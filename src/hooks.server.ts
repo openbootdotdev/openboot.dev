@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 
-function generateInstallScript(username: string, slug: string, customScript: string, dotfilesRepo: string): string {
+export function generateInstallScript(username: string, slug: string, customScript: string, dotfilesRepo: string): string {
 	return `#!/bin/bash
 set -e
 
@@ -9,6 +9,12 @@ echo "  OpenBoot - Custom Install"
 echo "  Config: @${username}/${slug}"
 echo "========================================"
 echo ""
+
+echo "Some installations require admin privileges."
+sudo -v
+( while true; do sudo -n true; sleep 50; done ) 2>/dev/null &
+SUDO_KEEPALIVE_PID=$!
+trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f \\"\$OPENBOOT_BIN\\"" EXIT
 
 install_xcode_clt() {
   if xcode-select -p &>/dev/null; then
@@ -56,8 +62,7 @@ OPENBOOT_URL="https://github.com/openbootdotdev/openboot/releases/latest/downloa
 TMPDIR="\${TMPDIR:-/tmp}"
 OPENBOOT_BIN="\$TMPDIR/openboot-\$\$"
 
-cleanup() { rm -f "\$OPENBOOT_BIN"; }
-trap cleanup EXIT
+
 
 echo "Downloading OpenBoot..."
 curl -fsSL "\$OPENBOOT_URL" -o "\$OPENBOOT_BIN"
@@ -66,6 +71,17 @@ chmod +x "\$OPENBOOT_BIN"
 echo "Using remote config: @${username}/${slug}"
 "\$OPENBOOT_BIN" --user ${username}/${slug} "\$@"
 
+${
+		customScript
+			? `
+echo ""
+echo "=== Running Custom Post-Install Script ==="
+set +e
+${customScript}
+set -e
+`
+			: ''
+	}
 ${
 		dotfilesRepo
 			? `
@@ -88,17 +104,6 @@ echo "Deploying dotfiles with stow..."
 for dir in */; do
   [ -d "\$dir" ] && stow -v --target="\$HOME" "\${dir%/}" 2>/dev/null || true
 done
-`
-			: ''
-	}
-${
-		customScript
-			? `
-echo ""
-echo "=== Running Custom Post-Install Script ==="
-set +e
-${customScript}
-set -e
 `
 			: ''
 	}
