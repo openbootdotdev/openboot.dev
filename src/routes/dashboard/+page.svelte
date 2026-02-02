@@ -54,6 +54,11 @@
 	let searchLoading = $state(false);
 	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+	let showImportModal = $state(false);
+	let brewfileContent = $state('');
+	let importLoading = $state(false);
+	let importError = $state('');
+
 	async function searchHomebrew(query: string) {
 		if (query.length < 2) {
 			searchResults = [];
@@ -281,6 +286,56 @@
 		}
 		return `openboot.dev/${$auth.user?.username}/${config.slug}/install`;
 	}
+
+	async function importBrewfile() {
+		if (!brewfileContent.trim()) {
+			importError = 'Please paste your Brewfile content';
+			return;
+		}
+
+		importLoading = true;
+		importError = '';
+
+		try {
+			const response = await fetch('/api/brewfile/parse', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ content: brewfileContent })
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				importError = data.error || 'Failed to parse Brewfile';
+				return;
+			}
+
+			if (data.packages.length === 0) {
+				importError = 'No packages found in Brewfile';
+				return;
+			}
+
+			showImportModal = false;
+			brewfileContent = '';
+
+			formData = {
+				name: 'Imported Config',
+				description: `Imported from Brewfile (${data.packages.length} packages)`,
+				base_preset: 'minimal',
+				is_public: true,
+				alias: '',
+				packages: data.packages,
+				custom_script: '',
+				dotfiles_repo: ''
+			};
+			selectedPackages = new Set(data.packages);
+			showModal = true;
+		} catch (e) {
+			importError = 'Failed to parse Brewfile';
+		} finally {
+			importLoading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -305,7 +360,10 @@
 				<h1 class="page-title">My Configurations</h1>
 				<p class="page-subtitle">Create custom install configs for different teams or projects</p>
 			</div>
-			<Button variant="primary" onclick={() => openModal()}>+ New Config</Button>
+			<div class="header-actions">
+				<Button variant="secondary" onclick={() => showImportModal = true}>Import Brewfile</Button>
+				<Button variant="primary" onclick={() => openModal()}>+ New Config</Button>
+			</div>
 		</div>
 
 		{#if configs.length === 0}
@@ -499,6 +557,36 @@
 	</div>
 {/if}
 
+{#if showImportModal}
+	<div class="modal-overlay" onclick={() => showImportModal = false}>
+		<div class="modal import-modal" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-header">
+				<h3 class="modal-title">Import Brewfile</h3>
+				<button class="close-btn" onclick={() => showImportModal = false}>&times;</button>
+			</div>
+			<div class="modal-body">
+				{#if importError}
+					<div class="error-message">{importError}</div>
+				{/if}
+
+				<div class="form-group">
+					<label class="form-label">Paste your Brewfile content</label>
+					<textarea
+						class="form-textarea brewfile-input"
+						bind:value={brewfileContent}
+						placeholder={'tap "homebrew/cask"\nbrew "git"\nbrew "node"\ncask "visual-studio-code"\ncask "docker"'}
+					></textarea>
+					<p class="form-hint">Supports tap, brew, and cask entries</p>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<Button variant="secondary" onclick={() => showImportModal = false}>Cancel</Button>
+				<Button variant="primary" onclick={importBrewfile}>{importLoading ? 'Parsing...' : 'Import'}</Button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <style>
 	.header {
 		background: var(--bg-secondary);
@@ -556,6 +644,21 @@
 		color: var(--text-secondary);
 		font-size: 0.95rem;
 		margin-top: 4px;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: 8px;
+	}
+
+	.import-modal {
+		max-width: 500px;
+	}
+
+	.brewfile-input {
+		min-height: 200px;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.85rem;
 	}
 
 	.empty-state {
