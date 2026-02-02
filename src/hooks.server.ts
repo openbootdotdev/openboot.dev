@@ -10,11 +10,14 @@ echo "  Config: @${username}/${slug}"
 echo "========================================"
 echo ""
 
+TMPDIR="\${TMPDIR:-/tmp}"
+OPENBOOT_BIN="\$TMPDIR/openboot-\$\$"
+
 echo "Some installations require admin privileges."
 sudo -v
 ( while true; do sudo -n true; sleep 50; done ) 2>/dev/null &
-SUDO_KEEPALIVE_PID=$!
-trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f \\"\$OPENBOOT_BIN\\"" EXIT
+SUDO_KEEPALIVE_PID=\$!
+trap 'kill \$SUDO_KEEPALIVE_PID 2>/dev/null; rm -f "\$OPENBOOT_BIN"' EXIT
 
 install_xcode_clt() {
   if xcode-select -p &>/dev/null; then
@@ -59,10 +62,6 @@ else
 fi
 
 OPENBOOT_URL="https://github.com/openbootdotdev/openboot/releases/latest/download/openboot-darwin-\${ARCH}"
-TMPDIR="\${TMPDIR:-/tmp}"
-OPENBOOT_BIN="\$TMPDIR/openboot-\$\$"
-
-
 
 echo "Downloading OpenBoot..."
 curl -fsSL "\$OPENBOOT_URL" -o "\$OPENBOOT_BIN"
