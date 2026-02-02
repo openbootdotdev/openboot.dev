@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { generateInstallScript } from '../../../../hooks.server';
+import { generateInstallScript } from '$lib/server/install-script';
 
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const env = platform?.env;
