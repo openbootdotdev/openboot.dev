@@ -17,7 +17,10 @@
 		packages?: string[];
 		custom_script?: string;
 		dotfiles_repo?: string;
+		updated_at?: string;
 	}
+
+	let copiedId = $state('');
 
 	let configs = $state<Config[]>([]);
 	let loading = $state(true);
@@ -254,10 +257,22 @@
 		}
 	}
 
-	function copyToClipboard(text: string) {
+	function copyToClipboard(text: string, configId: string) {
 		navigator.clipboard.writeText(text);
-		toast = 'Copied!';
-		setTimeout(() => toast = '', 2000);
+		copiedId = configId;
+		setTimeout(() => copiedId = '', 2000);
+	}
+
+	function formatDate(dateStr?: string): string {
+		if (!dateStr) return '';
+		const date = new Date(dateStr + 'Z');
+		const now = new Date();
+		const diff = now.getTime() - date.getTime();
+		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+		if (days === 0) return 'Today';
+		if (days === 1) return 'Yesterday';
+		if (days < 7) return `${days} days ago`;
+		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	}
 
 	function getInstallUrl(config: Config): string {
@@ -301,7 +316,7 @@
 		{:else}
 			<div class="configs-grid">
 				{#each configs as config}
-					<div class="config-card">
+					<div class="config-card" onclick={() => editConfig(config.slug)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && editConfig(config.slug)}>
 						<div class="config-header">
 							<div>
 								<div class="config-name">{config.name}</div>
@@ -322,12 +337,15 @@
 						{/if}
 						<div class="config-meta">
 							<span class="config-meta-item">Preset: <strong>{config.base_preset}</strong></span>
+							{#if config.updated_at}
+								<span class="config-meta-item">Modified: <strong>{formatDate(config.updated_at)}</strong></span>
+							{/if}
 						</div>
-						<div class="config-url">
+						<div class="config-url" onclick={(e) => e.stopPropagation()}>
 							<code>curl -fsSL {getInstallUrl(config)} | bash</code>
-							<button class="copy-btn" onclick={() => copyToClipboard(`curl -fsSL https://${getInstallUrl(config)} | bash`)}>Copy</button>
+							<button class="copy-btn" onclick={() => copyToClipboard(`curl -fsSL https://${getInstallUrl(config)} | bash`, config.id)}>{copiedId === config.id ? 'Copied!' : 'Copy'}</button>
 						</div>
-						<div class="config-actions">
+						<div class="config-actions" onclick={(e) => e.stopPropagation()}>
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
 							<Button variant="danger" onclick={() => deleteConfig(config.slug)}>Delete</Button>
 						</div>
@@ -563,10 +581,12 @@
 		border-radius: 12px;
 		padding: 20px;
 		transition: all 0.2s;
+		cursor: pointer;
 	}
 
 	.config-card:hover {
 		border-color: var(--border-hover);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
 
 	.config-header {
