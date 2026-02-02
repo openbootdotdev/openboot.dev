@@ -10,6 +10,41 @@ echo "  Config: @${username}/${slug}"
 echo "========================================"
 echo ""
 
+install_xcode_clt() {
+  if xcode-select -p &>/dev/null; then
+    return 0
+  fi
+  echo "Installing Xcode Command Line Tools..."
+  echo "(A dialog may appear - please click 'Install')"
+  echo ""
+  xcode-select --install 2>/dev/null || true
+  echo "Waiting for Xcode Command Line Tools installation..."
+  until xcode-select -p &>/dev/null; do
+    sleep 5
+  done
+  echo "Xcode Command Line Tools installed!"
+  echo ""
+}
+
+install_homebrew() {
+  if command -v brew &>/dev/null; then
+    return 0
+  fi
+  echo "Installing Homebrew..."
+  echo ""
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [ "$(uname -m)" = "arm64" ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+  echo "Homebrew installed!"
+  echo ""
+}
+
+install_xcode_clt
+install_homebrew
+
 ARCH="$(uname -m)"
 if [ "$ARCH" = "arm64" ]; then
   ARCH="arm64"
