@@ -32,8 +32,13 @@ jobs:
         run: |
           for migration in migrations/*.sql; do
             if [ -f "$migration" ]; then
-              echo "Applying migration: $migration"
-              wrangler d1 execute openboot --remote --file="$migration" || true
+              echo "::group::Migration: $migration"
+              if wrangler d1 execute openboot --remote --file="$migration" 2>&1; then
+                echo "Migration applied successfully"
+              else
+                echo "Migration skipped (already applied or error)"
+              fi
+              echo "::endgroup::"
             fi
           done
       

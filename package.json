@@ -1,5 +1,5 @@
 {
-	"name": "website-new",
+	"name": "openboot-web",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -12,9 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-cloudflare": "^7.2.6",
-		"@sveltejs/adapter-cloudflare-workers": "^1.2.3",
 		"@sveltejs/kit": "^2.50.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"svelte": "^5.48.2",

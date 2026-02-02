@@ -4,6 +4,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { PRESET_PACKAGES, getPresetPackages } from '$lib/presets';
 
 	interface Config {
 		id: string;
@@ -36,21 +37,6 @@
 		custom_script: '',
 		dotfiles_repo: ''
 	});
-
-	const PRESET_PACKAGES: Record<string, { cli: string[]; cask: string[] }> = {
-		minimal: {
-			cli: ['curl', 'wget', 'jq', 'yq', 'ripgrep', 'fd', 'bat', 'eza', 'fzf', 'zoxide', 'htop', 'btop', 'tree', 'tldr', 'gh', 'git-delta', 'lazygit', 'stow'],
-			cask: ['warp', 'raycast', 'maccy', 'stats']
-		},
-		developer: {
-			cli: ['curl', 'wget', 'jq', 'yq', 'ripgrep', 'fd', 'bat', 'eza', 'fzf', 'zoxide', 'htop', 'btop', 'tree', 'tldr', 'gh', 'git-delta', 'lazygit', 'stow', 'node', 'go', 'pnpm', 'docker', 'docker-compose', 'tmux', 'neovim', 'httpie'],
-			cask: ['warp', 'raycast', 'maccy', 'stats', 'scroll-reverser', 'visual-studio-code', 'orbstack', 'google-chrome', 'arc', 'postman', 'notion']
-		},
-		full: {
-			cli: ['curl', 'wget', 'jq', 'yq', 'ripgrep', 'fd', 'bat', 'eza', 'fzf', 'zoxide', 'htop', 'btop', 'tree', 'tldr', 'gh', 'git-delta', 'lazygit', 'stow', 'node', 'go', 'pnpm', 'docker', 'docker-compose', 'tmux', 'neovim', 'httpie', 'python', 'uv', 'rustup', 'deno', 'bun', 'kubectl', 'helm', 'k9s', 'terraform', 'awscli', 'sqlite', 'postgresql', 'redis', 'duckdb', 'ollama', 'llm'],
-			cask: ['warp', 'raycast', 'maccy', 'stats', 'scroll-reverser', 'visual-studio-code', 'cursor', 'orbstack', 'google-chrome', 'arc', 'firefox', 'postman', 'proxyman', 'notion', 'obsidian', 'figma', 'iina', 'keka', 'aldente', 'rectangle']
-		}
-	};
 
 	interface SearchResult {
 		name: string;
@@ -96,11 +82,6 @@
 		searchDebounceTimer = setTimeout(() => {
 			searchHomebrew(value);
 		}, 300);
-	}
-
-	function getPresetPackages(preset: string): string[] {
-		const p = PRESET_PACKAGES[preset];
-		return p ? [...p.cli, ...p.cask] : [];
 	}
 
 	function getExtraPackages(): string[] {
