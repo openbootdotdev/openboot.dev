@@ -61,7 +61,9 @@ ${
 			? `
 echo ""
 echo "=== Running Custom Post-Install Script ==="
+set +e
 ${customScript}
+set -e
 `
 			: ''
 	}
