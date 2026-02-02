@@ -101,6 +101,7 @@ fi
 
 cd "\$DOTFILES_DIR"
 echo "Deploying dotfiles with stow..."
+rm -f "\$HOME/.zshrc" "\$HOME/.zshrc.pre-oh-my-zsh"
 for dir in */; do
   [ -d "\$dir" ] && stow -v --target="\$HOME" "\${dir%/}" 2>/dev/null || true
 done
