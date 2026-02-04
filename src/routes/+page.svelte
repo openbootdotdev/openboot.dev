@@ -44,7 +44,7 @@
 
 <svelte:head>
 	<title>OpenBoot - One-line macOS Development Environment Setup</title>
-	<meta name="description" content="Bootstrap your Mac development environment in minutes. One command to install everything you need - Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
+	<meta name="description" content="Bootstrap your Mac development environment in minutes. One command to install everything you need - Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh. Snapshot your current setup and share it with your team." />
 </svelte:head>
 
 <header class="site-header">
@@ -94,7 +94,7 @@
 				<div class="feature-item">Apple Silicon & Intel support</div>
 				<div class="feature-item">3 curated presets</div>
 				<div class="feature-item">Oh-My-Zsh + shell aliases</div>
-				<div class="feature-item">Dotfiles management</div>
+				<div class="feature-item">Snapshot & share your setup</div>
 				<div class="feature-item">macOS preferences tuning</div>
 				<div class="feature-item">Dry-run mode for preview</div>
 				<div class="feature-item">100% open source</div>
@@ -175,6 +175,43 @@
 						Create Custom Config
 					</Button>
 				{/if}
+			</div>
+		</section>
+
+		<section class="snapshot-section">
+			<div class="section-header">
+				<h2 class="section-title">Already Have a Setup?</h2>
+				<p class="section-subtitle">Capture your current Mac's installed state and share it as a config</p>
+			</div>
+
+			<div class="snapshot-card">
+				<div class="snapshot-content">
+					<div class="snapshot-info">
+						<div class="snapshot-flow">
+							<p class="snapshot-description">
+								Run one command to scan your machine — Homebrew formulae & casks, macOS preferences, shell config, git config, dev tools, and VS Code extensions — then upload it as a shareable configuration.
+							</p>
+							<p class="snapshot-usecase">Perfect for team leads who want to share their proven setup as a team baseline.</p>
+						</div>
+						<div class="snapshot-detects">
+							<span class="detect-tag">Homebrew formulae & casks</span>
+							<span class="detect-tag">macOS preferences</span>
+							<span class="detect-tag">Shell config</span>
+							<span class="detect-tag">Git config</span>
+							<span class="detect-tag">Dev tools</span>
+							<span class="detect-tag">VS Code extensions</span>
+						</div>
+					</div>
+					<div class="snapshot-command-area">
+						<div class="snapshot-command">
+							<code>openboot snapshot</code>
+							<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
+								{copied === 'snapshot' ? 'Copied!' : 'Copy'}
+							</button>
+						</div>
+						<span class="snapshot-flags">Also supports <code>--json</code> <code>--local</code> <code>--dry-run</code></span>
+					</div>
+				</div>
 			</div>
 		</section>
 	</div>
@@ -538,6 +575,111 @@
 		font-size: 0.85rem;
 	}
 
+	.snapshot-section {
+		margin-bottom: 80px;
+	}
+
+	.snapshot-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		padding: 36px 40px;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.snapshot-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: linear-gradient(90deg, var(--accent), transparent);
+	}
+
+	.snapshot-content {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 40px;
+		align-items: center;
+	}
+
+	.snapshot-info {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.snapshot-description {
+		color: var(--text-secondary);
+		font-size: 0.95rem;
+		line-height: 1.6;
+		margin: 0;
+	}
+
+	.snapshot-usecase {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		font-style: italic;
+		margin: 0;
+	}
+
+	.snapshot-detects {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.detect-tag {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.7rem;
+		padding: 4px 12px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 6px;
+		color: var(--text-secondary);
+	}
+
+	.snapshot-command-area {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 12px;
+		flex-shrink: 0;
+	}
+
+	.snapshot-command {
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 16px 20px;
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		white-space: nowrap;
+	}
+
+	.snapshot-command code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.95rem;
+		color: var(--accent);
+	}
+
+	.snapshot-flags {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.snapshot-flags code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		padding: 2px 6px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 4px;
+	}
+
 	@media (max-width: 768px) {
 		.ascii-logo {
 			font-size: 6px;
@@ -549,6 +691,23 @@
 
 		.presets-container {
 			grid-template-columns: 1fr;
+		}
+
+		.snapshot-card {
+			padding: 24px 20px;
+		}
+
+		.snapshot-content {
+			grid-template-columns: 1fr;
+			gap: 24px;
+		}
+
+		.snapshot-command-area {
+			align-items: stretch;
+		}
+
+		.snapshot-flags {
+			text-align: center;
 		}
 	}
 </style>
