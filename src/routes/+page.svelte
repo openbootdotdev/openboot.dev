@@ -204,16 +204,11 @@
 					</div>
 				<div class="snapshot-command-area">
 					<div class="snapshot-command">
-						<code>openboot snapshot</code>
-						<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
+						<code>curl -fsSL openboot.dev/install | bash -s -- snapshot</code>
+						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install | bash -s -- snapshot', 'snapshot')}>
 							{copied === 'snapshot' ? 'Copied!' : 'Copy'}
 						</button>
 					</div>
-					<span class="snapshot-flags">Also supports <code>--json</code> <code>--local</code> <code>--dry-run</code></span>
-					<a href="https://github.com/openbootdotdev/openboot/releases/latest" class="snapshot-install-hint">
-						Download OpenBoot CLI from GitHub Releases
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
-					</a>
 				</div>
 				</div>
 			</div>
@@ -670,32 +665,7 @@
 		color: var(--accent);
 	}
 
-	.snapshot-flags {
-		font-size: 0.75rem;
-		color: var(--text-muted);
-	}
 
-	.snapshot-flags code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.7rem;
-		color: var(--text-secondary);
-		padding: 2px 6px;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 4px;
-	}
-
-	.snapshot-install-hint {
-		font-size: 0.8rem;
-		color: var(--text-muted);
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		transition: color 0.2s;
-	}
-
-	.snapshot-install-hint:hover {
-		color: var(--accent);
-	}
 
 	@media (max-width: 768px) {
 		.ascii-logo {
@@ -721,10 +691,6 @@
 
 		.snapshot-command-area {
 			align-items: stretch;
-		}
-
-		.snapshot-flags {
-			text-align: center;
 		}
 	}
 </style>
