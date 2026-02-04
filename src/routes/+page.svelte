@@ -189,7 +189,7 @@
 					<div class="snapshot-info">
 					<div class="snapshot-flow">
 						<p class="snapshot-description">
-							Scan your existing machine — Homebrew packages, macOS preferences, shell & git config, dev tools, and VS Code extensions — and upload it as a shareable configuration. No preset needed.
+							Scan your existing machine — Homebrew packages, macOS preferences, shell & git config, and dev tools — and upload it as a shareable configuration. No preset needed.
 						</p>
 						<p class="snapshot-usecase">Perfect for team leads who want to share their proven setup as a team baseline.</p>
 					</div>
@@ -198,8 +198,7 @@
 							<span class="detect-tag">macOS preferences</span>
 							<span class="detect-tag">Shell config</span>
 							<span class="detect-tag">Git config</span>
-							<span class="detect-tag">Dev tools</span>
-							<span class="detect-tag">VS Code extensions</span>
+						<span class="detect-tag">Dev tools</span>
 						</div>
 					</div>
 				<div class="snapshot-command-area">
