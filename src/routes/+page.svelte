@@ -187,12 +187,12 @@
 			<div class="snapshot-card">
 				<div class="snapshot-content">
 					<div class="snapshot-info">
-						<div class="snapshot-flow">
-							<p class="snapshot-description">
-								Run one command to scan your machine — Homebrew formulae & casks, macOS preferences, shell config, git config, dev tools, and VS Code extensions — then upload it as a shareable configuration.
-							</p>
-							<p class="snapshot-usecase">Perfect for team leads who want to share their proven setup as a team baseline.</p>
-						</div>
+					<div class="snapshot-flow">
+						<p class="snapshot-description">
+							Scan your existing machine — Homebrew packages, macOS preferences, shell & git config, dev tools, and VS Code extensions — and upload it as a shareable configuration. No preset needed.
+						</p>
+						<p class="snapshot-usecase">Perfect for team leads who want to share their proven setup as a team baseline.</p>
+					</div>
 						<div class="snapshot-detects">
 							<span class="detect-tag">Homebrew formulae & casks</span>
 							<span class="detect-tag">macOS preferences</span>
@@ -202,15 +202,19 @@
 							<span class="detect-tag">VS Code extensions</span>
 						</div>
 					</div>
-					<div class="snapshot-command-area">
-						<div class="snapshot-command">
-							<code>openboot snapshot</code>
-							<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
-								{copied === 'snapshot' ? 'Copied!' : 'Copy'}
-							</button>
-						</div>
-						<span class="snapshot-flags">Also supports <code>--json</code> <code>--local</code> <code>--dry-run</code></span>
+				<div class="snapshot-command-area">
+					<div class="snapshot-command">
+						<code>openboot snapshot</code>
+						<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
+							{copied === 'snapshot' ? 'Copied!' : 'Copy'}
+						</button>
 					</div>
+					<span class="snapshot-flags">Also supports <code>--json</code> <code>--local</code> <code>--dry-run</code></span>
+					<a href="https://github.com/openbootdotdev/openboot/releases/latest" class="snapshot-install-hint">
+						Download OpenBoot CLI from GitHub Releases
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+					</a>
+				</div>
 				</div>
 			</div>
 		</section>
@@ -678,6 +682,19 @@
 		padding: 2px 6px;
 		background: rgba(255, 255, 255, 0.05);
 		border-radius: 4px;
+	}
+
+	.snapshot-install-hint {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		transition: color 0.2s;
+	}
+
+	.snapshot-install-hint:hover {
+		color: var(--accent);
 	}
 
 	@media (max-width: 768px) {
