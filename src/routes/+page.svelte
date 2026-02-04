@@ -201,61 +201,82 @@
 						</div>
 					</button>
 				{/each}
-			</div>
+		</div>
+	</section>
 
-			<div class="custom-config-cta">
-				{#if $auth.user}
-					<p>Manage your custom configurations</p>
-					<Button href="/dashboard" variant="secondary">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-							<rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-						</svg>
-						Go to Dashboard
-					</Button>
-				{:else}
-					<p>Want a custom setup for your team?</p>
-					<Button href="/api/auth/login" variant="secondary">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-						</svg>
-						Create Custom Config
-					</Button>
-				{/if}
-			</div>
-		</section>
-
-		<section class="snapshot-section">
+		<section class="beyond-section">
 			<div class="section-header">
-				<h2 class="section-title">Already Have a Setup?</h2>
-				<p class="section-subtitle">Capture your current Mac's installed state and share it as a config</p>
+				<h2 class="section-title">For Teams & Power Users</h2>
+				<p class="section-subtitle">Snapshot your existing setup or build a custom config for your entire team</p>
 			</div>
 
-			<div class="snapshot-card">
-				<div class="snapshot-content">
-					<div class="snapshot-info">
-					<div class="snapshot-flow">
-						<p class="snapshot-description">
-							Scan your existing machine — Homebrew packages, macOS preferences, shell & git config, and dev tools — and upload it as a shareable configuration. No preset needed.
-						</p>
-						<p class="snapshot-usecase">Perfect for team leads who want to share their proven setup as a team baseline.</p>
-					</div>
-						<div class="snapshot-detects">
-							<span class="detect-tag">Homebrew formulae & casks</span>
-							<span class="detect-tag">macOS preferences</span>
-							<span class="detect-tag">Shell config</span>
-							<span class="detect-tag">Git config</span>
+			<div class="beyond-grid">
+				<div class="beyond-card">
+					<div class="beyond-card-label">Snapshot</div>
+					<h3 class="beyond-card-title">Capture Your Current Setup</h3>
+					<p class="beyond-card-desc">
+						Scan your existing machine -- Homebrew packages, macOS preferences, shell & git config, and dev tools -- then upload it as a shareable configuration.
+					</p>
+					<p class="beyond-card-hint">Perfect for team leads who want to share their proven setup as a baseline.</p>
+					<div class="snapshot-detects">
+						<span class="detect-tag">Homebrew formulae & casks</span>
+						<span class="detect-tag">macOS preferences</span>
+						<span class="detect-tag">Shell config</span>
+						<span class="detect-tag">Git config</span>
 						<span class="detect-tag">Dev tools</span>
-						</div>
 					</div>
-				<div class="snapshot-command-area">
-					<div class="snapshot-command">
+					<div class="beyond-command">
+						<div class="beyond-command-prompt">$</div>
 						<code>curl -fsSL openboot.dev/install | bash -s -- snapshot</code>
 						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install | bash -s -- snapshot', 'snapshot')}>
-							{copied === 'snapshot' ? 'Copied!' : 'Copy'}
+							{#if copied === 'snapshot'}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+								Copied!
+							{:else}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+								Copy
+							{/if}
 						</button>
 					</div>
 				</div>
+
+				<div class="beyond-card">
+					<div class="beyond-card-label">Custom Configs</div>
+					{#if $auth.user}
+						<h3 class="beyond-card-title">Manage Your Configurations</h3>
+						<p class="beyond-card-desc">
+							Your team's custom configurations are ready. Add, edit, and share configs from the dashboard.
+						</p>
+					{:else}
+						<h3 class="beyond-card-title">Build a Custom Config</h3>
+						<p class="beyond-card-desc">
+							Create a custom configuration tailored for your team. Sign in to get started.
+						</p>
+					{/if}
+					<ul class="beyond-features">
+						<li>Import from Brewfile</li>
+						<li>Share via short URL</li>
+						<li>Team-wide configs</li>
+						<li>Dotfiles integration</li>
+					</ul>
+					<div class="beyond-card-action">
+						{#if $auth.user}
+							<Button href="/dashboard" variant="primary">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+									<rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+								</svg>
+								Go to Dashboard
+							</Button>
+						{:else}
+							<Button href="/api/auth/login" variant="primary">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+								</svg>
+								Sign in with GitHub
+							</Button>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</section>
@@ -328,11 +349,6 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-	}
-
-	.loading-text {
-		color: var(--text-muted);
-		font-size: 0.9rem;
 	}
 
 	/* ── Main ──────────────────────────────────────────── */
@@ -759,41 +775,25 @@
 		font-size: 0.65rem;
 	}
 
-	.custom-config-cta {
-		text-align: center;
-		margin-top: 32px;
-	}
+	/* ── Beyond Presets Section ───────────────────────── */
 
-	.custom-config-cta p {
-		color: var(--text-secondary);
-		margin-bottom: 16px;
-	}
-
-	/* ── Snapshot Section ─────────────────────────────── */
-
-	.snapshot-section {
+	.beyond-section {
 		margin-bottom: 80px;
-	}
-
-	.snapshot-card {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 20px;
-		padding: 40px 44px;
 		position: relative;
-		overflow: hidden;
 	}
 
-	.snapshot-card::before {
+	.beyond-section::before {
 		content: '';
 		position: absolute;
 		top: 0;
-		left: 0;
-		right: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 200px;
 		height: 3px;
-		background: linear-gradient(90deg, var(--accent), rgba(34, 197, 94, 0.3), var(--accent));
+		background: linear-gradient(90deg, transparent, var(--accent), transparent);
 		background-size: 200% 100%;
 		animation: gradient-shift 6s ease infinite;
+		border-radius: 2px;
 	}
 
 	@keyframes gradient-shift {
@@ -801,29 +801,64 @@
 		50% { background-position: 100% 50%; }
 	}
 
-	.snapshot-content {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		gap: 40px;
-		align-items: center;
+	.beyond-section .section-header {
+		padding-top: 28px;
 	}
 
-	.snapshot-info {
-		display: flex;
-		flex-direction: column;
+	.beyond-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
 		gap: 20px;
 	}
 
-	.snapshot-description {
+	.beyond-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		padding: 32px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		position: relative;
+	}
+
+	.beyond-card:hover {
+		border-color: var(--border-hover);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+	}
+
+	.beyond-card-label {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--accent);
+		padding: 4px 10px;
+		background: var(--accent-glow);
+		border-radius: 20px;
+		width: fit-content;
+	}
+
+	.beyond-card-title {
+		font-size: 1.15rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
+		margin: 0;
+	}
+
+	.beyond-card-desc {
 		color: var(--text-secondary);
-		font-size: 0.95rem;
+		font-size: 0.875rem;
 		line-height: 1.6;
 		margin: 0;
 	}
 
-	.snapshot-usecase {
+	.beyond-card-hint {
 		color: var(--text-muted);
-		font-size: 0.85rem;
+		font-size: 0.8rem;
 		font-style: italic;
 		margin: 0;
 	}
@@ -831,13 +866,14 @@
 	.snapshot-detects {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 6px;
+		margin-top: 4px;
 	}
 
 	.detect-tag {
 		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.7rem;
-		padding: 5px 12px;
+		font-size: 0.68rem;
+		padding: 4px 10px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
 		border-radius: 20px;
@@ -845,33 +881,75 @@
 		transition: border-color 0.2s;
 	}
 
-	.snapshot-card:hover .detect-tag {
+	.beyond-card:hover .detect-tag {
 		border-color: var(--border-hover);
 	}
 
-	.snapshot-command-area {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 12px;
-		flex-shrink: 0;
-	}
-
-	.snapshot-command {
+	.beyond-command {
 		background: var(--code-bg);
 		border: 1px solid var(--border);
-		border-radius: 12px;
-		padding: 16px 20px;
+		border-radius: 10px;
+		padding: 12px 16px;
 		display: flex;
 		align-items: center;
-		gap: 16px;
+		gap: 10px;
+		margin-top: auto;
+		transition: border-color 0.2s;
+	}
+
+	.beyond-command:hover {
+		border-color: rgba(34, 197, 94, 0.3);
+	}
+
+	.beyond-command-prompt {
+		color: var(--accent);
+		font-family: 'JetBrains Mono', monospace;
+		font-weight: 700;
+		font-size: 0.85rem;
+		flex-shrink: 0;
+		user-select: none;
+	}
+
+	.beyond-command code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.78rem;
+		color: var(--accent);
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.snapshot-command code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.95rem;
+	.beyond-features {
+		list-style: none;
+		padding: 0;
+		margin: 4px 0 0 0;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.beyond-features li {
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 0;
+	}
+
+	.beyond-features li::before {
+		content: '\2713';
 		color: var(--accent);
+		font-weight: 700;
+		font-size: 0.75rem;
+		flex-shrink: 0;
+	}
+
+	.beyond-card-action {
+		margin-top: auto;
+		padding-top: 8px;
 	}
 
 	/* ── Footer ───────────────────────────────────────── */
@@ -977,17 +1055,16 @@
 			grid-template-columns: 1fr;
 		}
 
-		.snapshot-card {
-			padding: 28px 24px;
-		}
-
-		.snapshot-content {
+		.beyond-grid {
 			grid-template-columns: 1fr;
-			gap: 24px;
 		}
 
-		.snapshot-command-area {
-			align-items: stretch;
+		.beyond-card {
+			padding: 24px;
+		}
+
+		.beyond-command code {
+			font-size: 0.7rem;
 		}
 
 		.terminal-window {
