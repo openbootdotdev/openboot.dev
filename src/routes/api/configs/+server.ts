@@ -2,25 +2,30 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
 
-export const GET: RequestHandler = async ({ platform, cookies }) => {
+export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
 	if (!env) return json({ error: 'Platform env not available' }, { status: 500 });
 
-	const user = await getCurrentUser(cookies, env.DB, env.JWT_SECRET);
+	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	const { results } = await env.DB.prepare('SELECT id, slug, name, description, base_preset, is_public, alias, updated_at FROM configs WHERE user_id = ? ORDER BY updated_at DESC')
+	const { results } = await env.DB.prepare('SELECT id, slug, name, description, base_preset, is_public, alias, updated_at, snapshot, snapshot_at FROM configs WHERE user_id = ? ORDER BY updated_at DESC')
 		.bind(user.id)
 		.all();
 
-	return json({ configs: results, username: user.username });
+	const configs = results.map((config: any) => ({
+		...config,
+		snapshot: config.snapshot ? JSON.parse(config.snapshot) : null
+	}));
+
+	return json({ configs, username: user.username });
 };
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
 	if (!env) return json({ error: 'Platform env not available' }, { status: 500 });
 
-	const user = await getCurrentUser(cookies, env.DB, env.JWT_SECRET);
+	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	let body;
@@ -30,7 +35,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo } = body;
+	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at } = body;
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
 
@@ -64,11 +69,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	try {
 		await env.DB.prepare(
 			`
-			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`
 		)
-			.bind(id, user.id, slug, name, description || '', base_preset || 'developer', JSON.stringify(packages || []), custom_script || '', is_public !== false ? 1 : 0, cleanAlias, dotfiles_repo || '')
+			.bind(id, user.id, slug, name, description || '', base_preset || 'developer', JSON.stringify(packages || []), custom_script || '', is_public !== false ? 1 : 0, cleanAlias, dotfiles_repo || '', snapshot ? JSON.stringify(snapshot) : null, snapshot_at || null)
 			.run();
 	} catch (e) {
 		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });

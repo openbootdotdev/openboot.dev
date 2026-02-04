@@ -42,7 +42,24 @@ export function getCookie(cookies: Cookies, name: string): string | undefined {
 	return cookies.get(name);
 }
 
-export async function getCurrentUser(cookies: Cookies, db: D1Database, secret: string) {
+export async function getCurrentUser(request: Request, cookies: Cookies, db: D1Database, secret: string) {
+	const authHeader = request.headers.get('Authorization');
+	if (authHeader && authHeader.startsWith('Bearer obt_')) {
+		const token = authHeader.slice(7);
+		const tokenRow = await db.prepare(
+			'SELECT * FROM api_tokens WHERE token = ? AND expires_at > datetime(\'now\')'
+		).bind(token).first<{ id: string; user_id: string }>();
+		
+		if (tokenRow) {
+			await db.prepare('UPDATE api_tokens SET last_used_at = datetime(\'now\') WHERE id = ?')
+				.bind(tokenRow.id).run();
+			
+			const user = await db.prepare('SELECT id, username, email, avatar_url FROM users WHERE id = ?')
+				.bind(tokenRow.user_id).first();
+			if (user) return user;
+		}
+	}
+
 	const token = getCookie(cookies, 'session');
 	if (!token) return null;
 
