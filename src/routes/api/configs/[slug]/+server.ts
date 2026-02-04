@@ -2,11 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
 
-export const GET: RequestHandler = async ({ platform, cookies, params }) => {
+export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
 	if (!env) return json({ error: 'Platform env not available' }, { status: 500 });
 
-	const user = await getCurrentUser(cookies, env.DB, env.JWT_SECRET);
+	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	const config = await env.DB.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).first();
@@ -17,7 +17,8 @@ export const GET: RequestHandler = async ({ platform, cookies, params }) => {
 	return json({
 		config: {
 			...config,
-			packages: JSON.parse((config.packages as string) || '[]')
+			packages: JSON.parse((config.packages as string) || '[]'),
+			snapshot: config.snapshot ? JSON.parse(config.snapshot) : null
 		},
 		install_url: installUrl
 	});
@@ -27,7 +28,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 	const env = platform?.env;
 	if (!env) return json({ error: 'Platform env not available' }, { status: 500 });
 
-	const user = await getCurrentUser(cookies, env.DB, env.JWT_SECRET);
+	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	let body;
@@ -37,7 +38,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo } = body;
+	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at } = body;
 	const slug = params.slug;
 
 	const existing = await env.DB.prepare('SELECT id, alias FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, slug).first<{ id: string; alias: string | null }>();
@@ -81,6 +82,8 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 				is_public = COALESCE(?, is_public),
 				alias = ?,
 				dotfiles_repo = COALESCE(?, dotfiles_repo),
+				snapshot = ?,
+				snapshot_at = ?,
 				updated_at = datetime('now')
 			WHERE user_id = ? AND slug = ?
 		`
@@ -95,6 +98,8 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 				is_public !== undefined ? (is_public ? 1 : 0) : null,
 				newAlias,
 				dotfiles_repo !== undefined ? dotfiles_repo : null,
+				snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
+				snapshot_at !== undefined ? snapshot_at : null,
 				user.id,
 				slug
 			)
@@ -108,11 +113,11 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 	return json({ success: true, slug: newSlug, alias: newAlias, install_url: installUrl });
 };
 
-export const DELETE: RequestHandler = async ({ platform, cookies, params }) => {
+export const DELETE: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
 	if (!env) return json({ error: 'Platform env not available' }, { status: 500 });
 
-	const user = await getCurrentUser(cookies, env.DB, env.JWT_SECRET);
+	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	await env.DB.prepare('DELETE FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).run();
