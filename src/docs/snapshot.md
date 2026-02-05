@@ -82,19 +82,45 @@ Save locally for later:
 openboot snapshot --local
 ```
 
-## Upload Flow
+## Interactive Flow
 
-When you run `openboot snapshot` without flags, after scanning your system it will:
+When you run `openboot snapshot` without flags:
 
-1. **Prompt for authentication** — opens your browser to authorize OpenBoot via a device code flow (similar to `gh auth login`). You see a code in the terminal, confirm it in the browser, and the CLI receives an auth token.
+1. **Scan with progress** — each component is scanned with real-time feedback:
+   ```
+   ✓ Homebrew Formulae    28 found
+   ✓ Homebrew Casks       12 found
+   ✓ macOS Preferences     9 found
+   ⠋ Shell Environment    scanning...
+   ```
 
-2. **Name your config** — you'll be asked to provide a name (e.g., "my-setup" or "team-baseline").
+2. **Review in the editor** — a full-screen TUI lets you review and customize what's included:
+   - **3 tabs**: Formulae, Casks, macOS Preferences
+   - **Toggle items** with Space to include/exclude individual packages or settings
+   - **Search** with `/` to find specific items
+   - **Select all** with `a` to quickly toggle an entire category
+   - Shell, Git, and Dev Tools are shown as a read-only summary
 
-3. **Upload** — the snapshot is pushed to openboot.dev as a new config under your account.
+3. **Confirm upload** — choose to upload to openboot.dev or save locally as a fallback.
 
-4. **Get your URL** — the CLI prints your shareable install URL: `openboot.dev/<username>/<slug>/install`
+4. **Authenticate** (if needed) — opens your browser to authorize via a device code flow (similar to `gh auth login`). If you're already authenticated, this step is skipped.
 
-If you're already authenticated (token stored at `~/.openboot/auth.json`), step 1 is skipped.
+5. **Name your config** — provide a name like "my-setup" or "team-baseline".
+
+6. **Success screen** — after upload, you'll see:
+   ```
+   ✓ Config uploaded successfully!
+
+   View your config:
+     https://openboot.dev/username/my-setup
+
+   Share with others:
+     curl -fsSL https://openboot.dev/username/my-setup/install | bash
+
+   Opening in browser...
+   ```
+
+The browser automatically opens to your new config page.
 
 ## Privacy
 
@@ -103,4 +129,4 @@ Snapshot is designed to be safe to share:
 - **Paths are sanitized** — any references to your home directory are replaced with `~/`
 - **Only whitelisted macOS preferences** — no arbitrary system data is read
 - **No secrets** — SSH keys, API tokens, `.env` files, and credentials are never captured
-- **You review before uploading** — the snapshot is shown in the terminal before upload so you can verify what's being shared
+- **Full control before uploading** — the interactive editor lets you review every item and deselect anything you don't want to share
