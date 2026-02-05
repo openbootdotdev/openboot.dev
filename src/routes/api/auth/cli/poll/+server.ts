@@ -22,7 +22,8 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		return json({ status: 'pending' });
 	}
 
-	if (row.status === 'approved' && row.token_id && row.user_id) {
+	// Handle both 'approved' and 'used' status - CLI may need to poll multiple times
+	if ((row.status === 'approved' || row.status === 'used') && row.token_id && row.user_id) {
 		const token = await env.DB.prepare('SELECT * FROM api_tokens WHERE id = ?')
 			.bind(row.token_id)
 			.first<{ id: string; token: string; expires_at: string }>();
@@ -31,9 +32,12 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			.bind(row.user_id)
 			.first<{ username: string }>();
 
-		await env.DB.prepare("UPDATE cli_auth_codes SET status = 'used' WHERE id = ?")
-			.bind(code_id)
-			.run();
+		// Mark as used after first successful fetch (idempotent)
+		if (row.status === 'approved') {
+			await env.DB.prepare("UPDATE cli_auth_codes SET status = 'used' WHERE id = ?")
+				.bind(code_id)
+				.run();
+		}
 
 		return json({
 			status: 'approved',
