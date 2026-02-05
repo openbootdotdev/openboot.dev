@@ -54,7 +54,11 @@ Capture your current Mac's development environment. Scans Homebrew packages, mac
 openboot snapshot
 ```
 
-By default, this scans your system and then walks you through uploading the result to openboot.dev as a shareable config.
+The interactive flow:
+1. **Scan** — progress animation shows each component being captured
+2. **Edit** — full-screen TUI to review and toggle items (Space to toggle, Tab to switch categories, `/` to search)
+3. **Confirm** — choose to upload or save locally
+4. **Upload** — authenticate (if needed), name your config, and get a shareable URL
 
 ### `openboot snapshot --dry-run`
 
