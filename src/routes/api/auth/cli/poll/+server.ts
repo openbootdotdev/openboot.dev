@@ -14,7 +14,11 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 
 	if (!row) return json({ status: 'expired' });
 
-	if (row.expires_at < new Date().toISOString()) {
+	// SQLite returns date as "YYYY-MM-DD HH:MM:SS" (UTC)
+	// We need to convert to ISO format for comparison to avoid string comparison issues
+	// where "YYYY-MM-DD HH:MM:SS" < "YYYY-MM-DDTHH:MM:SS.sssZ" due to space < T
+	const expiresAt = new Date(row.expires_at.replace(' ', 'T') + 'Z');
+	if (expiresAt < new Date()) {
 		return json({ status: 'expired' });
 	}
 
@@ -43,7 +47,8 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			status: 'approved',
 			token: token?.token,
 			username: user?.username,
-			expires_at: token?.expires_at
+			// Ensure strict RFC3339 format for Go client
+			expires_at: token?.expires_at ? token.expires_at.replace(' ', 'T') + 'Z' : undefined
 		});
 	}
 
