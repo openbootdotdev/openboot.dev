@@ -29,9 +29,17 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return json({ error: 'Config is private' }, { status: 403 });
 	}
 
-	const packages = JSON.parse(config.packages || '[]');
+	const packages: string[] = JSON.parse(config.packages || '[]');
 
-	let taps: string[] = [];
+	const tapsSet = new Set<string>();
+
+	for (const pkg of packages) {
+		const parts = pkg.split('/');
+		if (parts.length === 3) {
+			tapsSet.add(`${parts[0]}/${parts[1]}`);
+		}
+	}
+
 	const snapshotRow = await env.DB.prepare(
 		'SELECT snapshot FROM configs WHERE user_id = ? AND slug = ?'
 	)
@@ -41,11 +49,15 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	if (snapshotRow?.snapshot) {
 		try {
 			const snapshot = JSON.parse(snapshotRow.snapshot);
-			taps = snapshot.packages?.taps || [];
+			const snapshotTaps = snapshot.packages?.taps || [];
+			for (const tap of snapshotTaps) {
+				tapsSet.add(tap);
+			}
 		} catch {
-			taps = [];
 		}
 	}
+
+	const taps = Array.from(tapsSet);
 
 	return json({
 		username: user.username,
