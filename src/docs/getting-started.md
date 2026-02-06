@@ -31,7 +31,7 @@ Here's exactly what the install script does, in order:
 
 4. **Launches the interactive TUI** — a full-screen terminal interface appears where you can browse and toggle packages on/off using your keyboard. You start with the `developer` preset by default, but every package is individually selectable.
 
-5. **Installs your selections** — once you confirm, OpenBoot installs all selected Homebrew formulae and casks, configures Oh-My-Zsh (with plugins and a theme), sets up useful shell aliases, and applies macOS preference tweaks.
+5. **Installs your selections** — once you confirm, OpenBoot skips already-installed packages, then installs CLI tools in parallel and GUI apps sequentially (with terminal access for any password prompts). It also configures Oh-My-Zsh (with plugins and a theme), sets up useful shell aliases, and applies macOS preference tweaks.
 
 ## First Run Experience
 
