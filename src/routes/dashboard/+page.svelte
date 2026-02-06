@@ -537,13 +537,9 @@
 				{#if getExtraPackages().length > 0}
 					<div class="selected-extras">
 					{#each getExtraPackages() as pkg}
-						<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, selectedPackages.get(pkg) || 'formula')}>
+						{@const pkgType = selectedPackages.get(pkg) || 'formula'}
+						<button type="button" class="extra-tag {pkgType}" onclick={() => togglePackage(pkg, pkgType)}>
 							{pkg}
-							{#if selectedPackages.get(pkg) === 'cask'}
-								<span class="type-badge cask">cask</span>
-							{:else if selectedPackages.get(pkg) === 'tap'}
-								<span class="type-badge tap">tap</span>
-							{/if}
 							<span class="remove-icon">×</span>
 						</button>
 					{/each}
@@ -1097,8 +1093,6 @@
 		align-items: center;
 		gap: 4px;
 		padding: 4px 8px;
-		background: var(--accent);
-		color: #000;
 		border: none;
 		border-radius: 4px;
 		font-size: 0.75rem;
@@ -1107,26 +1101,31 @@
 		transition: all 0.15s;
 	}
 
-	.extra-tag:hover {
+	.extra-tag.formula {
+		background: var(--accent);
+		color: #000;
+	}
+
+	.extra-tag.formula:hover {
 		background: #1a9f4a;
 	}
 
-	.type-badge {
-		font-size: 0.6rem;
-		padding: 1px 4px;
-		border-radius: 3px;
-		text-transform: uppercase;
-		font-family: 'JetBrains Mono', monospace;
+	.extra-tag.cask {
+		background: #60a5fa;
+		color: #000;
 	}
 
-	.type-badge.cask {
-		background: rgba(96, 165, 250, 0.2);
-		color: #60a5fa;
+	.extra-tag.cask:hover {
+		background: #3b82f6;
 	}
 
-	.type-badge.tap {
-		background: rgba(251, 191, 36, 0.2);
-		color: #fbbf24;
+	.extra-tag.tap {
+		background: #fbbf24;
+		color: #000;
+	}
+
+	.extra-tag.tap:hover {
+		background: #f59e0b;
 	}
 
 	.remove-icon {
