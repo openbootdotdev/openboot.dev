@@ -31,12 +31,29 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	const packages = JSON.parse(config.packages || '[]');
 
+	let taps: string[] = [];
+	const snapshotRow = await env.DB.prepare(
+		'SELECT snapshot FROM configs WHERE user_id = ? AND slug = ?'
+	)
+		.bind(user.id, params.slug)
+		.first<{ snapshot: string }>();
+
+	if (snapshotRow?.snapshot) {
+		try {
+			const snapshot = JSON.parse(snapshotRow.snapshot);
+			taps = snapshot.packages?.taps || [];
+		} catch {
+			taps = [];
+		}
+	}
+
 	return json({
 		username: user.username,
 		slug: config.slug,
 		name: config.name,
 		preset: config.base_preset,
 		packages: packages,
+		taps: taps,
 		dotfiles_repo: config.dotfiles_repo || ''
 	});
 };
