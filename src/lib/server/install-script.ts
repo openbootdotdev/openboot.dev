@@ -16,8 +16,6 @@ echo ""
 TMPDIR="\${TMPDIR:-/tmp}"
 OPENBOOT_BIN="\$TMPDIR/openboot-\$\$"
 
-echo "Some installations require admin privileges."
-sudo -v
 trap 'rm -f "\$OPENBOOT_BIN"' EXIT
 
 install_xcode_clt() {
