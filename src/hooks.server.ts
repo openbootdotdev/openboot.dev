@@ -1,8 +1,14 @@
 import type { Handle } from '@sveltejs/kit';
 import { generateInstallScript } from '$lib/server/install-script';
 
+const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
+
+	if (path === '/install.sh') {
+		return Response.redirect(INSTALL_SCRIPT_URL, 302);
+	}
 
 	const shortAliasMatch = path.match(/^\/([a-z0-9-]+)$/);
 	if (shortAliasMatch && !['dashboard', 'api', 'install', 'docs', 'cli-auth'].includes(shortAliasMatch[1])) {
