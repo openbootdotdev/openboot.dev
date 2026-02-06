@@ -5,7 +5,7 @@ Snapshot captures your current Mac's development environment and turns it into a
 ## Install and Run
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- snapshot
+curl -fsSL openboot.dev/install.sh | bash -s -- snapshot
 ```
 
 This downloads the OpenBoot binary (if not already installed) and immediately runs the snapshot command.
@@ -115,7 +115,7 @@ When you run `openboot snapshot` without flags:
      https://openboot.dev/username/my-setup
 
    Share with others:
-     curl -fsSL https://openboot.dev/username/my-setup/install | bash
+     curl -fsSL https://openboot.dev/username/my-setup/install.sh | bash
 
    Opening in browser...
    ```
