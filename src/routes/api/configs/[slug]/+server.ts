@@ -14,11 +14,14 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 
 	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}/install`;
 
+	const rawPkgs = JSON.parse((config.packages as string) || '[]');
+	const packages = rawPkgs.map((p: any) => typeof p === 'string' ? { name: p, type: 'formula' } : p);
+
 	return json({
 		config: {
 			...config,
-			packages: JSON.parse((config.packages as string) || '[]'),
-			snapshot: config.snapshot ? JSON.parse(config.snapshot) : null
+			packages,
+			snapshot: config.snapshot ? JSON.parse(config.snapshot as string) : null
 		},
 		install_url: installUrl
 	});

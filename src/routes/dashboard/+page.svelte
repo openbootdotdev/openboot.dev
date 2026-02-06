@@ -14,7 +14,7 @@
 		base_preset: string;
 		is_public: number;
 		alias: string | null;
-		packages?: string[];
+		packages?: any[];
 		custom_script?: string;
 		dotfiles_repo?: string;
 		updated_at?: string;
@@ -47,7 +47,7 @@
 		type: 'formula' | 'cask' | 'tap';
 	}
 
-	let selectedPackages = $state(new Set<string>());
+	let selectedPackages = $state(new Map<string, string>());
 	let presetExpanded = $state(false);
 	let packageSearch = $state('');
 	let searchResults = $state<SearchResult[]>([]);
@@ -113,14 +113,18 @@
 
 	function getExtraPackages(): string[] {
 		const presetPkgs = new Set(getPresetPackages(formData.base_preset));
-		return Array.from(selectedPackages).filter((pkg) => !presetPkgs.has(pkg));
+		return Array.from(selectedPackages.keys()).filter((pkg) => !presetPkgs.has(pkg));
 	}
 
 
 
 	function initPackagesForPreset(preset: string) {
 		const presetPkgs = getPresetPackages(preset);
-		selectedPackages = new Set(presetPkgs);
+		const newMap = new Map<string, string>();
+		for (const pkg of presetPkgs) {
+			newMap.set(pkg, 'formula');
+		}
+		selectedPackages = newMap;
 	}
 
 	function handlePresetChange(newPreset: string) {
@@ -129,13 +133,13 @@
 	}
 
 	function togglePresetPackage(pkg: string) {
-		const newSet = new Set(selectedPackages);
-		if (newSet.has(pkg)) {
-			newSet.delete(pkg);
+		const newMap = new Map(selectedPackages);
+		if (newMap.has(pkg)) {
+			newMap.delete(pkg);
 		} else {
-			newSet.add(pkg);
+			newMap.set(pkg, 'formula');
 		}
-		selectedPackages = newSet;
+		selectedPackages = newMap;
 	}
 
 	onMount(async () => {
@@ -175,12 +179,20 @@
 				custom_script: config.custom_script || '',
 				dotfiles_repo: config.dotfiles_repo || ''
 			};
-			const savedPkgs = config.packages || [];
-			if (savedPkgs.length > 0) {
-				selectedPackages = new Set(savedPkgs);
-			} else {
-				initPackagesForPreset(config.base_preset);
+		const savedPkgs = config.packages || [];
+		if (savedPkgs.length > 0) {
+			const newMap = new Map<string, string>();
+			for (const pkg of savedPkgs) {
+				if (typeof pkg === 'string') {
+					newMap.set(pkg, 'formula');
+				} else {
+					newMap.set((pkg as any).name, (pkg as any).type || 'formula');
+				}
 			}
+			selectedPackages = newMap;
+		} else {
+			initPackagesForPreset(config.base_preset);
+		}
 		} else {
 			editingSlug = '';
 			formData = {
@@ -203,15 +215,15 @@
 		showModal = false;
 	}
 
-	function togglePackage(pkg: string) {
-		const newSet = new Set(selectedPackages);
-		if (newSet.has(pkg)) {
-			newSet.delete(pkg);
+	function togglePackage(pkg: string, type: string = 'formula') {
+		const newMap = new Map(selectedPackages);
+		if (newMap.has(pkg)) {
+			newMap.delete(pkg);
 		} else {
-			newSet.add(pkg);
+			newMap.set(pkg, type);
 		}
-		selectedPackages = newSet;
-		formData.packages = Array.from(newSet);
+		selectedPackages = newMap;
+		formData.packages = Array.from(newMap.keys());
 	}
 
 	async function saveConfig() {
@@ -233,7 +245,7 @@
 				body: JSON.stringify({
 					...formData,
 					alias: formData.alias.trim() || null,
-					packages: Array.from(selectedPackages)
+					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({ name, type }))
 				})
 			});
 
@@ -347,7 +359,11 @@
 				custom_script: '',
 				dotfiles_repo: ''
 			};
-			selectedPackages = new Set(data.packages);
+			const importMap = new Map<string, string>();
+			for (const pkg of data.packages) {
+				importMap.set(pkg, 'formula');
+			}
+			selectedPackages = importMap;
 			showModal = true;
 		} catch (e) {
 			importError = 'Failed to parse Brewfile';
@@ -520,12 +536,17 @@
 				</div>
 				{#if getExtraPackages().length > 0}
 					<div class="selected-extras">
-						{#each getExtraPackages() as pkg}
-							<button type="button" class="extra-tag" onclick={() => togglePackage(pkg)}>
-								{pkg}
-								<span class="remove-icon">×</span>
-							</button>
-						{/each}
+					{#each getExtraPackages() as pkg}
+						<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, selectedPackages.get(pkg) || 'formula')}>
+							{pkg}
+							{#if selectedPackages.get(pkg) === 'cask'}
+								<span class="type-badge cask">cask</span>
+							{:else if selectedPackages.get(pkg) === 'tap'}
+								<span class="type-badge tap">tap</span>
+							{/if}
+							<span class="remove-icon">×</span>
+						</button>
+					{/each}
 					</div>
 				{/if}
 				<div class="packages-search">
@@ -544,7 +565,7 @@
 				{:else if packageSearch.length >= 2}
 					<div class="packages-grid">
 						{#each searchResults as result}
-							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name)}>
+							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, result.type)}>
 								<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
 								<div class="package-content">
 									<div class="package-info">
@@ -1088,6 +1109,24 @@
 
 	.extra-tag:hover {
 		background: #1a9f4a;
+	}
+
+	.type-badge {
+		font-size: 0.6rem;
+		padding: 1px 4px;
+		border-radius: 3px;
+		text-transform: uppercase;
+		font-family: 'JetBrains Mono', monospace;
+	}
+
+	.type-badge.cask {
+		background: rgba(96, 165, 250, 0.2);
+		color: #60a5fa;
+	}
+
+	.type-badge.tap {
+		background: rgba(251, 191, 36, 0.2);
+		color: #fbbf24;
 	}
 
 	.remove-icon {
