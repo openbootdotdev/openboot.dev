@@ -29,11 +29,24 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return json({ error: 'Config is private' }, { status: 403 });
 	}
 
-	const packages: string[] = JSON.parse(config.packages || '[]');
+	const rawPackages: any[] = JSON.parse(config.packages || '[]');
+	const packageNames: string[] = [];
+	const caskNames: string[] = [];
+
+	for (const pkg of rawPackages) {
+		if (typeof pkg === 'string') {
+			packageNames.push(pkg);
+		} else {
+			packageNames.push(pkg.name);
+			if (pkg.type === 'cask') {
+				caskNames.push(pkg.name);
+			}
+		}
+	}
 
 	const tapsSet = new Set<string>();
 
-	for (const pkg of packages) {
+	for (const pkg of packageNames) {
 		const parts = pkg.split('/');
 		if (parts.length === 3) {
 			tapsSet.add(`${parts[0]}/${parts[1]}`);
@@ -64,7 +77,8 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		slug: config.slug,
 		name: config.name,
 		preset: config.base_preset,
-		packages: packages,
+		packages: packageNames,
+		casks: caskNames,
 		taps: taps,
 		dotfiles_repo: config.dotfiles_repo || ''
 	});
