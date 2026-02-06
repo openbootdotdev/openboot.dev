@@ -15,7 +15,28 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}/install`;
 
 	const rawPkgs = JSON.parse((config.packages as string) || '[]');
-	const packages = rawPkgs.map((p: any) => typeof p === 'string' ? { name: p, type: 'formula' } : p);
+	const needsTypeInference = rawPkgs.length > 0 && typeof rawPkgs[0] === 'string';
+
+	let caskSet = new Set<string>();
+	if (needsTypeInference && config.snapshot) {
+		try {
+			const snapshot = JSON.parse(config.snapshot as string);
+			const casks: string[] = snapshot.packages?.casks || [];
+			for (const c of casks) {
+				caskSet.add(c);
+			}
+		} catch {}
+	}
+
+	const packages = rawPkgs.map((p: any) => {
+		if (typeof p === 'string') {
+			const parts = p.split('/');
+			if (parts.length === 3) return { name: p, type: 'tap' };
+			if (caskSet.has(p)) return { name: p, type: 'cask' };
+			return { name: p, type: 'formula' };
+		}
+		return p;
+	});
 
 	return json({
 		config: {
