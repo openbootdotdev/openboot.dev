@@ -4,16 +4,6 @@
 
 Yes. OpenBoot is free and open source (MIT license) for individuals. You can create custom configs, use snapshot, and share setups at no cost. Team management features (org accounts, access controls) are on the roadmap and may have paid tiers.
 
-## Does it work on Linux?
-
-Partially. The Homebrew-based package installation works on Linux since Homebrew supports Linux (Linuxbrew). However, macOS-specific features don't apply:
-
-- macOS preference tweaks are skipped
-- Cask installations are skipped (casks are macOS-only)
-- Some GUI app detection in snapshot won't work
-
-For Linux, you'll get the CLI tool installations but not the full experience.
-
 ## Can I use it for my team?
 
 Yes. The recommended workflow is:
@@ -36,7 +26,7 @@ This is a common concern. Here's how OpenBoot handles it:
 
 ## What if I already have Homebrew installed?
 
-OpenBoot detects existing Homebrew installations and skips the Homebrew install step entirely. It also detects already-installed packages and marks them in the TUI so you know what's new versus what's already on your system.
+OpenBoot detects existing Homebrew installations and skips the Homebrew install step entirely. It also detects already-installed packages and skips them automatically — only new packages are installed, so re-running is fast and safe.
 
 ## How do I update OpenBoot?
 
