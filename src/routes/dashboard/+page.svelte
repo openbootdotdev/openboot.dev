@@ -116,18 +116,14 @@
 		return Array.from(selectedPackages.keys()).filter((pkg) => !presetPkgs.has(pkg));
 	}
 
-	function getGroupedExtras(): { cli: string[]; apps: string[]; taps: string[] } {
-		const extras = getExtraPackages();
+	function getGroupedPackages(): { cli: string[]; apps: string[] } {
 		const cli: string[] = [];
 		const apps: string[] = [];
-		const taps: string[] = [];
-		for (const pkg of extras) {
-			const t = selectedPackages.get(pkg) || 'formula';
+		for (const [pkg, t] of selectedPackages) {
 			if (t === 'cask') apps.push(pkg);
-			else if (t === 'tap') taps.push(pkg);
 			else cli.push(pkg);
 		}
-		return { cli, apps, taps };
+		return { cli, apps };
 	}
 
 
@@ -517,72 +513,47 @@
 					<p class="form-hint">After installing packages, OpenBoot will clone this repo and deploy configs via stow.</p>
 				</div>
 
-				<div class="packages-section">
-					<div class="packages-header">
-						<span class="packages-title">Packages from "{formData.base_preset}" preset</span>
-						<button class="expand-btn" onclick={() => presetExpanded = !presetExpanded}>
-							{presetExpanded ? 'Collapse' : 'Expand'} ({selectedPackages.size} selected)
-						</button>
+				{#if true}
+			{@const grouped = getGroupedPackages()}
+			<div class="packages-section">
+				<div class="packages-header">
+					<span class="packages-title">Packages</span>
+					<span class="extra-count">{selectedPackages.size} selected</span>
+				</div>
+
+				<div class="packages-group">
+					<div class="group-header">
+						<span class="group-label">CLI</span>
+						<span class="group-count">{grouped.cli.length}</span>
 					</div>
-					<p class="packages-hint">Click to toggle. Gray = won't install.</p>
-					<div class="preset-packages" class:expanded={presetExpanded}>
-						{#each presetExpanded ? getPresetPackages(formData.base_preset) : getPresetPackages(formData.base_preset).slice(0, 12) as pkg}
-							<button 
-								class="preset-tag" 
-								class:excluded={!selectedPackages.has(pkg)}
-								onclick={() => togglePresetPackage(pkg)}
-							>{pkg}</button>
-						{/each}
-						{#if !presetExpanded && getPresetPackages(formData.base_preset).length > 12}
-							<button class="preset-tag more" onclick={() => presetExpanded = true}>
-								+{getPresetPackages(formData.base_preset).length - 12} more
+					<div class="group-tags">
+						{#each grouped.cli as pkg}
+							<button type="button" class="pkg-tag" onclick={() => togglePackage(pkg, 'formula')}>
+								{pkg}<span class="remove-icon">×</span>
 							</button>
+						{/each}
+						{#if grouped.cli.length === 0}
+							<span class="group-empty">No CLI packages</span>
 						{/if}
 					</div>
 				</div>
 
-			<div class="packages-section">
-				<div class="packages-header">
-					<span class="packages-title">Additional Packages</span>
-					{#if getExtraPackages().length > 0}
-						<span class="extra-count">{getExtraPackages().length} added</span>
-					{/if}
-				</div>
-				{#if getExtraPackages().length > 0}
-					{@const grouped = getGroupedExtras()}
-					<div class="selected-extras">
-						{#if grouped.cli.length > 0}
-							<div class="extras-group">
-								<span class="group-label">CLI</span>
-								{#each grouped.cli as pkg}
-									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'formula')}>
-										{pkg}<span class="remove-icon">×</span>
-									</button>
-								{/each}
-							</div>
-						{/if}
-						{#if grouped.apps.length > 0}
-							<div class="extras-group">
-								<span class="group-label">Apps</span>
-								{#each grouped.apps as pkg}
-									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'cask')}>
-										{pkg}<span class="remove-icon">×</span>
-									</button>
-								{/each}
-							</div>
-						{/if}
-						{#if grouped.taps.length > 0}
-							<div class="extras-group">
-								<span class="group-label">Taps</span>
-								{#each grouped.taps as pkg}
-									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'tap')}>
-										{pkg}<span class="remove-icon">×</span>
-									</button>
-								{/each}
-							</div>
+				<div class="packages-group">
+					<div class="group-header">
+						<span class="group-label">Apps</span>
+						<span class="group-count">{grouped.apps.length}</span>
+					</div>
+					<div class="group-tags">
+						{#each grouped.apps as pkg}
+							<button type="button" class="pkg-tag" onclick={() => togglePackage(pkg, 'cask')}>
+								{pkg}<span class="remove-icon">×</span>
+							</button>
+						{/each}
+						{#if grouped.apps.length === 0}
+							<span class="group-empty">No GUI apps</span>
 						{/if}
 					</div>
-				{/if}
+				</div>
 				<div class="packages-search">
 					<input 
 						type="text" 
@@ -617,6 +588,7 @@
 					<div class="search-hint">Type at least 2 characters to search Homebrew packages</div>
 				{/if}
 			</div>
+			{/if}
 
 				<div class="form-group">
 					<label class="form-label">Custom Post-Install Script (Optional)</label>
@@ -1045,66 +1017,6 @@
 		margin-bottom: 12px;
 	}
 
-	.packages-hint {
-		font-size: 0.75rem;
-		color: var(--text-muted);
-		margin-bottom: 10px;
-	}
-
-	.expand-btn {
-		background: none;
-		border: none;
-		color: var(--accent);
-		font-size: 0.8rem;
-		cursor: pointer;
-		padding: 4px 8px;
-	}
-
-	.expand-btn:hover {
-		text-decoration: underline;
-	}
-
-	.preset-packages {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		max-height: 80px;
-		overflow: hidden;
-		transition: max-height 0.3s ease;
-	}
-
-	.preset-packages.expanded {
-		max-height: none;
-	}
-
-	.preset-tag {
-		padding: 4px 10px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		font-size: 0.75rem;
-		color: var(--text-secondary);
-		font-family: 'JetBrains Mono', monospace;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.preset-tag:hover {
-		border-color: var(--accent);
-	}
-
-	.preset-tag.excluded {
-		opacity: 0.4;
-		text-decoration: line-through;
-		background: transparent;
-	}
-
-	.preset-tag.more {
-		background: transparent;
-		border-style: dashed;
-		color: var(--text-muted);
-	}
-
 	.packages-title {
 		font-size: 1rem;
 		font-weight: 500;
@@ -1112,46 +1024,57 @@
 
 	.extra-count {
 		font-size: 0.8rem;
-		color: var(--accent);
+		color: var(--text-muted);
 	}
 
-	.selected-extras {
-		margin-bottom: 12px;
-		padding: 10px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid var(--border);
-		border-radius: 8px;
+	.packages-group {
+		margin-bottom: 16px;
 	}
 
-	.extras-group {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px;
-		margin-bottom: 8px;
-	}
-
-	.extras-group:last-child {
+	.packages-group:last-child {
 		margin-bottom: 0;
 	}
 
-	.group-label {
-		font-size: 0.6rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-muted);
-		font-weight: 600;
-		width: 32px;
-		flex-shrink: 0;
+	.group-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 8px;
 	}
 
-	.extra-tag {
+	.group-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-muted);
+		font-weight: 600;
+	}
+
+	.group-count {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		opacity: 0.6;
+	}
+
+	.group-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.group-empty {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		opacity: 0.4;
+	}
+
+	.pkg-tag {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
 		padding: 4px 8px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
 		color: var(--text-secondary);
 		border-radius: 4px;
 		font-size: 0.75rem;
@@ -1160,18 +1083,18 @@
 		transition: all 0.15s;
 	}
 
-	.extra-tag:hover {
-		background: rgba(255, 255, 255, 0.14);
-		color: var(--text-primary);
+	.pkg-tag:hover {
+		border-color: var(--danger);
+		color: var(--danger);
 	}
 
 	.remove-icon {
 		font-size: 0.9rem;
 		font-weight: bold;
-		opacity: 0.7;
+		opacity: 0.5;
 	}
 
-	.extra-tag:hover .remove-icon {
+	.pkg-tag:hover .remove-icon {
 		opacity: 1;
 	}
 
