@@ -369,9 +369,10 @@
 				custom_script: '',
 				dotfiles_repo: ''
 			};
+			const caskSet = new Set<string>(data.casks || []);
 			const importMap = new Map<string, string>();
 			for (const pkg of data.packages) {
-				importMap.set(pkg, 'formula');
+				importMap.set(pkg, caskSet.has(pkg) ? 'cask' : 'formula');
 			}
 			selectedPackages = importMap;
 			showModal = true;
