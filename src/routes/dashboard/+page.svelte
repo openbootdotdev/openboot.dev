@@ -44,7 +44,7 @@
 	interface SearchResult {
 		name: string;
 		desc: string;
-		type: 'formula' | 'cask';
+		type: 'formula' | 'cask' | 'tap';
 	}
 
 	let selectedPackages = $state(new Set<string>());
@@ -59,6 +59,10 @@
 	let importLoading = $state(false);
 	let importError = $state('');
 
+	function isTapPackage(query: string): boolean {
+		return /^[a-z0-9_-]+\/[a-z0-9_-]+\/[a-z0-9_-]+$/i.test(query);
+	}
+
 	async function searchHomebrew(query: string) {
 		if (query.length < 2) {
 			searchResults = [];
@@ -70,9 +74,24 @@
 			const response = await fetch(`/api/homebrew/search?q=${encodeURIComponent(query)}`);
 			const data = await response.json();
 			searchResults = data.results || [];
+
+			if (isTapPackage(query) && !searchResults.some(r => r.name === query)) {
+				searchResults.unshift({
+					name: query,
+					desc: 'Third-party tap package (will add tap automatically)',
+					type: 'tap' as const
+				});
+			}
 		} catch (e) {
 			console.error('Search failed:', e);
 			searchResults = [];
+			if (isTapPackage(query)) {
+				searchResults = [{
+					name: query,
+					desc: 'Third-party tap package (will add tap automatically)',
+					type: 'tap' as const
+				}];
+			}
 		} finally {
 			searchLoading = false;
 		}
@@ -515,7 +534,7 @@
 						class="search-input" 
 						value={packageSearch}
 						oninput={(e) => handleSearchInput(e.currentTarget.value)}
-						placeholder="Search Homebrew packages..." 
+						placeholder="Search packages or enter tap (e.g. steipete/tap/codexbar)" 
 					/>
 				</div>
 				{#if searchLoading}

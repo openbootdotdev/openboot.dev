@@ -85,8 +85,8 @@
 
 					<div class="install-command" id="install">
 						<div class="install-prompt">$</div>
-						<code>curl -fsSL https://openboot.dev/install | bash</code>
-						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install | bash', 'main')}>
+						<code>curl -fsSL https://openboot.dev/install.sh | bash</code>
+						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash', 'main')}>
 							{#if copied === 'main'}
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 								Copied!
@@ -178,7 +178,7 @@
 						class="preset-card"
 						class:featured={preset.id === 'developer'}
 						class:copied={copied === preset.id}
-						onclick={() => copyCommand(`curl -fsSL openboot.dev/install | bash -s -- --preset ${preset.id}`, preset.id)}
+						onclick={() => copyCommand(`curl -fsSL openboot.dev/install.sh | bash -s -- --preset ${preset.id}`, preset.id)}
 					>
 						<div class="preset-icon">{preset.icon}</div>
 						<div class="preset-header">
@@ -227,8 +227,8 @@
 					</div>
 					<div class="beyond-command">
 						<div class="beyond-command-prompt">$</div>
-						<code>curl -fsSL openboot.dev/install | bash -s -- snapshot</code>
-						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install | bash -s -- snapshot', 'snapshot')}>
+						<code>curl -fsSL openboot.dev/install.sh | bash -s -- snapshot</code>
+						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot', 'snapshot')}>
 							{#if copied === 'snapshot'}
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 								Copied!

@@ -37,13 +37,13 @@ Already have a Brewfile? Upload it in the dashboard and OpenBoot will parse it i
 Every config gets a shareable install URL:
 
 ```
-curl -fsSL openboot.dev/<username>/<slug>/install | bash
+curl -fsSL openboot.dev/<username>/<slug>/install.sh | bash
 ```
 
 For example, if your GitHub username is `sarah` and your config is named `frontend-team`:
 
 ```
-curl -fsSL openboot.dev/sarah/frontend-team/install | bash
+curl -fsSL openboot.dev/sarah/frontend-team/install.sh | bash
 ```
 
 Share this URL in your team's README, onboarding docs, or Slack. Anyone who runs it gets your exact setup.

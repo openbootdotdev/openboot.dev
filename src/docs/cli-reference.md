@@ -97,11 +97,11 @@ openboot snapshot --local
 Install a specific version:
 
 ```
-OPENBOOT_VERSION=0.3.1 curl -fsSL openboot.dev/install | bash
+OPENBOOT_VERSION=0.3.1 curl -fsSL openboot.dev/install.sh | bash
 ```
 
 Install to a custom directory:
 
 ```
-OPENBOOT_INSTALL_DIR=~/.local/bin curl -fsSL openboot.dev/install | bash
+OPENBOOT_INSTALL_DIR=~/.local/bin curl -fsSL openboot.dev/install.sh | bash
 ```

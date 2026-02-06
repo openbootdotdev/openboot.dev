@@ -13,7 +13,7 @@ Lightweight CLI essentials for servers, containers, or developers who prefer a l
 **GUI apps:** Warp, Raycast, Maccy, Stats
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- --preset minimal
+curl -fsSL openboot.dev/install.sh | bash -s -- --preset minimal
 ```
 
 ### developer (recommended)
@@ -25,7 +25,7 @@ A ready-to-code Mac setup with everything you need to start building immediately
 **GUI apps (additions over minimal):** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- --preset developer
+curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer
 ```
 
 ### full
@@ -37,7 +37,7 @@ The complete dev environment — every language, DevOps tool, database, and AI u
 **GUI apps (additions over developer):** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, Rectangle
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- --preset full
+curl -fsSL openboot.dev/install.sh | bash -s -- --preset full
 ```
 
 ## Customizing During Install
@@ -56,11 +56,11 @@ This means you can start with `developer` but add `kubectl` from `full`, or remo
 If you want to skip the TUI and install a preset exactly as defined (useful for CI or scripting), the `--preset` flag with no TUI will install everything in the preset without prompting:
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- --preset developer
+curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer
 ```
 
 Add `--dry-run` to preview what would be installed without actually installing anything:
 
 ```
-curl -fsSL openboot.dev/install | bash -s -- --preset developer --dry-run
+curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer --dry-run
 ```

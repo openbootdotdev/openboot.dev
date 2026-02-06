@@ -14,7 +14,7 @@ OpenBoot is an open-source command-line tool that bootstraps your macOS developm
 Open Terminal and run:
 
 ```
-curl -fsSL https://openboot.dev/install | bash
+curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
 That's it. One line.
