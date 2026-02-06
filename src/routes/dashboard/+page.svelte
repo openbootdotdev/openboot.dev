@@ -116,6 +116,20 @@
 		return Array.from(selectedPackages.keys()).filter((pkg) => !presetPkgs.has(pkg));
 	}
 
+	function getGroupedExtras(): { cli: string[]; apps: string[]; taps: string[] } {
+		const extras = getExtraPackages();
+		const cli: string[] = [];
+		const apps: string[] = [];
+		const taps: string[] = [];
+		for (const pkg of extras) {
+			const t = selectedPackages.get(pkg) || 'formula';
+			if (t === 'cask') apps.push(pkg);
+			else if (t === 'tap') taps.push(pkg);
+			else cli.push(pkg);
+		}
+		return { cli, apps, taps };
+	}
+
 
 
 	function initPackagesForPreset(preset: string) {
@@ -535,14 +549,38 @@
 					{/if}
 				</div>
 				{#if getExtraPackages().length > 0}
+					{@const grouped = getGroupedExtras()}
 					<div class="selected-extras">
-					{#each getExtraPackages() as pkg}
-						{@const pkgType = selectedPackages.get(pkg) || 'formula'}
-						<button type="button" class="extra-tag {pkgType}" onclick={() => togglePackage(pkg, pkgType)}>
-							{pkg}
-							<span class="remove-icon">×</span>
-						</button>
-					{/each}
+						{#if grouped.cli.length > 0}
+							<div class="extras-group">
+								<span class="group-label">CLI</span>
+								{#each grouped.cli as pkg}
+									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'formula')}>
+										{pkg}<span class="remove-icon">×</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+						{#if grouped.apps.length > 0}
+							<div class="extras-group">
+								<span class="group-label">Apps</span>
+								{#each grouped.apps as pkg}
+									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'cask')}>
+										{pkg}<span class="remove-icon">×</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+						{#if grouped.taps.length > 0}
+							<div class="extras-group">
+								<span class="group-label">Taps</span>
+								{#each grouped.taps as pkg}
+									<button type="button" class="extra-tag" onclick={() => togglePackage(pkg, 'tap')}>
+										{pkg}<span class="remove-icon">×</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				{/if}
 				<div class="packages-search">
@@ -1078,14 +1116,33 @@
 	}
 
 	.selected-extras {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
 		margin-bottom: 12px;
 		padding: 10px;
-		background: rgba(34, 197, 94, 0.05);
-		border: 1px dashed var(--accent);
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid var(--border);
 		border-radius: 8px;
+	}
+
+	.extras-group {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		margin-bottom: 8px;
+	}
+
+	.extras-group:last-child {
+		margin-bottom: 0;
+	}
+
+	.group-label {
+		font-size: 0.6rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-muted);
+		font-weight: 600;
+		width: 32px;
+		flex-shrink: 0;
 	}
 
 	.extra-tag {
@@ -1093,7 +1150,9 @@
 		align-items: center;
 		gap: 4px;
 		padding: 4px 8px;
-		border: none;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		color: var(--text-secondary);
 		border-radius: 4px;
 		font-size: 0.75rem;
 		font-family: 'JetBrains Mono', monospace;
@@ -1101,31 +1160,9 @@
 		transition: all 0.15s;
 	}
 
-	.extra-tag.formula {
-		background: var(--accent);
-		color: #000;
-	}
-
-	.extra-tag.formula:hover {
-		background: #1a9f4a;
-	}
-
-	.extra-tag.cask {
-		background: #60a5fa;
-		color: #000;
-	}
-
-	.extra-tag.cask:hover {
-		background: #3b82f6;
-	}
-
-	.extra-tag.tap {
-		background: #fbbf24;
-		color: #000;
-	}
-
-	.extra-tag.tap:hover {
-		background: #f59e0b;
+	.extra-tag:hover {
+		background: rgba(255, 255, 255, 0.14);
+		color: var(--text-primary);
 	}
 
 	.remove-icon {
