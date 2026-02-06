@@ -16,10 +16,10 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	}
 
 	const config = await env.DB.prepare(
-		'SELECT slug, name, base_preset, packages, is_public, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?'
+		'SELECT slug, name, base_preset, packages, snapshot, is_public, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?'
 	)
 		.bind(user.id, params.slug)
-		.first<{ slug: string; name: string; base_preset: string; packages: string; is_public: number; dotfiles_repo: string }>();
+		.first<{ slug: string; name: string; base_preset: string; packages: string; snapshot: string; is_public: number; dotfiles_repo: string }>();
 
 	if (!config) {
 		return json({ error: 'Config not found' }, { status: 404 });
@@ -29,6 +29,22 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return json({ error: 'Config is private' }, { status: 403 });
 	}
 
+	const tapsSet = new Set<string>();
+	const snapshotCasks = new Set<string>();
+
+	if (config.snapshot) {
+		try {
+			const snapshot = JSON.parse(config.snapshot);
+			for (const tap of snapshot.packages?.taps || []) {
+				tapsSet.add(tap);
+			}
+			for (const cask of snapshot.packages?.casks || []) {
+				snapshotCasks.add(cask);
+			}
+		} catch {
+		}
+	}
+
 	const rawPackages: any[] = JSON.parse(config.packages || '[]');
 	const packageNames: string[] = [];
 	const caskNames: string[] = [];
@@ -36,6 +52,9 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	for (const pkg of rawPackages) {
 		if (typeof pkg === 'string') {
 			packageNames.push(pkg);
+			if (snapshotCasks.has(pkg)) {
+				caskNames.push(pkg);
+			}
 		} else {
 			packageNames.push(pkg.name);
 			if (pkg.type === 'cask') {
@@ -44,29 +63,10 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		}
 	}
 
-	const tapsSet = new Set<string>();
-
 	for (const pkg of packageNames) {
 		const parts = pkg.split('/');
 		if (parts.length === 3) {
 			tapsSet.add(`${parts[0]}/${parts[1]}`);
-		}
-	}
-
-	const snapshotRow = await env.DB.prepare(
-		'SELECT snapshot FROM configs WHERE user_id = ? AND slug = ?'
-	)
-		.bind(user.id, params.slug)
-		.first<{ snapshot: string }>();
-
-	if (snapshotRow?.snapshot) {
-		try {
-			const snapshot = JSON.parse(snapshotRow.snapshot);
-			const snapshotTaps = snapshot.packages?.taps || [];
-			for (const tap of snapshotTaps) {
-				tapsSet.add(tap);
-			}
-		} catch {
 		}
 	}
 
