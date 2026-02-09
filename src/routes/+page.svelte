@@ -53,6 +53,7 @@
 <svelte:head>
 	<title>OpenBoot - One-line macOS Development Environment Setup</title>
 	<meta name="description" content="Bootstrap your Mac development environment in minutes. One command to install everything you need - Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh. Snapshot your current setup and share it with your team." />
+	<meta property="og:url" content="https://openboot.dev" />
 </svelte:head>
 
 <header class="site-header">
