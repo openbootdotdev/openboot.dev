@@ -39,6 +39,9 @@
 <svelte:head>
 	<title>{data.config.name} - OpenBoot</title>
 	<meta name="description" content={data.config.description || `Install ${data.config.name} with OpenBoot`} />
+	<meta property="og:title" content="{data.config.name} - OpenBoot" />
+	<meta property="og:description" content={data.config.description || `Install ${data.config.name} with OpenBoot — one command to set up your Mac.`} />
+	<meta property="og:url" content="https://openboot.dev/{data.configUser.username}/{data.config.slug}" />
 </svelte:head>
 
 <header class="header">

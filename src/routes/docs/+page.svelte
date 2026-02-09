@@ -65,6 +65,9 @@
 		name="description"
 		content="Documentation for OpenBoot — the open-source macOS development environment setup tool. Presets, custom configs, snapshot, CLI reference, and FAQ."
 	/>
+	<meta property="og:title" content="{sections.find((s) => s.id === activeSection)?.title ?? 'Docs'} — OpenBoot Docs" />
+	<meta property="og:description" content="Documentation for OpenBoot — the open-source macOS development environment setup tool." />
+	<meta property="og:url" content="https://openboot.dev/docs" />
 </svelte:head>
 
 <header class="site-header">
