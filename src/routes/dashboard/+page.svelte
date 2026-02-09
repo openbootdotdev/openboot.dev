@@ -303,6 +303,24 @@
 		}
 	}
 
+	async function duplicateConfig(slug: string) {
+		try {
+			const response = await fetch(`/api/configs/${slug}`);
+			const data = await response.json();
+			const source = data.config;
+			openModal({
+				...source,
+				id: '',
+				slug: '',
+				name: source.name + ' (Copy)',
+				alias: null
+			});
+			editingSlug = '';
+		} catch (e) {
+			alert('Failed to duplicate configuration');
+		}
+	}
+
 	function copyToClipboard(text: string, configId: string) {
 		navigator.clipboard.writeText(text);
 		copiedId = configId;
@@ -451,6 +469,7 @@
 						</div>
 						<div class="config-actions" onclick={(e) => e.stopPropagation()}>
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
+							<Button variant="secondary" onclick={() => duplicateConfig(config.slug)}>Duplicate</Button>
 							<Button variant="danger" onclick={() => deleteConfig(config.slug)}>Delete</Button>
 						</div>
 					</div>
