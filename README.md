@@ -1,53 +1,44 @@
 # openboot.dev
 
-> Website and API for [OpenBoot](https://github.com/openbootdotdev/openboot)
+> Website, dashboard, and API for [OpenBoot](https://github.com/openbootdotdev/openboot) — one-line macOS dev environment setup.
 
 [![Deploy](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml)
 
-## Overview
+**Live at [openboot.dev](https://openboot.dev)**
 
-This repository contains the website and API for OpenBoot:
+## What This Repo Does
 
-- **Landing page** at [openboot.dev](https://openboot.dev)
-- **Dashboard** for creating custom configurations
-- **Install script generator** for custom configs
-- **API** for config storage and retrieval
+- **Landing page** — product overview, presets, install commands
+- **Dashboard** — create, edit, duplicate, and share custom configs
+- **Install script API** — generates per-config install scripts for `curl | bash`
+- **Brewfile import** — parse and convert Brewfiles into OpenBoot configs
+- **Homebrew search** — live package search from the dashboard
+- **CLI auth** — device flow for authenticating the CLI via browser
+- **Snapshot API** — receive and store machine snapshots from the CLI
 
 ## Tech Stack
 
-- **Framework**: [SvelteKit 5](https://svelte.dev/) with TypeScript
-- **Styling**: CSS Variables (dark/light theme)
-- **Auth**: GitHub OAuth
-- **Database**: Cloudflare D1 (SQLite)
-- **Hosting**: Cloudflare Workers
+| Layer | Technology |
+|-------|-----------|
+| Framework | [SvelteKit 5](https://svelte.dev/) + TypeScript |
+| Styling | CSS variables (dark/light theme) |
+| Auth | GitHub OAuth |
+| Database | Cloudflare D1 (SQLite) |
+| Hosting | Cloudflare Workers + Pages |
 
 ## Development
 
-### Prerequisites
-
-- Node.js 20+
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
-- Cloudflare account (for D1 database)
-
-### Setup
-
 ```bash
-# Install dependencies
 npm install
 
-# Create local D1 database
 wrangler d1 create openboot-local
-
-# Run migrations
 wrangler d1 execute openboot-local --local --file=migrations/0001_init.sql
 wrangler d1 execute openboot-local --local --file=migrations/0002_add_alias.sql
 wrangler d1 execute openboot-local --local --file=migrations/0003_add_dotfiles_repo.sql
+wrangler d1 execute openboot-local --local --file=migrations/0004_add_snapshot_and_auth.sql
 
-# Start dev server
 npm run dev
 ```
-
-### Environment Variables
 
 Create a `.dev.vars` file:
 
@@ -58,37 +49,59 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 
 ## Deployment
 
-Deployment is automatic on push to `main` via GitHub Actions.
-
-Manual deploy:
+Automatic on push to `main` via GitHub Actions.
 
 ```bash
 npm run build
 wrangler deploy
 ```
 
-### Required Secrets
-
-Set these in GitHub repository settings:
-
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
+GitHub repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
 ## API Endpoints
+
+### Install Scripts
 
 | Endpoint | Description |
 |----------|-------------|
 | `GET /install` | Default install script |
-| `GET /:alias` | Install script for alias (e.g., `/fullstackjam`) |
-| `GET /:username/:slug/install` | Install script for config |
-| `GET /:username/:slug/config` | Config JSON |
+| `GET /:alias` | Install script for short alias |
+| `GET /:username/:slug/install` | Install script for specific config |
+| `GET /:username/:slug/config` | Config JSON for CLI consumption |
+
+### Auth
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/auth/login` | GitHub OAuth login redirect |
+| `GET /api/auth/callback` | GitHub OAuth callback |
+| `GET /api/auth/logout` | Clear session |
+| `POST /api/auth/cli/start` | Start CLI device auth flow |
+| `POST /api/auth/cli/approve` | Approve CLI auth request |
+| `GET /api/auth/cli/poll` | Poll CLI auth status |
+
+### Configs
+
+| Endpoint | Description |
+|----------|-------------|
 | `GET /api/user` | Current user info |
 | `GET /api/configs` | List user's configs |
+| `POST /api/configs` | Create config |
+| `GET /api/configs/:slug` | Get config by slug |
+| `PUT /api/configs/:slug` | Update config |
+| `DELETE /api/configs/:slug` | Delete config |
+| `POST /api/configs/from-snapshot` | Create config from CLI snapshot |
+
+### Utilities
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/brewfile/parse` | Parse Brewfile content into packages |
+| `GET /api/homebrew/search?q=` | Search Homebrew packages |
 
 ## Database Schema
 
 ```sql
--- users
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   github_id TEXT UNIQUE,
@@ -98,35 +111,28 @@ CREATE TABLE users (
   created_at TEXT
 );
 
--- configs
 CREATE TABLE configs (
   id TEXT PRIMARY KEY,
   user_id TEXT,
   slug TEXT,
   name TEXT,
-  packages TEXT,        -- JSON array
+  description TEXT,
+  base_preset TEXT,
+  packages TEXT,
   custom_script TEXT,
   dotfiles_repo TEXT,
+  snapshot TEXT,
   alias TEXT UNIQUE,
-  is_public INTEGER,
+  is_public INTEGER DEFAULT 1,
   created_at TEXT,
   updated_at TEXT
 );
 ```
 
-## Project Structure
-
-```
-openbootdotdev/
-├── openboot        # CLI tool (Go)
-├── openboot.dev    # This repo - Website (SvelteKit)
-└── dotfiles        # Dotfiles template
-```
-
 ## Related
 
-- [openboot](https://github.com/openbootdotdev/openboot) - CLI tool
-- [dotfiles](https://github.com/openbootdotdev/dotfiles) - Dotfiles template
+- [openboot](https://github.com/openbootdotdev/openboot) — CLI tool (Go)
+- [dotfiles](https://github.com/openbootdotdev/dotfiles) — Dotfiles template
 
 ## License
 
