@@ -51,8 +51,8 @@
 </script>
 
 <svelte:head>
-	<title>OpenBoot - One-line macOS Development Environment Setup</title>
-	<meta name="description" content="Bootstrap your Mac development environment in minutes. One command to install everything you need - Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh. Snapshot your current setup and share it with your team." />
+	<title>OpenBoot - Set up your Mac in one command, not one afternoon</title>
+	<meta name="description" content="One curl command installs 70+ curated dev tools, deploys your dotfiles, and configures macOS. Pick a preset or build your own — done in about 5 minutes." />
 	<meta property="og:url" content="https://openboot.dev" />
 </svelte:head>
 
@@ -70,19 +70,16 @@
 		<section class="hero">
 			<div class="hero-split">
 				<div class="hero-left">
-					<h1>One-line macOS<br />Dev Environment Setup</h1>
-					<p class="subtitle">Bootstrap your Mac in minutes. Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh with a single command.</p>
+					<h1>Set up your Mac in<br />one command — not one afternoon</h1>
+					<p class="subtitle">One curl command installs everything. Pick from 70+ curated dev tools, deploy your dotfiles, and configure macOS — all in about 5 minutes.</p>
 
-					<div class="features-grid">
-						<div class="feature-item">Beautiful interactive TUI</div>
-						<div class="feature-item">Apple Silicon & Intel</div>
-						<div class="feature-item">3 curated presets</div>
-						<div class="feature-item">Oh-My-Zsh + aliases</div>
-						<div class="feature-item">Snapshot & share setup</div>
-						<div class="feature-item">macOS prefs tuning</div>
-						<div class="feature-item">Dry-run mode</div>
-						<div class="feature-item">100% open source</div>
-					</div>
+				<div class="features-grid">
+					<div class="feature-item">70+ curated dev tools</div>
+					<div class="feature-item">Smart install — skips what's already there</div>
+					<div class="feature-item">Dotfiles + Oh-My-Zsh built in</div>
+					<div class="feature-item">Share configs with your team</div>
+					<div class="feature-item">100% open source, zero telemetry</div>
+				</div>
 
 					<div class="install-command" id="install">
 						<div class="install-prompt">$</div>
