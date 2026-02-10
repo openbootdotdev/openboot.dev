@@ -29,6 +29,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				if (isCurl || !isBrowser) {
 					const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
 
+					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch(() => {});
+
 					return new Response(script, {
 						headers: {
 							'Content-Type': 'text/plain; charset=utf-8',
@@ -60,6 +62,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 					if (config && config.is_public) {
 						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+
+						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});
 
 						return new Response(script, {
 							headers: {
