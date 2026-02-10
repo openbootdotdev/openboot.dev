@@ -65,6 +65,11 @@
 	let importLoading = $state(false);
 	let importError = $state('');
 
+	let showShareModal = $state(false);
+	let shareUrl = $state('');
+	let shareConfigName = $state('');
+	let shareCopied = $state(false);
+
 	function isTapPackage(query: string): boolean {
 		return /^[a-z0-9_-]+\/[a-z0-9_-]+\/[a-z0-9_-]+$/i.test(query);
 	}
@@ -457,11 +462,268 @@
 	}
 
 	function shareConfig(config: Config) {
-		const configUrl = `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
-		const text = `My dev stack: ${config.name} — set up in minutes with @openbootdotdev`;
+		shareUrl = `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
+		shareConfigName = config.name;
+		shareCopied = false;
+		showShareModal = true;
+	}
+
+	function closeShareModal() {
+		showShareModal = false;
+	}
+
+	function shareCopyLink() {
+		navigator.clipboard.writeText(shareUrl);
+		shareCopied = true;
+		setTimeout(() => shareCopied = false, 2000);
+	}
+
+	function shareOnTwitter() {
+		const text = `My dev stack: ${shareConfigName} — set up in minutes with @openbootdotdev`;
 		const hashtags = 'OpenBoot,macOS,DevTools';
-		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(configUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
+		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
 		window.open(tweetUrl, '_blank', 'width=550,height=420');
+	}
+
+	function generateQrMatrix(data: string): boolean[][] {
+		const EC_CODEWORDS: Record<number, number> = { 1: 7, 2: 10, 3: 15, 4: 20, 5: 26, 6: 36, 7: 40, 8: 48, 9: 60, 10: 72 };
+		const TOTAL_CODEWORDS: Record<number, number> = { 1: 26, 2: 44, 3: 70, 4: 100, 5: 134, 6: 172, 7: 196, 8: 242, 9: 292, 10: 346 };
+		const DATA_CAPACITY: Record<number, number> = {};
+		for (let v = 1; v <= 10; v++) DATA_CAPACITY[v] = TOTAL_CODEWORDS[v] - EC_CODEWORDS[v];
+
+		const bytes: number[] = [];
+		for (let i = 0; i < data.length; i++) {
+			const c = data.charCodeAt(i);
+			if (c < 128) bytes.push(c);
+			else if (c < 2048) { bytes.push(192 | (c >> 6)); bytes.push(128 | (c & 63)); }
+			else { bytes.push(224 | (c >> 12)); bytes.push(128 | ((c >> 6) & 63)); bytes.push(128 | (c & 63)); }
+		}
+
+		let version = 1;
+		for (let v = 1; v <= 10; v++) {
+			const dataCap = DATA_CAPACITY[v];
+			const bitCap = dataCap * 8;
+			const needed = 4 + 8 + bytes.length * 8;
+			if (needed <= bitCap) { version = v; break; }
+			if (v === 10) version = 10;
+		}
+
+		const size = 17 + version * 4;
+		const modules: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+		const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+
+		function setModule(r: number, c: number, val: boolean, reserve = true) {
+			if (r >= 0 && r < size && c >= 0 && c < size) {
+				modules[r][c] = val;
+				if (reserve) reserved[r][c] = true;
+			}
+		}
+
+		function addFinderPattern(row: number, col: number) {
+			for (let r = -1; r <= 7; r++) {
+				for (let c = -1; c <= 7; c++) {
+					const rr = row + r, cc = col + c;
+					if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+					const inOuter = r === 0 || r === 6 || c === 0 || c === 6;
+					const inInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+					const inSep = r === -1 || r === 7 || c === -1 || c === 7;
+					setModule(rr, cc, (inOuter || inInner) && !inSep);
+				}
+			}
+		}
+
+		addFinderPattern(0, 0);
+		addFinderPattern(0, size - 7);
+		addFinderPattern(size - 7, 0);
+
+		for (let i = 8; i < size - 8; i++) {
+			setModule(6, i, i % 2 === 0);
+			setModule(i, 6, i % 2 === 0);
+		}
+
+		setModule(size - 8, 8, true);
+
+		if (version >= 2) {
+			const alignPos = [6, size - 7];
+			for (const ar of alignPos) {
+				for (const ac of alignPos) {
+					if (reserved[ar][ac]) continue;
+					for (let r = -2; r <= 2; r++) {
+						for (let c = -2; c <= 2; c++) {
+							const val = Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0);
+							setModule(ar + r, ac + c, val);
+						}
+					}
+				}
+			}
+		}
+
+		for (let i = 0; i < 15; i++) {
+			const r1 = i < 6 ? i : i < 8 ? i + 1 : size - 15 + i;
+			const c1 = 8;
+			reserved[r1][c1] = true;
+			const r2 = 8;
+			const c2 = i < 8 ? size - 1 - i : i < 9 ? 15 - i : 14 - i;
+			reserved[r2][c2] = true;
+		}
+
+		const dataCap = DATA_CAPACITY[version];
+		const bits: number[] = [];
+		function pushBits(val: number, len: number) {
+			for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
+		}
+
+		pushBits(0b0100, 4);
+		pushBits(bytes.length, 8);
+		for (const b of bytes) pushBits(b, 8);
+		pushBits(0, Math.min(4, dataCap * 8 - bits.length));
+		while (bits.length % 8 !== 0) bits.push(0);
+		const pads = [0xEC, 0x11];
+		let padIdx = 0;
+		while (bits.length < dataCap * 8) {
+			pushBits(pads[padIdx % 2], 8);
+			padIdx++;
+		}
+
+		const dataCodewords: number[] = [];
+		for (let i = 0; i < bits.length; i += 8) {
+			let val = 0;
+			for (let j = 0; j < 8; j++) val = (val << 1) | (bits[i + j] || 0);
+			dataCodewords.push(val);
+		}
+
+		const numEc = EC_CODEWORDS[version];
+		const gfExp: number[] = new Array(256);
+		const gfLog: number[] = new Array(256);
+		let x = 1;
+		for (let i = 0; i < 255; i++) {
+			gfExp[i] = x;
+			gfLog[x] = i;
+			x <<= 1;
+			if (x >= 256) x ^= 0x11D;
+		}
+		gfExp[255] = gfExp[0];
+
+		function gfMul(a: number, b: number): number {
+			if (a === 0 || b === 0) return 0;
+			return gfExp[(gfLog[a] + gfLog[b]) % 255];
+		}
+
+		const gen: number[] = [1];
+		for (let i = 0; i < numEc; i++) {
+			const newGen = new Array(gen.length + 1).fill(0);
+			for (let j = 0; j < gen.length; j++) {
+				newGen[j] ^= gfMul(gen[j], gfExp[i]);
+				newGen[j + 1] ^= gen[j];
+			}
+			gen.length = 0;
+			gen.push(...newGen);
+		}
+
+		const msgPoly = new Array(dataCodewords.length + numEc).fill(0);
+		for (let i = 0; i < dataCodewords.length; i++) msgPoly[i] = dataCodewords[i];
+		for (let i = 0; i < dataCodewords.length; i++) {
+			const coef = msgPoly[i];
+			if (coef !== 0) {
+				for (let j = 0; j < gen.length; j++) {
+					msgPoly[i + j] ^= gfMul(gen[j], coef);
+				}
+			}
+		}
+		const ecCodewords = msgPoly.slice(dataCodewords.length);
+
+		const allCodewords = [...dataCodewords, ...ecCodewords];
+		const allBits: number[] = [];
+		for (const cw of allCodewords) {
+			for (let i = 7; i >= 0; i--) allBits.push((cw >> i) & 1);
+		}
+
+		let bitIndex = 0;
+		let upward = true;
+		for (let col = size - 1; col >= 0; col -= 2) {
+			if (col === 6) col = 5;
+			const rows = upward ? Array.from({ length: size }, (_, i) => size - 1 - i) : Array.from({ length: size }, (_, i) => i);
+			for (const row of rows) {
+				for (const dc of [0, -1]) {
+					const c = col + dc;
+					if (c < 0 || c >= size) continue;
+					if (reserved[row][c]) continue;
+					modules[row][c] = bitIndex < allBits.length ? allBits[bitIndex] === 1 : false;
+					bitIndex++;
+				}
+			}
+			upward = !upward;
+		}
+
+		const maskBit = 0;
+		for (let r = 0; r < size; r++) {
+			for (let c = 0; c < size; c++) {
+				if (reserved[r][c]) continue;
+				if ((r + c) % 2 === 0) modules[r][c] = !modules[r][c];
+			}
+		}
+
+		const formatBits = (1 << 10) | (maskBit << 3);
+		let rem = formatBits;
+		for (let i = 0; i < 5; i++) {
+			if (rem & (1 << (14 - i))) rem ^= 0x537 << (4 - i);
+		}
+		let formatInfo = (formatBits | rem) ^ 0x5412;
+
+		for (let i = 0; i < 15; i++) {
+			const bit = ((formatInfo >> (14 - i)) & 1) === 1;
+			const r1 = i < 6 ? i : i < 8 ? i + 1 : size - 15 + i;
+			modules[r1][8] = bit;
+			const c2 = i < 8 ? size - 1 - i : i < 9 ? 15 - i : 14 - i;
+			modules[8][c2] = bit;
+		}
+
+		return modules;
+	}
+
+	function qrToSvg(url: string, cellSize = 8, margin = 16): string {
+		const matrix = generateQrMatrix(url);
+		const size = matrix.length;
+		const svgSize = size * cellSize + margin * 2;
+
+		let rects = '';
+		for (let r = 0; r < size; r++) {
+			for (let c = 0; c < size; c++) {
+				if (matrix[r][c]) {
+					rects += `<rect x="${margin + c * cellSize}" y="${margin + r * cellSize}" width="${cellSize}" height="${cellSize}" rx="1.5"/>`;
+				}
+			}
+		}
+
+		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgSize} ${svgSize}" width="${svgSize}" height="${svgSize}">
+<rect width="${svgSize}" height="${svgSize}" fill="#ffffff" rx="12"/>
+${rects}
+</svg>`;
+	}
+
+	function downloadQrPng() {
+		const svg = qrToSvg(shareUrl, 10, 20);
+		const blob = new Blob([svg], { type: 'image/svg+xml' });
+		const url = URL.createObjectURL(blob);
+		const img = new Image();
+		img.onload = () => {
+			const canvas = document.createElement('canvas');
+			canvas.width = img.width * 2;
+			canvas.height = img.height * 2;
+			const ctx = canvas.getContext('2d')!;
+			ctx.scale(2, 2);
+			ctx.drawImage(img, 0, 0);
+			URL.revokeObjectURL(url);
+			canvas.toBlob((pngBlob) => {
+				if (!pngBlob) return;
+				const a = document.createElement('a');
+				a.href = URL.createObjectURL(pngBlob);
+				a.download = `${shareConfigName.replace(/\s+/g, '-').toLowerCase()}-qr.png`;
+				a.click();
+				URL.revokeObjectURL(a.href);
+			}, 'image/png');
+		};
+		img.src = url;
 	}
 </script>
 
@@ -767,6 +1029,56 @@
 		</div>
 	</div>
 {/if}
+
+{#if showShareModal}
+	<div class="modal-overlay" onclick={closeShareModal} onkeydown={(e) => e.key === 'Escape' && closeShareModal()} role="dialog" tabindex="-1">
+		<div class="modal share-modal" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-header">
+				<h3 class="modal-title">Share Configuration</h3>
+				<button class="close-btn" onclick={closeShareModal}>&times;</button>
+			</div>
+			<div class="modal-body share-body">
+				<div class="share-url-display">
+					<code>{shareUrl}</code>
+				</div>
+
+				<div class="share-options">
+					<button class="share-option" onclick={shareCopyLink}>
+						<span class="share-option-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+						</span>
+						<span class="share-option-label">{shareCopied ? 'Copied!' : 'Copy Link'}</span>
+					</button>
+
+					<button class="share-option" onclick={shareOnTwitter}>
+						<span class="share-option-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+						</span>
+						<span class="share-option-label">Share on X</span>
+					</button>
+
+					<div class="share-qr-section">
+						<div class="share-qr-header">
+							<span class="share-option-icon">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="17"/><line x1="14" y1="21" x2="17" y2="21"/></svg>
+							</span>
+							<span class="share-qr-title">QR Code</span>
+						</div>
+						<div class="share-qr-code">
+							{@html qrToSvg(shareUrl)}
+						</div>
+						<button class="share-qr-download" onclick={downloadQrPng}>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+							Download PNG
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && showShareModal) closeShareModal(); }} />
 
 {#if toast}
 	<div class="toast">{toast}</div>
@@ -1378,5 +1690,133 @@
 			opacity: 1;
 			transform: translateX(-50%) translateY(0);
 		}
+	}
+
+	.share-modal {
+		max-width: 420px;
+	}
+
+	.share-body {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.share-url-display {
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 12px 16px;
+	}
+
+	.share-url-display code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.8rem;
+		color: var(--accent);
+		word-break: break-all;
+	}
+
+	.share-options {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.share-option {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px 16px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		color: var(--text-primary);
+		font-size: 0.9rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.share-option:hover {
+		border-color: var(--accent);
+		background: var(--bg-secondary);
+	}
+
+	.share-option-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		background: var(--bg-secondary);
+		border-radius: 8px;
+		color: var(--text-secondary);
+		flex-shrink: 0;
+	}
+
+	.share-option:hover .share-option-icon {
+		color: var(--accent);
+	}
+
+	.share-option-label {
+		font-weight: 500;
+	}
+
+	.share-qr-section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		padding: 16px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+	}
+
+	.share-qr-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		align-self: flex-start;
+	}
+
+	.share-qr-title {
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--text-primary);
+	}
+
+	.share-qr-code {
+		background: #ffffff;
+		border-radius: 12px;
+		padding: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.share-qr-code :global(svg) {
+		width: 180px;
+		height: 180px;
+	}
+
+	.share-qr-download {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 16px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.share-qr-download:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 </style>
