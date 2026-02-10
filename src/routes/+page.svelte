@@ -560,8 +560,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 12px 16px;
-		background: #16161e;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		background: #1a1b26;
 	}
 
 	.terminal-dots {
@@ -593,6 +592,7 @@
 	.demo-svg {
 		width: 100%;
 		display: block;
+		background: #1a1b26;
 	}
 
 	/* ── How It Works ────────────────────────────────── */
