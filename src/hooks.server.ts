@@ -33,5 +33,36 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	const twoSegMatch = path.match(/^\/([a-z0-9_-]+)\/([a-z0-9_-]+)$/i);
+	if (twoSegMatch) {
+		const ua = event.request.headers.get('user-agent') || '';
+		const isCurl = /^(curl|wget)\//i.test(ua);
+		if (isCurl) {
+			const env = event.platform?.env;
+			if (env) {
+				const username = twoSegMatch[1];
+				const slug = twoSegMatch[2];
+
+				const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first<{ id: string }>();
+				if (user) {
+					const config = await env.DB.prepare('SELECT custom_script, is_public, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
+						.bind(user.id, slug)
+						.first<{ custom_script: string; is_public: number; dotfiles_repo: string }>();
+
+					if (config && config.is_public) {
+						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+
+						return new Response(script, {
+							headers: {
+								'Content-Type': 'text/plain; charset=utf-8',
+								'Cache-Control': 'no-cache'
+							}
+						});
+					}
+				}
+			}
+		}
+	}
+
 	return resolve(event);
 };

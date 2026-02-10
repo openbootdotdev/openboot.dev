@@ -12,7 +12,7 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 	const config = await env.DB.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).first();
 	if (!config) return json({ error: 'Config not found' }, { status: 404 });
 
-	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}/install`;
+	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}`;
 
 	const rawPkgs = JSON.parse((config.packages as string) || '[]');
 	const needsTypeInference = rawPkgs.length > 0 && typeof rawPkgs[0] === 'string';
@@ -132,7 +132,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
 	}
 
-	const installUrl = newAlias ? `${env.APP_URL}/${newAlias}` : `${env.APP_URL}/${user.username}/${newSlug}/install`;
+	const installUrl = newAlias ? `${env.APP_URL}/${newAlias}` : `${env.APP_URL}/${user.username}/${newSlug}`;
 
 	return json({ success: true, slug: newSlug, alias: newAlias, install_url: installUrl });
 };
