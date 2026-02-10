@@ -48,6 +48,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	const rawPackages: any[] = JSON.parse(config.packages || '[]');
 	const packageNames: string[] = [];
 	const caskNames: string[] = [];
+	const npmNames: string[] = [];
 
 	for (const pkg of rawPackages) {
 		if (typeof pkg === 'string') {
@@ -56,9 +57,13 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 				caskNames.push(pkg);
 			}
 		} else {
-			packageNames.push(pkg.name);
-			if (pkg.type === 'cask') {
-				caskNames.push(pkg.name);
+			if (pkg.type === 'npm') {
+				npmNames.push(pkg.name);
+			} else {
+				packageNames.push(pkg.name);
+				if (pkg.type === 'cask') {
+					caskNames.push(pkg.name);
+				}
 			}
 		}
 	}
@@ -80,6 +85,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		packages: packageNames,
 		casks: caskNames,
 		taps: taps,
+		npm: npmNames,
 		dotfiles_repo: config.dotfiles_repo || ''
 	});
 };

@@ -1,6 +1,7 @@
 export interface PresetPackages {
 	cli: string[];
 	cask: string[];
+	npm?: string[];
 }
 
 export const PRESET_PACKAGES: Record<string, PresetPackages> = {
@@ -68,7 +69,8 @@ export const PRESET_PACKAGES: Record<string, PresetPackages> = {
 			'arc',
 			'postman',
 			'notion'
-		]
+		],
+		npm: ['typescript', 'tsx', 'eslint', 'prettier', 'nodemon']
 	},
 	full: {
 		cli: [
@@ -136,13 +138,14 @@ export const PRESET_PACKAGES: Record<string, PresetPackages> = {
 			'keka',
 			'aldente',
 			'rectangle'
-		]
+		],
+		npm: ['typescript', 'tsx', 'eslint', 'prettier', 'nodemon', 'pm2', 'serve', 'vercel', 'wrangler']
 	}
 };
 
 export function getPresetPackages(preset: string): string[] {
 	const p = PRESET_PACKAGES[preset];
-	return p ? [...p.cli, ...p.cask] : [];
+	return p ? [...p.cli, ...p.cask, ...(p.npm || [])] : [];
 }
 
 export const PRESET_NAMES = ['minimal', 'developer', 'full'] as const;

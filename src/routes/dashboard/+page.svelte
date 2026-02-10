@@ -44,7 +44,7 @@
 	interface SearchResult {
 		name: string;
 		desc: string;
-		type: 'formula' | 'cask' | 'tap';
+		type: 'formula' | 'cask' | 'tap' | 'npm';
 	}
 
 	let selectedPackages = $state(new Map<string, string>());
@@ -116,23 +116,34 @@
 		return Array.from(selectedPackages.keys()).filter((pkg) => !presetPkgs.has(pkg));
 	}
 
-	function getGroupedPackages(): { cli: string[]; apps: string[] } {
+	function getGroupedPackages(): { cli: string[]; apps: string[]; npm: string[] } {
 		const cli: string[] = [];
 		const apps: string[] = [];
+		const npm: string[] = [];
 		for (const [pkg, t] of selectedPackages) {
 			if (t === 'cask') apps.push(pkg);
+			else if (t === 'npm') npm.push(pkg);
 			else cli.push(pkg);
 		}
-		return { cli, apps };
+		return { cli, apps, npm };
 	}
 
 
 
 	function initPackagesForPreset(preset: string) {
-		const presetPkgs = getPresetPackages(preset);
+		const p = PRESET_PACKAGES[preset];
+		if (!p) return;
 		const newMap = new Map<string, string>();
-		for (const pkg of presetPkgs) {
+		for (const pkg of p.cli) {
 			newMap.set(pkg, 'formula');
+		}
+		for (const pkg of p.cask) {
+			newMap.set(pkg, 'cask');
+		}
+		if (p.npm) {
+			for (const pkg of p.npm) {
+				newMap.set(pkg, 'npm');
+			}
 		}
 		selectedPackages = newMap;
 	}
@@ -571,6 +582,23 @@
 						{/each}
 						{#if grouped.apps.length === 0}
 							<span class="group-empty">No GUI apps</span>
+						{/if}
+					</div>
+				</div>
+
+				<div class="packages-group">
+					<div class="group-header">
+						<span class="group-label">NPM</span>
+						<span class="group-count">{grouped.npm.length}</span>
+					</div>
+					<div class="group-tags">
+						{#each grouped.npm as pkg}
+							<button type="button" class="pkg-tag" onclick={() => togglePackage(pkg, 'npm')}>
+								{pkg}<span class="remove-icon">×</span>
+							</button>
+						{/each}
+						{#if grouped.npm.length === 0}
+							<span class="group-empty">No npm packages</span>
 						{/if}
 					</div>
 				</div>
