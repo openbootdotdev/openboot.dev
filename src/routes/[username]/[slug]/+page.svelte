@@ -64,15 +64,17 @@
 			const forkResponse = await fetch('/api/configs', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					name: `${data.config.name} (fork)`,
-					description: `Forked from @${data.configUser.username}`,
-					base_preset: data.config.base_preset,
-					packages: data.config.packages,
-					is_public: true,
-					custom_script: data.config.custom_script || '',
-					dotfiles_repo: data.config.dotfiles_repo || ''
-				})
+			body: JSON.stringify({
+				name: `${data.config.name} (fork)`,
+				description: `Forked from @${data.configUser.username}`,
+				base_preset: data.config.base_preset,
+				packages: data.config.packages,
+				is_public: true,
+				custom_script: data.config.custom_script || '',
+				dotfiles_repo: data.config.dotfiles_repo || '',
+				snapshot: data.config.snapshot || null,
+				snapshot_at: data.config.snapshot_at || null
+			})
 			});
 
 			if (!forkResponse.ok) {
