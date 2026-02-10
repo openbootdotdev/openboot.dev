@@ -90,7 +90,7 @@ openboot snapshot --local
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENBOOT_VERSION` | Override the version of OpenBoot to install | Latest release |
-| `OPENBOOT_INSTALL_DIR` | Override the installation directory for the binary | `/usr/local/bin` or `/opt/homebrew/bin` |
+| `OPENBOOT_INSTALL_DIR` | Override the installation directory for the binary | `~/.openboot/bin` |
 
 ### Example
 
