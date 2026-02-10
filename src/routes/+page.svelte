@@ -53,7 +53,14 @@
 <svelte:head>
 	<title>OpenBoot - Set up your Mac in one command, not one afternoon</title>
 	<meta name="description" content="One curl command installs 70+ curated dev tools, deploys your dotfiles, and configures macOS. Pick a preset or build your own — done in about 5 minutes." />
+	<meta property="og:title" content="OpenBoot - One-line macOS Development Environment Setup" />
+	<meta property="og:description" content="Bootstrap your Mac development environment in minutes. One command to install Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
+	<meta property="og:image" content="https://openboot.dev/og-image.png" />
 	<meta property="og:url" content="https://openboot.dev" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="OpenBoot - One-line macOS Development Environment Setup" />
+	<meta name="twitter:description" content="Bootstrap your Mac development environment in minutes. One command to install Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
+	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
 <header class="site-header">
