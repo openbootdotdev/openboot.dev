@@ -54,6 +54,11 @@
 	let searchLoading = $state(false);
 	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+	let npmSearch = $state('');
+	let npmSearchResults = $state<SearchResult[]>([]);
+	let npmSearchLoading = $state(false);
+	let npmSearchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 	let showImportModal = $state(false);
 	let brewfileContent = $state('');
 	let importLoading = $state(false);
@@ -108,6 +113,39 @@
 		}
 		searchDebounceTimer = setTimeout(() => {
 			searchHomebrew(value);
+		}, 300);
+	}
+
+	async function searchNpm(query: string) {
+		if (query.length < 2) {
+			npmSearchResults = [];
+			return;
+		}
+
+		npmSearchLoading = true;
+		try {
+			const response = await fetch(`/api/npm/search?q=${encodeURIComponent(query)}`);
+			const data = await response.json();
+			npmSearchResults = data.results || [];
+		} catch (e) {
+			console.error('npm search failed:', e);
+			npmSearchResults = [];
+		} finally {
+			npmSearchLoading = false;
+		}
+	}
+
+	function handleNpmSearchInput(value: string) {
+		npmSearch = value;
+		if (npmSearchDebounceTimer) {
+			clearTimeout(npmSearchDebounceTimer);
+		}
+		if (value.length < 2) {
+			npmSearchResults = [];
+			return;
+		}
+		npmSearchDebounceTimer = setTimeout(() => {
+			searchNpm(value);
 		}, 300);
 	}
 
@@ -601,6 +639,39 @@
 							<span class="group-empty">No npm packages</span>
 						{/if}
 					</div>
+					<div class="packages-search">
+						<input 
+							type="text" 
+							class="search-input" 
+							value={npmSearch}
+							oninput={(e) => handleNpmSearchInput(e.currentTarget.value)}
+							placeholder="Search npm packages (e.g. typescript, eslint)" 
+						/>
+					</div>
+					{#if npmSearchLoading}
+						<div class="search-status">Searching npm...</div>
+					{:else if npmSearch.length >= 2 && npmSearchResults.length === 0}
+						<div class="search-status">No npm packages found for "{npmSearch}"</div>
+					{:else if npmSearch.length >= 2}
+						<div class="packages-grid">
+							{#each npmSearchResults as result}
+								<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, 'npm')}>
+									<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
+									<div class="package-content">
+										<div class="package-info">
+											<span class="package-name">{result.name}</span>
+											<span class="package-type">npm</span>
+										</div>
+										{#if result.desc}
+											<span class="package-desc">{result.desc.slice(0, 60)}{result.desc.length > 60 ? '...' : ''}</span>
+										{/if}
+									</div>
+								</button>
+							{/each}
+						</div>
+					{:else}
+						<div class="search-hint">Type at least 2 characters to search npm packages</div>
+					{/if}
 				</div>
 				<div class="packages-search">
 					<input 
@@ -608,13 +679,13 @@
 						class="search-input" 
 						value={packageSearch}
 						oninput={(e) => handleSearchInput(e.currentTarget.value)}
-						placeholder="Search packages or enter tap (e.g. steipete/tap/codexbar)" 
+						placeholder="Search Homebrew packages or enter tap (e.g. steipete/tap/codexbar)" 
 					/>
 				</div>
 				{#if searchLoading}
-					<div class="search-status">Searching...</div>
+					<div class="search-status">Searching Homebrew...</div>
 				{:else if packageSearch.length >= 2 && searchResults.length === 0}
-					<div class="search-status">No packages found for "{packageSearch}"</div>
+					<div class="search-status">No Homebrew packages found for "{packageSearch}"</div>
 				{:else if packageSearch.length >= 2}
 					<div class="packages-grid">
 						{#each searchResults as result}
