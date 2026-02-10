@@ -1,10 +1,11 @@
 import type { RequestHandler } from './$types';
 import { Resvg } from '@cf-wasm/resvg';
 
-let fontCache: Uint8Array | null = null;
+let fontCacheRegular: Uint8Array | null = null;
+let fontCacheBold: Uint8Array | null = null;
 
-async function loadFont(): Promise<Uint8Array> {
-	if (fontCache) return fontCache;
+async function loadFonts(): Promise<Uint8Array[]> {
+	if (fontCacheRegular && fontCacheBold) return [fontCacheRegular, fontCacheBold];
 
 	const css = await fetch(
 		'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&subset=latin',
@@ -16,12 +17,16 @@ async function loadFont(): Promise<Uint8Array> {
 		}
 	).then((r) => r.text());
 
-	const fontUrl = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)?.[1];
-	if (!fontUrl) throw new Error('Could not find font URL');
+	const fontUrls = [...css.matchAll(/src: url\((.+?)\) format\('truetype'\)/g)].map((m) => m[1]);
+	if (fontUrls.length === 0) throw new Error('Could not find font URLs');
 
-	const fontBuffer = await fetch(fontUrl).then((r) => r.arrayBuffer());
-	fontCache = new Uint8Array(fontBuffer);
-	return fontCache;
+	const buffers = await Promise.all(
+		fontUrls.map((url) => fetch(url).then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)))
+	);
+
+	fontCacheRegular = buffers[0];
+	fontCacheBold = buffers[1] || buffers[0];
+	return buffers;
 }
 
 function esc(s: string): string {
@@ -158,7 +163,7 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 	const npm = rawPkgs.filter((p) => p.type === 'npm');
 	const total = rawPkgs.length;
 
-	const fontData = await loadFont();
+	const fontBuffers = await loadFonts();
 
 	const svg = buildSvg(
 		config.name,
@@ -174,9 +179,10 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 		const resvg = await Resvg.async(svg, {
 			fitTo: { mode: 'width' as const, value: 1200 },
 			font: {
-				fontBuffers: [fontData],
+				fontBuffers,
 				defaultFontFamily: 'Inter',
 				sansSerifFamily: 'Inter',
+				monospaceFamily: 'Inter',
 				defaultFontSize: 16
 			}
 		});
@@ -186,15 +192,19 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 		return new Response(pngBuffer, {
 			headers: {
 				'Content-Type': 'image/png',
-				'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+				'Cache-Control': 'public, max-age=60',
+				'X-Font-Count': String(fontBuffers.length),
+				'X-Font-Size': String(fontBuffers[0]?.length || 0),
+				'X-Svg-Length': String(svg.length)
 			}
 		});
-	} catch {
-		return new Response(svg, {
-			headers: {
-				'Content-Type': 'image/svg+xml',
-				'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+	} catch (e) {
+		return new Response(
+			JSON.stringify({ error: String(e), stack: (e as Error).stack }),
+			{
+				status: 500,
+				headers: { 'Content-Type': 'application/json' }
 			}
-		});
+		);
 	}
 };
