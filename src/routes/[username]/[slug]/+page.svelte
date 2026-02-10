@@ -7,14 +7,6 @@
 	let activeTab = $state('overview');
 	let copied = $state(false);
 
-	const tabs = [
-		{ id: 'overview', label: 'Overview' },
-		{ id: 'formulae', label: 'Formulae' },
-		{ id: 'casks', label: 'Casks' },
-		{ id: 'macos', label: 'macOS' },
-		{ id: 'shell', label: 'Shell' }
-	];
-
 	function getInstallCommand() {
 		return `curl -fsSL https://openboot.dev/${data.configUser.username}/${data.config.slug}/install | bash`;
 	}
@@ -26,14 +18,33 @@
 	}
 
 	const snapshot = data.config.snapshot || {};
-	const packages = snapshot.packages || {};
-	const formulae = packages.formulae || [];
-	const casks = packages.casks || [];
-	const taps = packages.taps || [];
+	const snapshotPkgs = snapshot.packages || {};
 	const macosPrefs = snapshot.macos_prefs || [];
 	const shell = snapshot.shell || {};
 	const git = snapshot.git || {};
 	const devTools = snapshot.dev_tools || [];
+
+	const configPkgs: { name: string; type: string }[] = Array.isArray(data.config.packages)
+		? data.config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
+		: [];
+
+	const configCli = configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm');
+	const configApps = configPkgs.filter((p: any) => p.type === 'cask');
+	const configNpm = configPkgs.filter((p: any) => p.type === 'npm');
+
+	const formulae = snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name);
+	const casks = snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name);
+	const taps = snapshotPkgs.taps || [];
+	const hasSnapshot = !!(snapshotPkgs.formulae?.length || snapshotPkgs.casks?.length);
+
+	const tabs = [
+		{ id: 'overview', label: 'Overview' },
+		{ id: 'formulae', label: 'CLI' },
+		{ id: 'casks', label: 'Apps' },
+		...(configNpm.length > 0 ? [{ id: 'npm', label: 'NPM' }] : []),
+		...(macosPrefs.length > 0 ? [{ id: 'macos', label: 'macOS' }] : []),
+		...(shell.default || shell.oh_my_zsh ? [{ id: 'shell', label: 'Shell' }] : [])
+	];
 </script>
 
 <svelte:head>
@@ -79,20 +90,30 @@
 		<div class="stats">
 			<div class="stat">
 				<span class="stat-value">{formulae.length}</span>
-				<span class="stat-label">Formulae</span>
+				<span class="stat-label">CLI</span>
 			</div>
 			<div class="stat">
 				<span class="stat-value">{casks.length}</span>
-				<span class="stat-label">Casks</span>
+				<span class="stat-label">Apps</span>
 			</div>
-			<div class="stat">
-				<span class="stat-value">{devTools.length}</span>
-				<span class="stat-label">Dev Tools</span>
-			</div>
-			<div class="stat">
-				<span class="stat-value">{macosPrefs.length}</span>
-				<span class="stat-label">Preferences</span>
-			</div>
+			{#if configNpm.length > 0}
+				<div class="stat">
+					<span class="stat-value">{configNpm.length}</span>
+					<span class="stat-label">NPM</span>
+				</div>
+			{/if}
+			{#if devTools.length > 0}
+				<div class="stat">
+					<span class="stat-value">{devTools.length}</span>
+					<span class="stat-label">Dev Tools</span>
+				</div>
+			{/if}
+			{#if macosPrefs.length > 0}
+				<div class="stat">
+					<span class="stat-value">{macosPrefs.length}</span>
+					<span class="stat-label">Preferences</span>
+				</div>
+			{/if}
 		</div>
 	</section>
 
@@ -108,6 +129,8 @@
 					<span class="tab-count">{formulae.length}</span>
 				{:else if tab.id === 'casks' && casks.length > 0}
 					<span class="tab-count">{casks.length}</span>
+				{:else if tab.id === 'npm' && configNpm.length > 0}
+					<span class="tab-count">{configNpm.length}</span>
 				{:else if tab.id === 'macos' && macosPrefs.length > 0}
 					<span class="tab-count">{macosPrefs.length}</span>
 				{/if}
@@ -182,7 +205,7 @@
 
 		{:else if activeTab === 'formulae'}
 			{#if formulae.length === 0}
-				<div class="empty-state">No formulae in this snapshot.</div>
+				<div class="empty-state">No CLI packages configured.</div>
 			{:else}
 				<div class="package-grid">
 					{#each formulae as pkg}
@@ -193,11 +216,22 @@
 
 		{:else if activeTab === 'casks'}
 			{#if casks.length === 0}
-				<div class="empty-state">No casks in this snapshot.</div>
+				<div class="empty-state">No apps configured.</div>
 			{:else}
 				<div class="package-grid">
 					{#each casks as pkg}
 						<div class="package-item">{pkg}</div>
+					{/each}
+				</div>
+			{/if}
+
+		{:else if activeTab === 'npm'}
+			{#if configNpm.length === 0}
+				<div class="empty-state">No npm packages configured.</div>
+			{:else}
+				<div class="package-grid">
+					{#each configNpm as pkg}
+						<div class="package-item">{pkg.name}</div>
 					{/each}
 				</div>
 			{/if}
