@@ -1,82 +1,99 @@
 import type { RequestHandler } from './$types';
-import satori from 'satori';
 import { Resvg } from '@cf-wasm/resvg';
 
-async function loadFont(): Promise<ArrayBuffer> {
-	const css = await fetch(
-		'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&subset=latin',
-		{
-			headers: {
-				'User-Agent':
-					'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1'
-			}
-		}
-	).then((r) => r.text());
-
-	const fontUrl = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)?.[1];
-	if (!fontUrl) throw new Error('Could not find font URL');
-	return fetch(fontUrl).then((r) => r.arrayBuffer());
+function esc(s: string): string {
+	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function renderTags(
-	pkgs: { name: string }[],
-	color: string,
-	max: number
-): Record<string, unknown>[] {
-	const visible = pkgs.slice(0, max);
-	const overflow = pkgs.length - max;
-	const tags: Record<string, unknown>[] = visible.map((p) => ({
-		type: 'span',
-		props: {
-			style: {
-				display: 'flex',
-				background: '#141414',
-				border: '1px solid #252525',
-				color,
-				padding: '6px 14px',
-				borderRadius: 6,
-				fontSize: 14,
-				fontFamily: 'Inter',
-				whiteSpace: 'nowrap'
-			},
-			children: p.name
-		}
-	}));
-	if (overflow > 0) {
-		tags.push({
-			type: 'span',
-			props: {
-				style: { display: 'flex', color: '#444', fontSize: 13, padding: '6px 8px', alignItems: 'center' },
-				children: `+${overflow} more`
-			}
-		});
-	}
-	return tags;
-}
+function buildSvg(
+	name: string,
+	description: string,
+	username: string,
+	preset: string,
+	homebrew: { name: string }[],
+	npm: { name: string }[],
+	total: number
+): string {
+	const W = 1200;
+	const H = 630;
+	const pad = 48;
 
-function buildSection(label: string, count: number, children: Record<string, unknown>[]) {
-	return {
-		type: 'div',
-		props: {
-			style: { display: 'flex', flexDirection: 'column', gap: 10 },
-			children: [
-				{
-					type: 'span',
-					props: {
-						style: { display: 'flex', fontSize: 11, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase' },
-						children: `${label} · ${count}`
-					}
-				},
-				{
-					type: 'div',
-					props: {
-						style: { display: 'flex', flexWrap: 'wrap', gap: 8 },
-						children
-					}
+	let tagsSvg = '';
+	let curX = pad;
+	let curY = 180;
+	const tagH = 28;
+	const tagGap = 8;
+	const tagPadX = 14;
+	const maxY = H - 70;
+	const charW = 8.4;
+
+	function addGroup(label: string, count: number, pkgs: { name: string }[], color: string) {
+		if (curY > maxY) return;
+		tagsSvg += `<text x="${pad}" y="${curY}" fill="#555" font-size="11" font-family="monospace" letter-spacing="1.5">${label} · ${count}</text>`;
+		curY += 20;
+		curX = pad;
+
+		for (let i = 0; i < pkgs.length; i++) {
+			if (curY > maxY) {
+				tagsSvg += `<text x="${curX}" y="${curY + 18}" fill="#555" font-size="13" font-family="sans-serif">+${pkgs.length - i} more</text>`;
+				curY += tagH + tagGap;
+				return;
+			}
+
+			const text = pkgs[i].name;
+			const tw = text.length * charW + tagPadX * 2;
+
+			if (curX + tw > W - pad && curX !== pad) {
+				curX = pad;
+				curY += tagH + tagGap;
+				if (curY > maxY) {
+					tagsSvg += `<text x="${curX}" y="${curY + 18}" fill="#555" font-size="13" font-family="sans-serif">+${pkgs.length - i} more</text>`;
+					curY += tagH + tagGap;
+					return;
 				}
-			]
+			}
+
+			tagsSvg += `<rect x="${curX}" y="${curY}" width="${tw}" height="${tagH}" rx="6" fill="#141414" stroke="#252525" stroke-width="1"/>`;
+			tagsSvg += `<text x="${curX + tagPadX}" y="${curY + 18}" fill="${color}" font-size="13" font-family="monospace">${esc(text)}</text>`;
+			curX += tw + tagGap;
 		}
-	};
+		curY += tagH + tagGap + 8;
+		curX = pad;
+	}
+
+	if (homebrew.length > 0) addGroup('HOMEBREW', homebrew.length, homebrew, '#e0e0e0');
+	if (npm.length > 0) addGroup('NPM', npm.length, npm, '#22c55e');
+
+	const descLine = description
+		? `<text x="${pad}" y="138" fill="#888" font-size="16" font-family="sans-serif">${esc(description.slice(0, 80))}</text>`
+		: '';
+
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+		<rect width="${W}" height="${H}" fill="#0a0a0a"/>
+		<defs>
+			<radialGradient id="glow" cx="0.2" cy="0.15" r="0.55">
+				<stop offset="0%" stop-color="#22c55e" stop-opacity="0.07"/>
+				<stop offset="40%" stop-color="#22c55e" stop-opacity="0.03"/>
+				<stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+			</radialGradient>
+		</defs>
+		<rect width="${W}" height="${H}" fill="url(#glow)"/>
+
+		<text x="${pad}" y="76" fill="#22c55e" font-size="28" font-weight="bold" font-family="sans-serif">OpenBoot</text>
+		<text x="${pad}" y="112" fill="#ffffff" font-size="28" font-weight="bold" font-family="sans-serif">${esc(name)}</text>
+		${descLine}
+
+		<text x="${W - pad}" y="68" fill="#666" font-size="15" font-family="sans-serif" text-anchor="end">@${esc(username)}</text>
+		<text x="${W - pad}" y="90" fill="#22c55e" font-size="15" font-family="sans-serif" text-anchor="end">${total} packages</text>
+
+		<line x1="${pad}" y1="158" x2="${W - pad}" y2="158" stroke="#1a1a1a" stroke-width="1"/>
+
+		${tagsSvg}
+
+		<line x1="${pad}" y1="${H - 56}" x2="${W - pad}" y2="${H - 56}" stroke="#1a1a1a" stroke-width="1"/>
+		<text x="${pad}" y="${H - 28}" fill="#444" font-size="14" font-family="sans-serif">openboot.dev</text>
+		<text x="${W - pad}" y="${H - 28}" fill="#444" font-size="13" font-family="sans-serif" text-anchor="end">${esc(preset)} preset</text>
+	</svg>`;
 }
 
 export const GET: RequestHandler = async ({ params, platform }) => {
@@ -118,84 +135,33 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 	const npm = rawPkgs.filter((p) => p.type === 'npm');
 	const total = rawPkgs.length;
 
-	const sections: Record<string, unknown>[] = [];
-	if (homebrew.length > 0) sections.push(buildSection('HOMEBREW', homebrew.length, renderTags(homebrew, '#e0e0e0', 24)));
-	if (npm.length > 0) sections.push(buildSection('NPM', npm.length, renderTags(npm, '#22c55e', 12)));
+	const svg = buildSvg(
+		config.name,
+		config.description || '',
+		targetUser.username,
+		config.base_preset,
+		homebrew,
+		npm,
+		total
+	);
 
-	const descChildren = config.description
-		? [{ type: 'span', props: { style: { display: 'flex', color: '#888', fontSize: 16 }, children: config.description.slice(0, 80) } }]
-		: [];
+	try {
+		const resvg = await Resvg.async(svg, { fitTo: { mode: 'width' as const, value: 1200 } });
+		const pngData = resvg.render();
+		const pngBuffer = pngData.asPng();
 
-	const element = {
-		type: 'div',
-		props: {
-			style: { display: 'flex', flexDirection: 'column', width: 1200, height: 630, background: '#0a0a0a', padding: 48, fontFamily: 'Inter' },
-			children: [
-				{
-					type: 'div',
-					props: {
-						style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-						children: [
-							{ type: 'span', props: { style: { display: 'flex', color: '#22c55e', fontSize: 28, fontWeight: 700 }, children: 'OpenBoot' } },
-							{
-								type: 'div',
-								props: {
-									style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 },
-									children: [
-										{ type: 'span', props: { style: { display: 'flex', color: '#666', fontSize: 15 }, children: `@${username}` } },
-										{ type: 'span', props: { style: { display: 'flex', color: '#22c55e', fontSize: 15 }, children: `${total} packages` } }
-									]
-								}
-							}
-						]
-					}
-				},
-				{
-					type: 'div',
-					props: {
-						style: { display: 'flex', flexDirection: 'column', marginTop: 12, gap: 4 },
-						children: [
-							{ type: 'span', props: { style: { display: 'flex', color: '#fff', fontSize: 32, fontWeight: 700 }, children: config.name } },
-							...descChildren
-						]
-					}
-				},
-				{ type: 'div', props: { style: { display: 'flex', width: '100%', height: 1, background: '#1a1a1a', margin: '20px 0' }, children: [] } },
-				{ type: 'div', props: { style: { display: 'flex', flexDirection: 'column', gap: 20, flex: 1, overflow: 'hidden' }, children: sections } },
-				{ type: 'div', props: { style: { display: 'flex', width: '100%', height: 1, background: '#1a1a1a', marginTop: 'auto' }, children: [] } },
-				{
-					type: 'div',
-					props: {
-						style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-						children: [
-							{ type: 'span', props: { style: { display: 'flex', color: '#444', fontSize: 14 }, children: 'openboot.dev' } },
-							{ type: 'span', props: { style: { display: 'flex', color: '#444', fontSize: 13 }, children: `${config.base_preset} preset` } }
-						]
-					}
-				}
-			]
-		}
-	};
-
-	const fontData = await loadFont();
-
-	const svg = await satori(element as any, {
-		width: 1200,
-		height: 630,
-		fonts: [
-			{ name: 'Inter', data: fontData, weight: 400, style: 'normal' as const },
-			{ name: 'Inter', data: fontData, weight: 700, style: 'normal' as const }
-		]
-	});
-
-	const resvg = new Resvg(svg, { fitTo: { mode: 'width' as const, value: 1200 } });
-	const pngData = resvg.render();
-	const pngBuffer = pngData.asPng();
-
-	return new Response(pngBuffer, {
-		headers: {
-			'Content-Type': 'image/png',
-			'Cache-Control': 'public, max-age=86400, s-maxage=86400'
-		}
-	});
+		return new Response(pngBuffer, {
+			headers: {
+				'Content-Type': 'image/png',
+				'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+			}
+		});
+	} catch {
+		return new Response(svg, {
+			headers: {
+				'Content-Type': 'image/svg+xml',
+				'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+			}
+		});
+	}
 };
