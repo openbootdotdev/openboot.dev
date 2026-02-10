@@ -451,9 +451,7 @@
 	}
 
 	function shareConfig(config: Config) {
-		const configUrl = config.alias
-			? `https://openboot.dev/${config.alias}`
-			: `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
+		const configUrl = `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
 		const text = `My dev stack: ${config.name} — set up in minutes with @openbootdotdev`;
 		const hashtags = 'OpenBoot,macOS,DevTools';
 		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(configUrl)}&hashtags=${encodeURIComponent(hashtags)}`;
