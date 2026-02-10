@@ -48,6 +48,7 @@
 	}
 
 	let selectedPackages = $state(new Map<string, string>());
+	let packageDescs = $state(new Map<string, string>());
 	let presetExpanded = $state(false);
 	let packageSearch = $state('');
 	let searchResults = $state<SearchResult[]>([]);
@@ -241,14 +242,17 @@
 		const savedPkgs = config.packages || [];
 		if (savedPkgs.length > 0) {
 			const newMap = new Map<string, string>();
+			const newDescs = new Map<string, string>();
 			for (const pkg of savedPkgs) {
 				if (typeof pkg === 'string') {
 					newMap.set(pkg, 'formula');
 				} else {
 					newMap.set((pkg as any).name, (pkg as any).type || 'formula');
+					if ((pkg as any).desc) newDescs.set((pkg as any).name, (pkg as any).desc);
 				}
 			}
 			selectedPackages = newMap;
+			packageDescs = newDescs;
 		} else {
 			initPackagesForPreset(config.base_preset);
 		}
@@ -274,12 +278,14 @@
 		showModal = false;
 	}
 
-	function togglePackage(pkg: string, type: string = 'formula') {
+	function togglePackage(pkg: string, type: string = 'formula', desc: string = '') {
 		const newMap = new Map(selectedPackages);
 		if (newMap.has(pkg)) {
 			newMap.delete(pkg);
+			packageDescs.delete(pkg);
 		} else {
 			newMap.set(pkg, type);
+			if (desc) packageDescs.set(pkg, desc);
 		}
 		selectedPackages = newMap;
 		formData.packages = Array.from(newMap.keys());
@@ -304,7 +310,7 @@
 				body: JSON.stringify({
 					...formData,
 					alias: formData.alias.trim() || null,
-					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({ name, type }))
+					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({ name, type, desc: packageDescs.get(name) || '' }))
 				})
 			});
 
@@ -649,7 +655,7 @@
 				{:else if packageSearch.length >= 2}
 					<div class="packages-grid">
 						{#each searchResults as result}
-							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, result.type)}>
+							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, result.type, result.desc)}>
 								<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
 								<div class="package-content">
 									<div class="package-info">
@@ -698,7 +704,7 @@
 					{:else if npmSearch.length >= 2}
 						<div class="packages-grid">
 							{#each npmSearchResults as result}
-								<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, 'npm')}>
+								<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, 'npm', result.desc)}>
 									<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
 									<div class="package-content">
 										<div class="package-info">
