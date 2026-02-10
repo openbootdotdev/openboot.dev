@@ -52,7 +52,7 @@
 
 <svelte:head>
 	<title>OpenBoot - Set up your Mac in one command, not one afternoon</title>
-	<meta name="description" content="One curl command installs 70+ curated dev tools, deploys your dotfiles, and configures macOS. Pick a preset or build your own — done in about 5 minutes." />
+	<meta name="description" content="One curl command installs 60+ curated dev tools, deploys your dotfiles, and configures macOS. Pick a preset or build your own — done in about 5 minutes." />
 	<meta property="og:title" content="OpenBoot - One-line macOS Development Environment Setup" />
 	<meta property="og:description" content="Bootstrap your Mac development environment in minutes. One command to install Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
 	<meta property="og:image" content="https://openboot.dev/og-image.png" />
@@ -78,10 +78,10 @@
 			<div class="hero-split">
 				<div class="hero-left">
 					<h1>Set up your Mac in<br />one command — not one afternoon</h1>
-					<p class="subtitle">One curl command installs everything. Pick from 70+ curated dev tools, deploy your dotfiles, and configure macOS — all in about 5 minutes.</p>
+					<p class="subtitle">One curl command installs everything. Pick from 60+ curated dev tools, deploy your dotfiles, and configure macOS — all in about 5 minutes.</p>
 
 				<div class="features-grid">
-					<div class="feature-item">70+ curated dev tools</div>
+					<div class="feature-item">60+ curated dev tools</div>
 					<div class="feature-item">Smart install — skips what's already there</div>
 					<div class="feature-item">Dotfiles + Oh-My-Zsh built in</div>
 					<div class="feature-item">Share configs with your team</div>
