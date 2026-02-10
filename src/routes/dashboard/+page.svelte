@@ -624,6 +624,40 @@
 					</div>
 				</div>
 
+				<div class="packages-search">
+					<input 
+						type="text" 
+						class="search-input" 
+						value={packageSearch}
+						oninput={(e) => handleSearchInput(e.currentTarget.value)}
+						placeholder="Search Homebrew packages or enter tap (e.g. steipete/tap/codexbar)" 
+					/>
+				</div>
+				{#if searchLoading}
+					<div class="search-status">Searching Homebrew...</div>
+				{:else if packageSearch.length >= 2 && searchResults.length === 0}
+					<div class="search-status">No Homebrew packages found for "{packageSearch}"</div>
+				{:else if packageSearch.length >= 2}
+					<div class="packages-grid">
+						{#each searchResults as result}
+							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, result.type)}>
+								<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
+								<div class="package-content">
+									<div class="package-info">
+										<span class="package-name">{result.name}</span>
+										<span class="package-type">{result.type}</span>
+									</div>
+									{#if result.desc}
+										<span class="package-desc">{result.desc.slice(0, 60)}{result.desc.length > 60 ? '...' : ''}</span>
+									{/if}
+								</div>
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<div class="search-hint">Type at least 2 characters to search Homebrew packages</div>
+				{/if}
+
 				<div class="packages-group">
 					<div class="group-header">
 						<span class="group-label">NPM</span>
@@ -673,39 +707,6 @@
 						<div class="search-hint">Type at least 2 characters to search npm packages</div>
 					{/if}
 				</div>
-				<div class="packages-search">
-					<input 
-						type="text" 
-						class="search-input" 
-						value={packageSearch}
-						oninput={(e) => handleSearchInput(e.currentTarget.value)}
-						placeholder="Search Homebrew packages or enter tap (e.g. steipete/tap/codexbar)" 
-					/>
-				</div>
-				{#if searchLoading}
-					<div class="search-status">Searching Homebrew...</div>
-				{:else if packageSearch.length >= 2 && searchResults.length === 0}
-					<div class="search-status">No Homebrew packages found for "{packageSearch}"</div>
-				{:else if packageSearch.length >= 2}
-					<div class="packages-grid">
-						{#each searchResults as result}
-							<button type="button" class="package-item" class:selected={selectedPackages.has(result.name)} onclick={() => togglePackage(result.name, result.type)}>
-								<span class="check-indicator">{selectedPackages.has(result.name) ? '✓' : ''}</span>
-								<div class="package-content">
-									<div class="package-info">
-										<span class="package-name">{result.name}</span>
-										<span class="package-type">{result.type}</span>
-									</div>
-									{#if result.desc}
-										<span class="package-desc">{result.desc.slice(0, 60)}{result.desc.length > 60 ? '...' : ''}</span>
-									{/if}
-								</div>
-							</button>
-						{/each}
-					</div>
-				{:else}
-					<div class="search-hint">Type at least 2 characters to search Homebrew packages</div>
-				{/if}
 			</div>
 			{/if}
 
