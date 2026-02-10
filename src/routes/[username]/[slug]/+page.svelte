@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -8,6 +9,8 @@
 	let copied = $state(false);
 	let showShareModal = $state(false);
 	let shareCopied = $state(false);
+	let forking = $state(false);
+	let forkError = $state('');
 
 	function getInstallCommand() {
 		return `curl -fsSL https://openboot.dev/${data.configUser.username}/${data.config.slug} | bash`;
@@ -285,6 +288,45 @@ ${rects}
 		img.src = url;
 	}
 
+	async function forkConfig() {
+		forking = true;
+		forkError = '';
+
+		try {
+			const authCheck = await fetch('/api/user');
+			if (!authCheck.ok) {
+				window.location.href = '/api/auth/login';
+				return;
+			}
+
+			const forkResponse = await fetch('/api/configs', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: `${data.config.name} (fork)`,
+					description: `Forked from @${data.configUser.username}`,
+					base_preset: data.config.base_preset,
+					packages: data.config.packages,
+					is_public: true,
+					custom_script: data.config.custom_script || '',
+					dotfiles_repo: data.config.dotfiles_repo || ''
+				})
+			});
+
+			if (!forkResponse.ok) {
+				const error = await forkResponse.json();
+				forkError = error.error || 'Failed to fork config';
+				forking = false;
+				return;
+			}
+
+			goto('/dashboard');
+		} catch (err) {
+			forkError = 'Network error. Please try again.';
+			forking = false;
+		}
+	}
+
 	function getPackageUrl(name: string, type: 'formula' | 'cask' | 'npm'): string {
 		if (type === 'npm') return `https://www.npmjs.com/package/${name}`;
 		if (type === 'cask') return `https://formulae.brew.sh/cask/${name}`;
@@ -363,6 +405,13 @@ ${rects}
 					{copied ? 'Copied!' : 'Copy'}
 				</button>
 			</div>
+			<button class="fork-btn" onclick={forkConfig} disabled={forking}>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>
+				{forking ? 'Forking...' : 'Fork Config'}
+			</button>
+			{#if forkError}
+				<div class="fork-error">{forkError}</div>
+			{/if}
 		</div>
 
 		<div class="stats">
@@ -392,6 +441,10 @@ ${rects}
 					<span class="stat-label">Preferences</span>
 				</div>
 			{/if}
+			<div class="stat">
+				<span class="stat-value">{data.config.install_count || 0}</span>
+				<span class="stat-label">Installs</span>
+			</div>
 		</div>
 	</section>
 
@@ -794,6 +847,47 @@ ${rects}
 
 	.copy-btn:hover {
 		background: var(--accent-hover);
+	}
+
+	.fork-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		margin-top: 12px;
+		padding: 10px 16px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-primary);
+		font-size: 0.9rem;
+		font-weight: 500;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.fork-btn:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--bg-secondary);
+	}
+
+	.fork-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.fork-error {
+		margin-top: 8px;
+		padding: 8px 12px;
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+		border-radius: 6px;
+		color: #ef4444;
+		font-size: 0.85rem;
+		text-align: center;
 	}
 
 	.stats {
