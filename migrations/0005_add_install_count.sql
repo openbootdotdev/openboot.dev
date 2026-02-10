@@ -1,0 +1,1 @@
+ALTER TABLE configs ADD COLUMN install_count INTEGER DEFAULT 0;
