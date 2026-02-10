@@ -21,14 +21,23 @@ export const handle: Handle = async ({ event, resolve }) => {
 				.first<{ slug: string; username: string; custom_script: string; dotfiles_repo: string }>();
 
 			if (config) {
-				const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
+				const ua = event.request.headers.get('user-agent') || '';
+				const isCurl = /^(curl|wget)\//i.test(ua);
+				const accept = event.request.headers.get('accept') || '';
+				const isBrowser = accept.includes('text/html');
 
-				return new Response(script, {
-					headers: {
-						'Content-Type': 'text/plain; charset=utf-8',
-						'Cache-Control': 'no-cache'
-					}
-				});
+				if (isCurl || !isBrowser) {
+					const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
+
+					return new Response(script, {
+						headers: {
+							'Content-Type': 'text/plain; charset=utf-8',
+							'Cache-Control': 'no-cache'
+						}
+					});
+				} else if (isBrowser) {
+					return Response.redirect(`/${config.username}/${config.slug}`, 302);
+				}
 			}
 		}
 	}
