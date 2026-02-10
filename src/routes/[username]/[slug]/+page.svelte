@@ -42,6 +42,9 @@
 	<meta property="og:title" content="{data.config.name} - OpenBoot" />
 	<meta property="og:description" content={data.config.description || `Install ${data.config.name} with OpenBoot — one command to set up your Mac.`} />
 	<meta property="og:url" content="https://openboot.dev/{data.configUser.username}/{data.config.slug}" />
+	<meta property="og:image" content="https://openboot.dev/{data.configUser.username}/{data.config.slug}/og" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:image" content="https://openboot.dev/{data.configUser.username}/{data.config.slug}/og" />
 </svelte:head>
 
 <header class="header">
