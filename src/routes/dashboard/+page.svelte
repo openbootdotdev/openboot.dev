@@ -378,7 +378,7 @@
 
 	function shareConfig(config: Config) {
 		const url = `https://${getInstallUrl(config)}`;
-		const text = `Set up my entire Mac dev environment in 5 minutes instead of 5 hours with OpenBoot`;
+		const text = `Set up my entire Mac dev environment in 5 minutes instead of 5 hours with @openbootdotdev`;
 		const hashtags = 'OpenBoot,macOS,DevTools';
 		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
 		window.open(tweetUrl, '_blank', 'width=550,height=420');
