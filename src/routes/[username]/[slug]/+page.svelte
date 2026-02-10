@@ -8,13 +8,19 @@
 	let copied = $state(false);
 
 	function getInstallCommand() {
-		return `curl -fsSL https://openboot.dev/${data.configUser.username}/${data.config.slug}/install | bash`;
+		return `curl -fsSL https://openboot.dev/${data.configUser.username}/${data.config.slug} | bash`;
 	}
 
 	function copyCommand() {
 		navigator.clipboard.writeText(getInstallCommand());
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
+	}
+
+	function getPackageUrl(name: string, type: 'formula' | 'cask' | 'npm'): string {
+		if (type === 'npm') return `https://www.npmjs.com/package/${name}`;
+		if (type === 'cask') return `https://formulae.brew.sh/cask/${name}`;
+		return `https://formulae.brew.sh/formula/${name}`;
 	}
 
 	const snapshot = data.config.snapshot || {};
@@ -209,7 +215,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each formulae as pkg}
-						<div class="package-item">{pkg}</div>
+						<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg}</a>
 					{/each}
 				</div>
 			{/if}
@@ -220,7 +226,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each casks as pkg}
-						<div class="package-item">{pkg}</div>
+						<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg}</a>
 					{/each}
 				</div>
 			{/if}
@@ -231,7 +237,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each configNpm as pkg}
-						<div class="package-item">{pkg.name}</div>
+						<a href={getPackageUrl(pkg.name, 'npm')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg.name}</a>
 					{/each}
 				</div>
 			{/if}
@@ -619,12 +625,21 @@
 	}
 
 	.package-item {
+		display: block;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		padding: 10px 14px;
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.85rem;
+		color: var(--text-primary);
+		text-decoration: none;
+		transition: border-color 0.2s, background 0.2s;
+	}
+
+	.package-item:hover {
+		border-color: var(--accent);
+		background: var(--bg-tertiary);
 	}
 
 	.prefs-list {

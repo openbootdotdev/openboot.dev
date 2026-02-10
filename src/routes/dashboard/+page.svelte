@@ -392,7 +392,7 @@
 		if (config.alias) {
 			return `openboot.dev/${config.alias}`;
 		}
-		return `openboot.dev/${$auth.user?.username}/${config.slug}/install`;
+		return `openboot.dev/${$auth.user?.username}/${config.slug}`;
 	}
 
 	async function importBrewfile() {

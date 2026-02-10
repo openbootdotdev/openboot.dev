@@ -79,7 +79,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
 	}
 
-	const installUrl = cleanAlias ? `${env.APP_URL}/${cleanAlias}` : `${env.APP_URL}/${user.username}/${slug}/install`;
+	const installUrl = cleanAlias ? `${env.APP_URL}/${cleanAlias}` : `${env.APP_URL}/${user.username}/${slug}`;
 
 	return json({ id, slug, alias: cleanAlias, install_url: installUrl }, { status: 201 });
 };
