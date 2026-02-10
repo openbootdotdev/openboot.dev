@@ -23,7 +23,7 @@ That's it. One line.
 
 Here's exactly what the install script does, in order:
 
-1. **Downloads the OpenBoot binary** — a small Go binary is fetched from the latest GitHub release and placed in `/usr/local/bin` (Intel) or `/opt/homebrew/bin` (Apple Silicon).
+1. **Downloads the OpenBoot binary** — a small Go binary is fetched from the latest GitHub release and placed in `~/.openboot/bin` (and added to your PATH automatically).
 
 2. **Installs Xcode Command Line Tools** — if not already installed, OpenBoot triggers the macOS CLT installer. These are required for Git, compilers, and Homebrew.
 
