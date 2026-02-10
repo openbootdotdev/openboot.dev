@@ -192,19 +192,15 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 		return new Response(pngBuffer, {
 			headers: {
 				'Content-Type': 'image/png',
-				'Cache-Control': 'public, max-age=60',
-				'X-Font-Count': String(fontBuffers.length),
-				'X-Font-Size': String(fontBuffers[0]?.length || 0),
-				'X-Svg-Length': String(svg.length)
+				'Cache-Control': 'public, max-age=3600, s-maxage=3600'
 			}
 		});
-	} catch (e) {
-		return new Response(
-			JSON.stringify({ error: String(e), stack: (e as Error).stack }),
-			{
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
+	} catch {
+		return new Response(svg, {
+			headers: {
+				'Content-Type': 'image/svg+xml',
+				'Cache-Control': 'public, max-age=3600, s-maxage=3600'
 			}
-		);
+		});
 	}
 };
