@@ -457,6 +457,256 @@
 			importLoading = false;
 		}
 	}
+
+	async function generateStackImage(config: Config) {
+		const response = await fetch(`/api/configs/${config.slug}`);
+		const data = await response.json();
+		const packages: { name: string; type: string }[] = data.config.packages || [];
+
+		const cli = packages.filter((p) => p.type !== 'cask' && p.type !== 'npm');
+		const apps = packages.filter((p) => p.type === 'cask');
+		const npm = packages.filter((p) => p.type === 'npm');
+
+		const W = 1200;
+		const H = 630;
+		const canvas = document.createElement('canvas');
+		canvas.width = W;
+		canvas.height = H;
+		const maybeCtx = canvas.getContext('2d');
+		if (!maybeCtx) return;
+		const ctx: CanvasRenderingContext2D = maybeCtx;
+
+		ctx.fillStyle = '#0a0a0a';
+		ctx.fillRect(0, 0, W, H);
+
+		const glow = ctx.createRadialGradient(W * 0.5, H * 0.15, 0, W * 0.5, H * 0.15, W * 0.6);
+		glow.addColorStop(0, 'rgba(34, 197, 94, 0.08)');
+		glow.addColorStop(0.5, 'rgba(34, 197, 94, 0.03)');
+		glow.addColorStop(1, 'rgba(34, 197, 94, 0)');
+		ctx.fillStyle = glow;
+		ctx.fillRect(0, 0, W, H);
+
+		const edgeGlow = ctx.createRadialGradient(W * 0.85, H * 0.8, 0, W * 0.85, H * 0.8, W * 0.35);
+		edgeGlow.addColorStop(0, 'rgba(34, 197, 94, 0.04)');
+		edgeGlow.addColorStop(1, 'rgba(34, 197, 94, 0)');
+		ctx.fillStyle = edgeGlow;
+		ctx.fillRect(0, 0, W, H);
+
+		for (let i = 0; i < W; i += 1) {
+			for (let j = 0; j < H; j += 4) {
+				if (Math.random() < 0.015) {
+					const noise = Math.random() * 12;
+					ctx.fillStyle = `rgba(255,255,255,${noise / 255})`;
+					ctx.fillRect(i, j, 1, 1);
+				}
+			}
+		}
+
+		ctx.strokeStyle = 'rgba(34, 197, 94, 0.15)';
+		ctx.lineWidth = 1;
+		ctx.strokeRect(24, 24, W - 48, H - 48);
+
+		const cornerLen = 16;
+		ctx.strokeStyle = '#22c55e';
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(24, 24 + cornerLen);
+		ctx.lineTo(24, 24);
+		ctx.lineTo(24 + cornerLen, 24);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(W - 24 - cornerLen, 24);
+		ctx.lineTo(W - 24, 24);
+		ctx.lineTo(W - 24, 24 + cornerLen);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(24, H - 24 - cornerLen);
+		ctx.lineTo(24, H - 24);
+		ctx.lineTo(24 + cornerLen, H - 24);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(W - 24 - cornerLen, H - 24);
+		ctx.lineTo(W - 24, H - 24);
+		ctx.lineTo(W - 24, H - 24 - cornerLen);
+		ctx.stroke();
+
+		ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
+		ctx.fillStyle = '#22c55e';
+		ctx.fillText('OpenBoot', 56, 72);
+
+		const username = $auth.user?.username || 'user';
+		ctx.font = '16px system-ui, -apple-system, sans-serif';
+		ctx.fillStyle = '#666666';
+		const logoWidth = ctx.measureText('OpenBoot').width;
+		ctx.fillText(`@${username}`, 56 + logoWidth + 16, 72);
+
+		ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+		ctx.fillStyle = '#e5e5e5';
+		ctx.fillText(config.name, 56, 108);
+
+		ctx.strokeStyle = 'rgba(42, 42, 42, 0.6)';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(56, 124);
+		ctx.lineTo(W - 56, 124);
+		ctx.stroke();
+
+		const colWidth = (W - 112 - 32) / 3;
+		const colStartX = 56;
+		const groupStartY = 148;
+
+		function measureTag(text: string, maxWidth: number): { displayText: string; w: number; h: number } {
+			const tagH = 30;
+			const padX = 12;
+			ctx.font = '13px "SFMono-Regular", "Cascadia Mono", "Consolas", monospace';
+			let displayText = text;
+			let textW = ctx.measureText(displayText).width;
+			if (textW + padX * 2 > maxWidth) {
+				while (textW + padX * 2 + 10 > maxWidth && displayText.length > 3) {
+					displayText = displayText.slice(0, -1);
+					textW = ctx.measureText(displayText + '...').width;
+				}
+				displayText = displayText + '...';
+				textW = ctx.measureText(displayText).width;
+			}
+			return { displayText, w: textW + padX * 2, h: tagH };
+		}
+
+		function drawTag(x: number, y: number, text: string, maxWidth: number): { w: number; h: number } {
+			const { displayText, w: tagW, h: tagH } = measureTag(text, maxWidth);
+			const padX = 12;
+
+			ctx.fillStyle = '#1a1a1a';
+			ctx.beginPath();
+			ctx.roundRect(x, y, tagW, tagH, 6);
+			ctx.fill();
+
+			ctx.strokeStyle = '#2a2a2a';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.roundRect(x, y, tagW, tagH, 6);
+			ctx.stroke();
+
+			ctx.fillStyle = '#d4d4d4';
+			ctx.font = '13px "SFMono-Regular", "Cascadia Mono", "Consolas", monospace';
+			ctx.fillText(displayText, x + padX, y + 20);
+
+			return { w: tagW, h: tagH };
+		}
+
+		function drawGroup(
+			label: string,
+			pkgs: { name: string }[],
+			colX: number,
+			startY: number,
+			maxColW: number
+		): number {
+			let y = startY;
+
+			ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+			ctx.fillStyle = '#666666';
+			ctx.fillText(label.toUpperCase(), colX, y + 10);
+
+			ctx.font = '11px system-ui, -apple-system, sans-serif';
+			ctx.fillStyle = '#444444';
+			const labelW = ctx.measureText(label.toUpperCase()).width;
+			ctx.fillText(`${pkgs.length}`, colX + labelW + 8, y + 10);
+
+			y += 22;
+			let rowX = colX;
+			const gap = 6;
+			const tagH = 30;
+			const maxY = H - 80;
+
+			for (let i = 0; i < pkgs.length; i++) {
+				if (y > maxY) {
+					ctx.font = '12px system-ui, -apple-system, sans-serif';
+					ctx.fillStyle = '#444444';
+					ctx.fillText(`+${pkgs.length - i} more`, rowX, y + 14);
+					y += 20;
+					break;
+				}
+
+				const avail = maxColW - (rowX - colX);
+				const measured = measureTag(pkgs[i].name, avail);
+
+				if (rowX + measured.w + gap > colX + maxColW && rowX !== colX) {
+					rowX = colX;
+					y += tagH + gap;
+					if (y > maxY) {
+						ctx.font = '12px system-ui, -apple-system, sans-serif';
+						ctx.fillStyle = '#444444';
+						ctx.fillText(`+${pkgs.length - i} more`, rowX, y + 14);
+						y += 20;
+						break;
+					}
+				}
+
+				const tag = drawTag(rowX, y, pkgs[i].name, maxColW - (rowX - colX));
+				rowX += tag.w + gap;
+
+				if (rowX > colX + maxColW - 40) {
+					rowX = colX;
+					y += tagH + gap;
+				}
+			}
+
+			return y;
+		}
+
+		const groups: [string, { name: string }[]][] = [];
+		if (cli.length > 0) groups.push(['CLI', cli]);
+		if (apps.length > 0) groups.push(['Apps', apps]);
+		if (npm.length > 0) groups.push(['NPM', npm]);
+
+		if (groups.length === 1) {
+			drawGroup(groups[0][0], groups[0][1], colStartX, groupStartY, W - 112);
+		} else if (groups.length === 2) {
+			const halfW = (W - 112 - 16) / 2;
+			drawGroup(groups[0][0], groups[0][1], colStartX, groupStartY, halfW);
+			drawGroup(groups[1][0], groups[1][1], colStartX + halfW + 16, groupStartY, halfW);
+		} else if (groups.length === 3) {
+			drawGroup(groups[0][0], groups[0][1], colStartX, groupStartY, colWidth);
+			drawGroup(groups[1][0], groups[1][1], colStartX + colWidth + 16, groupStartY, colWidth);
+			drawGroup(groups[2][0], groups[2][1], colStartX + (colWidth + 16) * 2, groupStartY, colWidth);
+		}
+
+		ctx.fillStyle = 'rgba(10, 10, 10, 0.9)';
+		ctx.fillRect(0, H - 56, W, 56);
+		ctx.strokeStyle = 'rgba(42, 42, 42, 0.4)';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(56, H - 56);
+		ctx.lineTo(W - 56, H - 56);
+		ctx.stroke();
+
+		ctx.font = '14px system-ui, -apple-system, sans-serif';
+		ctx.fillStyle = '#444444';
+		ctx.fillText('openboot.dev', 56, H - 28);
+
+		const totalCount = `${packages.length} packages`;
+		ctx.font = '14px system-ui, -apple-system, sans-serif';
+		ctx.fillStyle = '#22c55e';
+		const countW = ctx.measureText(totalCount).width;
+		ctx.fillText(totalCount, W - 56 - countW, H - 28);
+
+		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+		if (!blob) return;
+
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${config.name.toLowerCase().replace(/\s+/g, '-')}-stack.png`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+
+		const installUrl = `https://${getInstallUrl(config)}`;
+		const text = `My dev stack: ${config.name} (${packages.length} packages) — set up in minutes with @openbootdotdev`;
+		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(installUrl)}&hashtags=${encodeURIComponent('OpenBoot,DevTools')}`;
+		window.open(tweetUrl, '_blank', 'width=550,height=420');
+	}
 </script>
 
 <svelte:head>
@@ -528,6 +778,7 @@
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
 							<Button variant="secondary" onclick={() => duplicateConfig(config.slug)}>Duplicate</Button>
 							<Button variant="secondary" onclick={() => shareConfig(config)}>Share</Button>
+							<Button variant="secondary" onclick={() => generateStackImage(config)}>Share Stack</Button>
 							<Button variant="danger" onclick={() => deleteConfig(config.slug)}>Delete</Button>
 						</div>
 					</div>
