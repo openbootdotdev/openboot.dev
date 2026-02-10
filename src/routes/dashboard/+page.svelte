@@ -376,6 +376,14 @@
 		setTimeout(() => copiedId = '', 2000);
 	}
 
+	function shareConfig(config: Config) {
+		const url = `https://${getInstallUrl(config)}`;
+		const text = `Set up my entire Mac dev environment in 5 minutes instead of 5 hours with OpenBoot`;
+		const hashtags = 'OpenBoot,macOS,DevTools';
+		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
+		window.open(tweetUrl, '_blank', 'width=550,height=420');
+	}
+
 	function formatDate(dateStr?: string): string {
 		if (!dateStr) return '';
 		const date = new Date(dateStr + 'Z');
@@ -519,6 +527,7 @@
 						<div class="config-actions" onclick={(e) => e.stopPropagation()}>
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
 							<Button variant="secondary" onclick={() => duplicateConfig(config.slug)}>Duplicate</Button>
+							<Button variant="secondary" onclick={() => shareConfig(config)}>Share</Button>
 							<Button variant="danger" onclick={() => deleteConfig(config.slug)}>Delete</Button>
 						</div>
 					</div>
