@@ -76,7 +76,13 @@ echo ""
 echo "=== Running Custom Post-Install Script ==="
 set +e
 ${customScript}
+CUSTOM_SCRIPT_EXIT=$?
 set -e
+if [ $CUSTOM_SCRIPT_EXIT -ne 0 ]; then
+  echo ""
+  echo "⚠ Custom script exited with code $CUSTOM_SCRIPT_EXIT"
+  echo "  Installation will continue, but check script output above."
+fi
 `
 			: ''
 	}
