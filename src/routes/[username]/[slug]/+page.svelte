@@ -146,67 +146,119 @@
 
 	<section class="tab-content">
 		{#if activeTab === 'overview'}
-			<div class="overview-grid">
-				{#if devTools.length > 0}
-					<div class="overview-card">
-						<h3 class="card-title">Dev Tools</h3>
-						<div class="tool-list">
-							{#each devTools as tool}
-								<div class="tool-item">
-									<span class="tool-name">{tool.name}</span>
-									<span class="tool-version">{tool.version}</span>
+			<div class="overview">
+				<div class="overview-categories">
+					{#if formulae.length > 0}
+						<div class="category-card">
+							<div class="category-header">
+								<span class="category-icon">⌘</span>
+								<div>
+									<h3 class="category-title">CLI Tools</h3>
+									<span class="category-count">{formulae.length} packages</span>
 								</div>
-							{/each}
+							</div>
+							<div class="category-items">
+								{#each formulae.slice(0, 6) as pkg}
+									<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="category-item">
+										<span class="item-name">{pkg}</span>
+										{#if data.packageDescriptions[pkg]}
+											<span class="item-desc">{data.packageDescriptions[pkg]}</span>
+										{/if}
+									</a>
+								{/each}
+							</div>
+							{#if formulae.length > 6}
+								<button class="see-all" onclick={() => activeTab = 'formulae'}>See all {formulae.length} →</button>
+							{/if}
 						</div>
-					</div>
-				{/if}
+					{/if}
 
-				{#if shell.default || shell.oh_my_zsh}
-					<div class="overview-card">
-						<h3 class="card-title">Shell</h3>
-						<div class="shell-info">
-							{#if shell.default}
-								<div class="info-row">
-									<span class="info-label">Shell</span>
-									<span class="info-value">{shell.default}</span>
+					{#if casks.length > 0}
+						<div class="category-card">
+							<div class="category-header">
+								<span class="category-icon">🖥</span>
+								<div>
+									<h3 class="category-title">Applications</h3>
+									<span class="category-count">{casks.length} apps</span>
 								</div>
+							</div>
+							<div class="category-items">
+								{#each casks.slice(0, 6) as pkg}
+									<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="category-item">
+										<span class="item-name">{pkg}</span>
+										{#if data.packageDescriptions[pkg]}
+											<span class="item-desc">{data.packageDescriptions[pkg]}</span>
+										{/if}
+									</a>
+								{/each}
+							</div>
+							{#if casks.length > 6}
+								<button class="see-all" onclick={() => activeTab = 'casks'}>See all {casks.length} →</button>
 							{/if}
-							{#if shell.oh_my_zsh}
-								<div class="info-row">
-									<span class="info-label">Oh My Zsh</span>
-									<span class="info-value badge">Enabled</span>
+						</div>
+					{/if}
+
+					{#if configNpm.length > 0}
+						<div class="category-card">
+							<div class="category-header">
+								<span class="category-icon">📦</span>
+								<div>
+									<h3 class="category-title">NPM Global</h3>
+									<span class="category-count">{configNpm.length} packages</span>
 								</div>
+							</div>
+							<div class="category-items">
+								{#each configNpm.slice(0, 6) as pkg}
+									<a href={getPackageUrl(pkg.name, 'npm')} target="_blank" rel="noopener noreferrer" class="category-item">
+										<span class="item-name">{pkg.name}</span>
+										{#if data.packageDescriptions[pkg.name]}
+											<span class="item-desc">{data.packageDescriptions[pkg.name]}</span>
+										{/if}
+									</a>
+								{/each}
+							</div>
+							{#if configNpm.length > 6}
+								<button class="see-all" onclick={() => activeTab = 'npm'}>See all {configNpm.length} →</button>
 							{/if}
+						</div>
+					{/if}
+				</div>
+
+				<div class="overview-info">
+					<div class="info-card">
+						<h4 class="info-card-title">Preset</h4>
+						<span class="info-card-value">{data.config.base_preset}</span>
+						<p class="info-card-desc">Base configuration template</p>
+					</div>
+
+					{#if data.config.dotfiles_repo}
+						<div class="info-card">
+							<h4 class="info-card-title">Dotfiles</h4>
+							<a href={data.config.dotfiles_repo} target="_blank" rel="noopener noreferrer" class="info-card-link">{data.config.dotfiles_repo.replace('https://github.com/', '')}</a>
+							<p class="info-card-desc">Deployed via GNU Stow</p>
+						</div>
+					{/if}
+
+					{#if shell.default || shell.oh_my_zsh}
+						<div class="info-card">
+							<h4 class="info-card-title">Shell</h4>
+							<span class="info-card-value">{shell.default || 'zsh'}{shell.oh_my_zsh ? ' + Oh My Zsh' : ''}</span>
 							{#if shell.theme}
-								<div class="info-row">
-									<span class="info-label">Theme</span>
-									<span class="info-value">{shell.theme}</span>
-								</div>
+								<p class="info-card-desc">Theme: {shell.theme}</p>
 							{/if}
 							{#if shell.plugins && shell.plugins.length > 0}
-								<div class="info-row plugins">
-									<span class="info-label">Plugins</span>
-									<div class="plugin-tags">
-										{#each shell.plugins as plugin}
-											<span class="plugin-tag">{plugin}</span>
-										{/each}
-									</div>
+								<div class="info-card-tags">
+									{#each shell.plugins.slice(0, 5) as plugin}
+										<span class="mini-tag">{plugin}</span>
+									{/each}
+									{#if shell.plugins.length > 5}
+										<span class="mini-tag muted">+{shell.plugins.length - 5}</span>
+									{/if}
 								</div>
 							{/if}
 						</div>
-					</div>
-				{/if}
-
-				{#if taps.length > 0}
-					<div class="overview-card">
-						<h3 class="card-title">Homebrew Taps</h3>
-						<div class="tap-list">
-							{#each taps as tap}
-								<span class="tap-item">{tap}</span>
-							{/each}
-						</div>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 
 		{:else if activeTab === 'formulae'}
@@ -215,7 +267,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each formulae as pkg}
-						<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg}</a>
+						<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="package-item" data-tooltip={data.packageDescriptions[pkg] || ''}>{pkg}</a>
 					{/each}
 				</div>
 			{/if}
@@ -226,7 +278,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each casks as pkg}
-						<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg}</a>
+						<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="package-item" data-tooltip={data.packageDescriptions[pkg] || ''}>{pkg}</a>
 					{/each}
 				</div>
 			{/if}
@@ -237,7 +289,7 @@
 			{:else}
 				<div class="package-grid">
 					{#each configNpm as pkg}
-						<a href={getPackageUrl(pkg.name, 'npm')} target="_blank" rel="noopener noreferrer" class="package-item">{pkg.name}</a>
+						<a href={getPackageUrl(pkg.name, 'npm')} target="_blank" rel="noopener noreferrer" class="package-item" data-tooltip={data.packageDescriptions[pkg.name] || ''}>{pkg.name}</a>
 					{/each}
 				</div>
 			{/if}
@@ -640,6 +692,204 @@
 	.package-item:hover {
 		border-color: var(--accent);
 		background: var(--bg-tertiary);
+	}
+
+	.package-item {
+		position: relative;
+	}
+
+	.package-item[data-tooltip]:not([data-tooltip=""])::after {
+		content: attr(data-tooltip);
+		position: absolute;
+		bottom: calc(100% + 8px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		color: var(--text-secondary);
+		padding: 6px 10px;
+		border-radius: 6px;
+		font-size: 0.75rem;
+		font-family: 'Outfit', sans-serif;
+		white-space: nowrap;
+		max-width: 280px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		z-index: 10;
+	}
+
+	.package-item[data-tooltip]:not([data-tooltip=""]):hover::after {
+		opacity: 1;
+	}
+
+	.overview {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	.overview-categories {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 16px;
+	}
+
+	.category-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 20px;
+	}
+
+	.category-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	.category-icon {
+		font-size: 1.5rem;
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-tertiary);
+		border-radius: 10px;
+	}
+
+	.category-title {
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.category-count {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.category-items {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.category-item {
+		display: flex;
+		flex-direction: column;
+		padding: 8px 10px;
+		border-radius: 6px;
+		transition: background 0.15s;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.category-item:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.item-name {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.85rem;
+		color: var(--text-primary);
+	}
+
+	.item-desc {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		margin-top: 2px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.see-all {
+		display: block;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 10px;
+		margin-top: 8px;
+		color: var(--accent);
+		font-size: 0.8rem;
+		cursor: pointer;
+		text-align: center;
+		border-radius: 6px;
+		transition: background 0.15s;
+	}
+
+	.see-all:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.overview-info {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 12px;
+	}
+
+	.info-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 16px;
+	}
+
+	.info-card-title {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 6px;
+	}
+
+	.info-card-value {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		display: block;
+	}
+
+	.info-card-link {
+		font-size: 0.85rem;
+		color: var(--accent);
+		text-decoration: none;
+		word-break: break-all;
+	}
+
+	.info-card-link:hover {
+		text-decoration: underline;
+	}
+
+	.info-card-desc {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		margin-top: 4px;
+	}
+
+	.info-card-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		margin-top: 8px;
+	}
+
+	.mini-tag {
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.7rem;
+	}
+
+	.mini-tag.muted {
+		color: var(--text-muted);
 	}
 
 	.prefs-list {

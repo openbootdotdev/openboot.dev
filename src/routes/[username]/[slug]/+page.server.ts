@@ -39,8 +39,43 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 		console.error('Failed to parse config JSON', e);
 	}
 
+	const pkgs: {name: string; type: string; desc?: string}[] = Array.isArray(config.packages)
+		? config.packages.map((p: any) => typeof p === 'string' ? {name: p, type: 'formula'} : p)
+		: [];
+
+	const missing = pkgs.filter(p => !p.desc);
+	if (missing.length > 0) {
+		const descResults = await Promise.allSettled(
+			missing.map(async (p) => {
+				try {
+					if (p.type === 'npm') {
+						const r = await fetch(`https://registry.npmjs.org/${p.name}`, { cf: { cacheTtl: 86400, cacheEverything: true } } as RequestInit);
+						if (r.ok) { const d = await r.json() as any; return { name: p.name, desc: d.description || '' }; }
+					} else {
+						const kind = p.type === 'cask' ? 'cask' : 'formula';
+						const r = await fetch(`https://formulae.brew.sh/api/${kind}/${p.name}.json`, { cf: { cacheTtl: 86400, cacheEverything: true } } as RequestInit);
+						if (r.ok) { const d = await r.json() as any; return { name: p.name, desc: d.desc || '' }; }
+					}
+				} catch {}
+				return { name: p.name, desc: '' };
+			})
+		);
+		for (const r of descResults) {
+			if (r.status === 'fulfilled' && r.value.desc) {
+				const pkg = pkgs.find(p => p.name === r.value.name);
+				if (pkg) pkg.desc = r.value.desc;
+			}
+		}
+	}
+
+	const packageDescriptions: Record<string, string> = {};
+	for (const p of pkgs) {
+		if (p.desc) packageDescriptions[p.name] = p.desc;
+	}
+
 	return {
 		configUser: targetUser,
-		config
+		config,
+		packageDescriptions
 	};
 };
