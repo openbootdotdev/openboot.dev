@@ -282,6 +282,7 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 0 24px;
+		overflow: hidden;
 	}
 
 	/* ── Header ─────────────────────────────────────────── */
@@ -339,7 +340,7 @@
 	.hero-split {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 56px;
+		gap: 40px;
 		align-items: center;
 	}
 
@@ -588,6 +589,7 @@
 		flex-direction: column;
 		gap: 12px;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		min-width: 0;
 	}
 
 	.hero-action-card:hover {

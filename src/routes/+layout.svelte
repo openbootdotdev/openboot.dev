@@ -19,6 +19,10 @@
 		box-sizing: border-box;
 	}
 
+	:global(html, body) {
+		overflow-x: hidden;
+	}
+
 	:global(body) {
 		font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 		background: var(--bg-primary);
