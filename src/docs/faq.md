@@ -21,8 +21,8 @@ This is a common concern. Here's how OpenBoot handles it:
 - The install script is **open source** — review it anytime at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
 - The script is hosted on openboot.dev (Cloudflare Workers) and served over HTTPS
 - **No telemetry** is collected — no analytics, no tracking, no phoning home
-- You can download and inspect the script before running it: `curl -fsSL openboot.dev/install.sh > install.sh && cat install.sh`
-- The binary itself is downloaded from GitHub Releases with checksum verification
+- You can download and inspect the script before running it: `curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh`
+- The binary itself is downloaded from GitHub Releases with SHA256 checksum verification (can be skipped with `OPENBOOT_SKIP_CHECKSUM=true` if needed)
 
 ## What if I already have Homebrew installed?
 
@@ -33,7 +33,7 @@ OpenBoot detects existing Homebrew installations and skips the Homebrew install 
 Re-run the install script:
 
 ```
-curl -fsSL openboot.dev/install.sh | bash
+curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
 This downloads the latest binary and replaces the existing one. Your configs, snapshots, and auth tokens are not affected.

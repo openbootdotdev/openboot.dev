@@ -14,9 +14,9 @@
 
 	const sections = [
 		{ id: 'getting-started', title: 'Getting Started', content: gettingStartedMd },
+		{ id: 'snapshot', title: 'Snapshot', content: snapshotMd },
 		{ id: 'presets', title: 'Presets', content: presetsMd },
 		{ id: 'custom-configs', title: 'Custom Configurations', content: customConfigsMd },
-		{ id: 'snapshot', title: 'Snapshot', content: snapshotMd },
 		{ id: 'cli-reference', title: 'CLI Reference', content: cliReferenceMd },
 		{ id: 'faq', title: 'FAQ', content: faqMd }
 	];

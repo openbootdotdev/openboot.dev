@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import Button from '$lib/components/Button.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	let copied = $state('');
@@ -45,21 +44,21 @@
 			name: 'full',
 			icon: '🌟',
 			description: 'Complete dev environment with languages, DevOps, databases, and AI tools.',
-			tools: ['python', 'rust', 'kubectl', 'terraform', 'ollama', 'Cursor']
+			tools: ['python', 'rustup', 'kubectl', 'terraform', 'ollama', 'Cursor']
 		}
 	];
 </script>
 
 <svelte:head>
-	<title>OpenBoot - Set up your Mac in one command, not one afternoon</title>
-	<meta name="description" content="One curl command installs 60+ curated dev tools, deploys your dotfiles, and configures macOS. Pick a preset or build your own — done in about 5 minutes." />
-	<meta property="og:title" content="OpenBoot - One-line macOS Development Environment Setup" />
-	<meta property="og:description" content="Bootstrap your Mac development environment in minutes. One command to install Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
+	<title>OpenBoot - Set up your Mac or capture your setup in one command</title>
+	<meta name="description" content="One command to install 80+ dev tools on a fresh Mac — or snapshot your current setup and share it with your team. Open source, zero telemetry." />
+	<meta property="og:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
+	<meta property="og:description" content="Install 80+ dev tools on a fresh Mac, or snapshot your current setup and share it. Homebrew, dotfiles, macOS prefs — done in minutes." />
 	<meta property="og:image" content="https://openboot.dev/og-image.png" />
 	<meta property="og:url" content="https://openboot.dev" />
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="OpenBoot - One-line macOS Development Environment Setup" />
-	<meta name="twitter:description" content="Bootstrap your Mac development environment in minutes. One command to install Homebrew, CLI tools, GUI apps, dotfiles, and Oh-My-Zsh." />
+	<meta name="twitter:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
+	<meta name="twitter:description" content="Install 80+ dev tools on a fresh Mac, or snapshot your current setup and share it. Homebrew, dotfiles, macOS prefs — done in minutes." />
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
@@ -77,32 +76,18 @@
 		<section class="hero">
 			<div class="hero-split">
 				<div class="hero-left">
-					<h1>Set up your Mac in<br />one command — not one afternoon</h1>
-					<p class="subtitle">One curl command installs everything. Pick from 60+ curated dev tools, deploy your dotfiles, and configure macOS — all in about 5 minutes.</p>
+				<h1>Set up your Mac —<br />or capture the one you have</h1>
+				<p class="subtitle">One command to install 80+ dev tools on a fresh Mac. Or snapshot your current setup and share it with your team.</p>
 
 				<div class="features-grid">
-					<div class="feature-item">60+ curated dev tools</div>
+					<div class="feature-item">80+ curated dev tools</div>
 					<div class="feature-item">Smart install — skips what's already there</div>
 					<div class="feature-item">Dotfiles + Oh-My-Zsh built in</div>
 					<div class="feature-item">Share configs with your team</div>
 					<div class="feature-item">100% open source, zero telemetry</div>
 				</div>
 
-					<div class="install-command" id="install">
-						<div class="install-prompt">$</div>
-						<code>curl -fsSL https://openboot.dev/install.sh | bash</code>
-						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash', 'main')}>
-							{#if copied === 'main'}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								Copied!
-							{:else}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-								Copy
-							{/if}
-						</button>
-					</div>
-
-				<div class="cta-buttons">
+			<div class="cta-buttons">
 					{#if $auth.user}
 						<a href="/dashboard" class="btn-outlined">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -146,10 +131,50 @@
 					<img src="/demo.svg" alt="OpenBoot demo — installing dev tools in one command" class="demo-svg" loading="eager" />
 				</div>
 			</div>
-			</div>
-		</section>
+		</div>
 
-		<section class="how-it-works">
+		<div class="hero-actions">
+			<div class="hero-action-card">
+				<div class="hero-action-label">New Mac</div>
+				<h3 class="hero-action-title">Fresh Mac? Install everything.</h3>
+				<p class="hero-action-desc">Pick from 80+ curated dev tools, deploy your dotfiles, and configure macOS — done in about 5 minutes.</p>
+				<div class="install-command" id="install">
+					<div class="install-prompt">$</div>
+					<code>curl -fsSL https://openboot.dev/install.sh | bash</code>
+					<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash', 'main')}>
+						{#if copied === 'main'}
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+							Copied!
+						{:else}
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+							Copy
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			<div class="hero-action-card hero-action-snapshot">
+				<div class="hero-action-label">Snapshot</div>
+				<h3 class="hero-action-title">Already set up? Capture it.</h3>
+				<p class="hero-action-desc">Scan your Homebrew packages, macOS prefs, shell & git config. Save locally or share as a config URL — your choice.</p>
+				<div class="install-command">
+					<div class="install-prompt">$</div>
+					<code>curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot</code>
+					<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot', 'snapshot')}>
+						{#if copied === 'snapshot'}
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+							Copied!
+						{:else}
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+							Copy
+						{/if}
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="how-it-works">
 			<div class="section-header">
 				<h2 class="section-title">How It Works</h2>
 				<p class="section-subtitle">From zero to coding in 4 steps</p>
@@ -189,7 +214,7 @@
 						class="preset-card"
 						class:featured={preset.id === 'developer'}
 						class:copied={copied === preset.id}
-						onclick={() => copyCommand(`curl -fsSL openboot.dev/install.sh | bash -s -- --preset ${preset.id}`, preset.id)}
+						onclick={() => copyCommand(`curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset ${preset.id}`, preset.id)}
 					>
 						<div class="preset-icon">{preset.icon}</div>
 						<div class="preset-header">
@@ -213,96 +238,39 @@
 					</button>
 				{/each}
 		</div>
+
 	</section>
-
-		<section class="beyond-section">
-			<div class="section-header">
-				<h2 class="section-title">For Teams & Power Users</h2>
-				<p class="section-subtitle">Go beyond presets</p>
-			</div>
-
-			<div class="beyond-grid">
-				<div class="beyond-card">
-					<div class="beyond-card-label">Snapshot</div>
-					<h3 class="beyond-card-title">Capture Your Current Setup</h3>
-					<p class="beyond-card-desc">
-						Scan your existing machine -- Homebrew packages, macOS preferences, shell & git config, and dev tools -- then upload it as a shareable configuration.
-					</p>
-				<div class="beyond-command">
-						<div class="beyond-command-prompt">$</div>
-						<code>curl -fsSL openboot.dev/install.sh | bash -s -- snapshot</code>
-						<button class="copy-btn" onclick={() => copyCommand('curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot', 'snapshot')}>
-							{#if copied === 'snapshot'}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								Copied!
-							{:else}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-								Copy
-							{/if}
-						</button>
-					</div>
-				</div>
-
-				<div class="beyond-card">
-					<div class="beyond-card-label">Custom Configs</div>
-					{#if $auth.user}
-						<h3 class="beyond-card-title">Manage Your Configurations</h3>
-						<p class="beyond-card-desc">
-							Your team's custom configurations are ready. Add, edit, and share configs from the dashboard.
-						</p>
-					{:else}
-						<h3 class="beyond-card-title">Build a Custom Config</h3>
-						<p class="beyond-card-desc">
-							Create a custom configuration tailored for your team. Sign in to get started.
-						</p>
-					{/if}
-					<ul class="beyond-features">
-						<li>Import from Brewfile</li>
-						<li>Share via short URL</li>
-						<li>Team-wide configs</li>
-						<li>Dotfiles integration</li>
-					</ul>
-					<div class="beyond-card-action">
-						{#if $auth.user}
-							<Button href="/dashboard" variant="primary">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-									<rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-								</svg>
-								Go to Dashboard
-							</Button>
-						{:else}
-							<Button href="/api/auth/login" variant="primary">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-									<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-								</svg>
-								Sign in with GitHub
-							</Button>
-						{/if}
-					</div>
-				</div>
-			</div>
-		</section>
 	</div>
 </main>
 
 <footer>
 	<div class="container">
 		<div class="footer-links">
-			<a href="https://github.com/openbootdotdev/openboot">
+			{#if $auth.user}
+				<a href="/dashboard">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+					Dashboard
+				</a>
+			{:else}
+				<a href="/api/auth/login">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+					Custom Configs
+				</a>
+			{/if}
+			<a href="/docs">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+				Docs
+			</a>
+			<a href="https://github.com/openbootdotdev/openboot" target="_blank" rel="noopener">
 				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
 				GitHub
 			</a>
-			<a href="https://github.com/openbootdotdev/openboot/issues">
+			<a href="https://github.com/openbootdotdev/openboot/issues" target="_blank" rel="noopener">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
 				Issues
 			</a>
-		<a href="/docs">
-			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-			Docs
-		</a>
 		</div>
-		<p class="footer-tagline">Set up your Mac the way it should be.</p>
+		<p class="footer-tagline">Open source, zero telemetry. Set up your Mac the way it should be.</p>
 		<p class="footer-text">MIT License</p>
 	</div>
 </footer>
@@ -602,6 +570,75 @@
 		background: #1a1b26;
 	}
 
+	/* ── Hero Actions (Dual CTA Cards) ──────────────── */
+
+	.hero-actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 20px;
+		margin-top: 48px;
+	}
+
+	.hero-action-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		padding: 28px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.hero-action-card:hover {
+		border-color: var(--border-hover);
+		transform: translateY(-4px);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+	}
+
+	.hero-action-card:first-child {
+		border-color: rgba(34, 197, 94, 0.3);
+		background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.04) 100%);
+	}
+
+	.hero-action-card:first-child:hover {
+		border-color: rgba(34, 197, 94, 0.5);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(34, 197, 94, 0.08);
+	}
+
+	.hero-action-label {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--accent);
+		padding: 4px 10px;
+		background: var(--accent-glow);
+		border-radius: 20px;
+		width: fit-content;
+	}
+
+	.hero-action-title {
+		font-size: 1.15rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
+		margin: 0;
+	}
+
+	.hero-action-desc {
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+		line-height: 1.6;
+		margin: 0;
+	}
+
+	.hero-action-card .install-command {
+		margin-top: auto;
+		margin-bottom: 0;
+	}
+
 	/* ── How It Works ────────────────────────────────── */
 
 	.how-it-works {
@@ -661,7 +698,7 @@
 	/* ── Presets Section ──────────────────────────────── */
 
 	.presets-section {
-		margin-bottom: 80px;
+		margin-bottom: 20px;
 	}
 
 	.section-header {
@@ -810,154 +847,6 @@
 		font-size: 0.65rem;
 	}
 
-	/* ── Beyond Presets Section ───────────────────────── */
-
-	.beyond-section {
-		margin-bottom: 80px;
-		position: relative;
-	}
-
-	.beyond-section::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 200px;
-		height: 3px;
-		background: linear-gradient(90deg, transparent, var(--accent), transparent);
-		background-size: 200% 100%;
-		animation: gradient-shift 6s ease infinite;
-		border-radius: 2px;
-	}
-
-	@keyframes gradient-shift {
-		0%, 100% { background-position: 0% 50%; }
-		50% { background-position: 100% 50%; }
-	}
-
-	.beyond-section .section-header {
-		padding-top: 28px;
-	}
-
-	.beyond-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 20px;
-	}
-
-	.beyond-card {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		padding: 32px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		position: relative;
-	}
-
-	.beyond-card:hover {
-		border-color: var(--border-hover);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-	}
-
-	.beyond-card-label {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.65rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--accent);
-		padding: 4px 10px;
-		background: var(--accent-glow);
-		border-radius: 20px;
-		width: fit-content;
-	}
-
-	.beyond-card-title {
-		font-size: 1.15rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		color: var(--text-primary);
-		margin: 0;
-	}
-
-	.beyond-card-desc {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		line-height: 1.6;
-		margin: 0;
-	}
-
-	.beyond-command {
-		background: var(--code-bg);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		padding: 12px 16px;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-top: auto;
-		transition: border-color 0.2s;
-	}
-
-	.beyond-command:hover {
-		border-color: rgba(34, 197, 94, 0.3);
-	}
-
-	.beyond-command-prompt {
-		color: var(--accent);
-		font-family: 'JetBrains Mono', monospace;
-		font-weight: 700;
-		font-size: 0.85rem;
-		flex-shrink: 0;
-		user-select: none;
-	}
-
-	.beyond-command code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.78rem;
-		color: var(--accent);
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.beyond-features {
-		list-style: none;
-		padding: 0;
-		margin: 4px 0 0 0;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.beyond-features li {
-		color: var(--text-secondary);
-		font-size: 0.85rem;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 0;
-	}
-
-	.beyond-features li::before {
-		content: '\2713';
-		color: var(--accent);
-		font-weight: 700;
-		font-size: 0.75rem;
-		flex-shrink: 0;
-	}
-
-	.beyond-card-action {
-		margin-top: auto;
-		padding-top: 8px;
-	}
-
 	/* ── Footer ───────────────────────────────────────── */
 
 	footer {
@@ -1056,6 +945,12 @@
 		}
 	}
 
+	@media (max-width: 960px) {
+		.hero-actions {
+			grid-template-columns: 1fr;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.hero h1 {
 			font-size: 1.75rem;
@@ -1065,15 +960,7 @@
 			grid-template-columns: 1fr;
 		}
 
-		.beyond-grid {
-			grid-template-columns: 1fr;
-		}
-
-		.beyond-card {
-			padding: 24px;
-		}
-
-		.beyond-command code {
+		.install-command code {
 			font-size: 0.7rem;
 		}
 

@@ -6,38 +6,38 @@ Presets are curated collections of packages designed for different use cases. Ea
 
 ### minimal
 
-Lightweight CLI essentials for servers, containers, or developers who prefer a lean setup.
+CLI essentials for servers, containers, or minimalists. Fast and lightweight.
 
 **CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tldr, gh, git-delta, lazygit, stow
 
 **GUI apps:** Warp, Raycast, Maccy, Stats
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- --preset minimal
+curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
 ```
 
 ### developer (recommended)
 
-A ready-to-code Mac setup with everything you need to start building immediately. Includes all of `minimal` plus languages, Docker, editors, and browsers.
+Ready-to-code Mac setup. Everything you need to start building immediately. Includes all of `minimal` plus languages, Docker, editors, and browsers.
 
 **CLI tools (additions over minimal):** node, go, pnpm, docker, docker-compose, tmux, neovim, httpie
 
 **GUI apps (additions over minimal):** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer
+curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
 ```
 
 ### full
 
-The complete dev environment — every language, DevOps tool, database, and AI utility we recommend. Best for polyglot developers, DevOps engineers, or anyone who wants it all.
+Complete dev environment with languages, DevOps, databases, and AI tools. Best for polyglot developers, DevOps engineers, or anyone who wants it all.
 
 **CLI tools (additions over developer):** python, uv, rustup, deno, bun, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm
 
 **GUI apps (additions over developer):** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, Rectangle
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- --preset full
+curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
 ```
 
 ## Customizing During Install
@@ -53,14 +53,21 @@ This means you can start with `developer` but add `kubectl` from `full`, or remo
 
 ## Non-Interactive Install
 
-If you want to skip the TUI and install a preset exactly as defined (useful for CI or scripting), the `--preset` flag with no TUI will install everything in the preset without prompting:
+If you want to skip the TUI and install a preset exactly as defined (useful for CI or scripting), combine `--preset` with `--silent`:
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer
+curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --silent
+```
+
+In silent mode, Git name and email must be set via environment variables (if not already configured):
+
+```
+OPENBOOT_GIT_NAME="Your Name" OPENBOOT_GIT_EMAIL="you@example.com" \
+  curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --silent
 ```
 
 Add `--dry-run` to preview what would be installed without actually installing anything:
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- --preset developer --dry-run
+curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --dry-run
 ```
