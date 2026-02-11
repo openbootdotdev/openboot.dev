@@ -1,61 +1,62 @@
-# Custom Configurations
+---
+title: Custom Configs
+group: Features
+order: 5
+---
 
-Custom configs let you create, save, and share your own package selections. They're stored on openboot.dev and can be installed by anyone with the URL.
+# Custom Configs
 
-## Create an Account
+Build your own setup, save it on openboot.dev, and share it as a one-line install command. Anyone with the URL can install your exact environment.
 
-Sign in with GitHub OAuth — click **Login** in the header or visit the dashboard directly. No email/password required.
+## Creating a Config
 
-## Using the Dashboard
+1. **Sign in** with GitHub — click **Login** in the header (no email/password needed)
+2. Go to your **[Dashboard](/dashboard)**
+3. Click **Create Config**
+4. Pick a **base preset** (`minimal`, `developer`, or `full`) as your starting point
+5. **Add or remove packages** using the search
+6. Save
 
-Once logged in, go to your **Dashboard** to manage configs.
+## What a Config Can Include
 
-### Creating a Config
+| Feature | Description |
+|---------|-------------|
+| **Homebrew formulae** | CLI tools installed via `brew install` |
+| **Homebrew casks** | GUI apps installed via `brew install --cask` |
+| **Custom scripts** | Shell commands that run after packages install (SSH setup, repo cloning, etc.) |
+| **Dotfiles repo** | A Git URL — gets cloned and linked with `stow` |
+| **macOS preferences** | Whitelisted system settings (Dock, Finder, key repeat, etc.) |
 
-1. Click **Create Config**
-2. Enter a **name** (e.g., "frontend-team") and optional **description**
-3. Choose a **base preset** (minimal, developer, or full) as your starting point
-4. Add or remove individual packages using the package search
-5. Save your config
+See [Config Options](/docs/config-options) for the full schema and all available fields.
 
-### Config Options
+## Importing a Brewfile
 
-Each config supports:
+Already have a Brewfile? Upload it in the dashboard. OpenBoot parses all `brew` and `cask` entries and maps them to a config automatically.
 
-- **Homebrew formulae** — CLI tools installed via `brew install`
-- **Homebrew casks** — GUI apps installed via `brew install --cask`
-- **Custom scripts** — Shell commands that run after package installation (e.g., setting up SSH keys, cloning repos)
-- **Dotfiles repo** — A Git URL to your dotfiles repository that gets cloned and stowed
-- **macOS preferences** — Whitelisted system settings (Dock autohide, key repeat speed, etc.)
+## Sharing
 
-### Import from Brewfile
-
-Already have a Brewfile? Upload it in the dashboard and OpenBoot will parse it into a config. All `brew` and `cask` entries are extracted and mapped to the config format.
-
-## Sharing Configs
-
-Every config gets a shareable install URL:
-
-```
-curl -fsSL https://openboot.dev/<username>/<slug>/install.sh | bash
-```
-
-For example, if your GitHub username is `sarah` and your config is named `frontend-team`:
+Every config gets a URL:
 
 ```
 curl -fsSL https://openboot.dev/sarah/frontend-team/install.sh | bash
 ```
 
-Share this URL in your team's README, onboarding docs, or Slack. Anyone who runs it gets your exact setup.
+Put it in your README, onboarding docs, or Slack. One command, same environment for everyone.
 
-## Public vs Private Configs
+You can also install via the CLI directly:
 
-- **Public** (default) — anyone can view and install your config
-- **Private** — only you can see the config in the dashboard, but the install URL still works if someone has it
+```
+openboot --user sarah/frontend-team
+```
 
-## Custom URL Aliases
+## Public vs Private
 
-Config slugs are auto-generated from the config name, but you can edit them in the dashboard. Keep them short and memorable:
+- **Public** (default) — anyone can view the config page and install
+- **Private** — hidden from your profile, but the install URL still works if shared
+
+## Short URLs
+
+Config slugs are auto-generated, but you can edit them in the dashboard. Keep them short:
 
 - `openboot.dev/yourname/ios` instead of `openboot.dev/yourname/ios-development-team-2024`
 - `openboot.dev/yourname/ml` instead of `openboot.dev/yourname/machine-learning-setup`

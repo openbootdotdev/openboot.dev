@@ -1,67 +1,84 @@
+---
+title: FAQ
+group: ''
+order: 12
+---
+
 # FAQ
 
 ## Is OpenBoot free?
 
-Yes. OpenBoot is free and open source (MIT license) for individuals. You can create custom configs, use snapshot, and share setups at no cost. Team management features (org accounts, access controls) are on the roadmap and may have paid tiers.
+Yes — free and open source (MIT license). Create configs, use snapshot, share setups, all at no cost. Team management features (org accounts, access controls) are on the roadmap and may have paid tiers.
 
-## Can I use it for my team?
+## Why not just use Homebrew directly?
 
-Yes. The recommended workflow is:
+Homebrew installs packages. OpenBoot sets up your **entire** environment — packages, GUI apps, shell configuration, dotfiles, and macOS preferences — in one command. Think of it as Homebrew + shell setup + dotfiles + system preferences, orchestrated together with an interactive TUI for picking what you want.
 
-1. Create a custom config on your dashboard with your team's standard tools
-2. Share the one-line install URL in your onboarding docs or README
-3. New team members run the command and get the exact same environment
-
-Alternatively, a team lead can run `openboot snapshot` on their own machine to capture their proven setup and share it directly.
+If you're happy managing each of those separately, you don't need OpenBoot. If you'd rather do it in 5 minutes instead of an hour, give it a try.
 
 ## Is it safe to pipe curl to bash?
 
-This is a common concern. Here's how OpenBoot handles it:
+Fair question. Here's how OpenBoot handles it:
 
-- The install script is **open source** — review it anytime at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
-- The script is hosted on openboot.dev (Cloudflare Workers) and served over HTTPS
-- **No telemetry** is collected — no analytics, no tracking, no phoning home
-- You can download and inspect the script before running it: `curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh`
-- The binary itself is downloaded from GitHub Releases with SHA256 checksum verification (can be skipped with `OPENBOOT_SKIP_CHECKSUM=true` if needed)
+- The install script is **open source** — review it at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
+- Hosted on openboot.dev (Cloudflare Workers), served over HTTPS
+- **Zero telemetry** — no analytics, no tracking, no phoning home
+- The binary is downloaded from GitHub Releases with **SHA256 checksum verification**
+- You can inspect the script before running it:
 
-## What if I already have Homebrew installed?
+```
+curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh
+```
 
-OpenBoot detects existing Homebrew installations and skips the Homebrew install step entirely. It also detects already-installed packages and skips them automatically — only new packages are installed, so re-running is fast and safe.
+## What if I already have Homebrew?
+
+OpenBoot detects existing Homebrew installs and skips the setup. It also skips already-installed packages — only new ones get installed. Re-running is fast and safe.
+
+## Can I use it without an account?
+
+Yes. No account needed for:
+
+- Installing with presets (`minimal`, `developer`, `full`)
+- Using the interactive TUI
+- Running `openboot snapshot --local` or `--json`
+
+An account (GitHub OAuth) is only needed to upload configs to openboot.dev and share them via URL.
 
 ## How do I update OpenBoot?
 
-Re-run the install script:
-
 ```
-curl -fsSL https://openboot.dev/install.sh | bash
+openboot update --self
 ```
 
-This downloads the latest binary and replaces the existing one. Your configs, snapshots, and auth tokens are not affected.
+Or re-run the install script — it downloads the latest binary and replaces the old one. Your configs, snapshots, and auth tokens are unaffected.
 
 ## Where is my data stored?
 
-- **Configs and user data** — stored in Cloudflare D1 (SQLite-compatible database) on openboot.dev's infrastructure
-- **Configs are public by default** — anyone with the URL can install from your config. You can mark configs as private in the dashboard.
-- **Auth tokens** — stored locally at `~/.openboot/auth.json` on your machine
-- **Local snapshots** — saved to `~/.openboot/snapshot.json` when using `--local`
-- **No data is stored on your machine** beyond the binary, auth token, and optional local snapshots
+| What | Where |
+|------|-------|
+| Configs & user data | Cloudflare D1 on openboot.dev |
+| Auth token | `~/.openboot/auth.json` (local) |
+| Local snapshots | `~/.openboot/snapshot.json` (local) |
+| OpenBoot binary | `~/.openboot/bin/openboot` (local) |
 
-## Can I use OpenBoot without an account?
+Configs are public by default. You can mark them private in the dashboard — they'll be hidden from your profile but the install URL still works if shared.
 
-Yes. You don't need an account to:
+## What shell does OpenBoot set up?
 
-- Install using the default presets (`minimal`, `developer`, `full`)
-- Use the interactive TUI
-- Run `openboot snapshot --local` or `openboot snapshot --json`
+**Zsh** with **Oh-My-Zsh**:
 
-An account is only needed to upload configs to openboot.dev and share them via URL.
+- Plugins: git, zsh-autosuggestions, zsh-syntax-highlighting
+- A clean, informative theme
+- Useful developer aliases
 
-## What shell does OpenBoot configure?
+If you already have Oh-My-Zsh, OpenBoot merges its recommendations without overwriting your config. If you manage your shell yourself, use `--shell skip`.
 
-OpenBoot sets up **Zsh** with **Oh-My-Zsh**, including:
+## Does it work on Linux?
 
-- A curated set of plugins (git, zsh-autosuggestions, zsh-syntax-highlighting)
-- A clean theme
-- Useful aliases for common developer tasks
+Not yet. OpenBoot is macOS-only. Linux support is being explored.
 
-If you already have Oh-My-Zsh installed, OpenBoot merges its plugin recommendations without overwriting your existing configuration.
+## Can I use it with my existing dotfiles?
+
+Yes. Set your dotfiles repo URL in your config and OpenBoot will clone and link it with GNU Stow. See [Dotfiles & Shell](/docs/dotfiles-shell) for details.
+
+Your existing dotfiles repo structure works as-is — OpenBoot doesn't require any special format.

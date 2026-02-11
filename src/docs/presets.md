@@ -1,12 +1,25 @@
+---
+title: Presets
+group: Features
+order: 3
+---
+
 # Presets
 
-Presets are curated collections of packages designed for different use cases. Each preset is a starting point — when the interactive TUI launches, you can toggle any package on or off before confirming the install.
+Three curated starting points. Pick one, then customize it in the TUI before installing — add what you want, remove what you don't.
 
-## Available Presets
+## At a Glance
 
-### minimal
+| | minimal | developer | full |
+|---|---------|-----------|------|
+| **Best for** | Minimalists, servers | Most developers | Polyglot / DevOps |
+| **CLI tools** | 18 | 26 | 40 |
+| **GUI apps** | 4 | 11 | 20 |
+| **Includes** | Essentials | Essentials + languages + editors | Everything |
 
-CLI essentials for servers, containers, or minimalists. Fast and lightweight.
+## minimal
+
+CLI essentials. Fast and lightweight.
 
 **CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tldr, gh, git-delta, lazygit, stow
 
@@ -16,25 +29,25 @@ CLI essentials for servers, containers, or minimalists. Fast and lightweight.
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
 ```
 
-### developer (recommended)
+## developer
 
-Ready-to-code Mac setup. Everything you need to start building immediately. Includes all of `minimal` plus languages, Docker, editors, and browsers.
+The recommended starting point. Everything you need to start building, nothing you don't.
 
-**CLI tools (additions over minimal):** node, go, pnpm, docker, docker-compose, tmux, neovim, httpie
-
-**GUI apps (additions over minimal):** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser
+**Adds over minimal:**
+- **CLI:** node, go, pnpm, docker, docker-compose, tmux, neovim, httpie
+- **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
 ```
 
-### full
+## full
 
-Complete dev environment with languages, DevOps, databases, and AI tools. Best for polyglot developers, DevOps engineers, or anyone who wants it all.
+Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
 
-**CLI tools (additions over developer):** python, uv, rustup, deno, bun, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm
-
-**GUI apps (additions over developer):** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, Rectangle
+**Adds over developer:**
+- **CLI:** python, uv, rustup, deno, bun, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm
+- **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, Rectangle
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
@@ -42,32 +55,27 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
 
 ## Customizing During Install
 
-You don't have to accept a preset as-is. When the interactive TUI launches:
+Presets are just the starting selection. When the TUI launches:
 
-1. The preset's packages come pre-selected
-2. Use **arrow keys** to navigate the package list
+1. The preset's packages come **pre-selected**
+2. Use **arrow keys** to navigate, **Tab** to switch between formulae and casks
 3. Press **Space** to toggle any package on or off
-4. Press **Enter** to confirm and begin installation
+4. Press **Enter** to confirm and install
 
-This means you can start with `developer` but add `kubectl` from `full`, or remove `notion` if you don't use it. The preset is just the starting selection.
+Want `developer` but with `kubectl`? Select `developer`, then toggle `kubectl` on. Don't use Notion? Toggle it off. The preset is the starting point, not the final answer.
 
-## Non-Interactive Install
+## Skipping the TUI
 
-If you want to skip the TUI and install a preset exactly as defined (useful for CI or scripting), combine `--preset` with `--silent`:
+For scripted installs, use `--silent` to install a preset exactly as defined:
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --silent
 ```
 
-In silent mode, Git name and email must be set via environment variables (if not already configured):
-
-```
-OPENBOOT_GIT_NAME="Your Name" OPENBOOT_GIT_EMAIL="you@example.com" \
-  curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --silent
-```
-
-Add `--dry-run` to preview what would be installed without actually installing anything:
+Preview what would be installed first with `--dry-run`:
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --dry-run
 ```
+
+See [CLI Reference](/docs/cli-reference) for automation details.
