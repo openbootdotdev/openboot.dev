@@ -605,6 +605,11 @@
 		margin-bottom: 80px;
 	}
 
+	.section-header {
+		text-align: center;
+		margin-bottom: 32px;
+	}
+
 	.steps-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
