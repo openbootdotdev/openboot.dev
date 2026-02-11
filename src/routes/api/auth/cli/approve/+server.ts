@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, generateId } from '$lib/server/auth';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
@@ -8,6 +9,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const rl = checkRateLimit(getRateLimitKey('cli-approve', user.id), RATE_LIMITS.CLI_APPROVE);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	let body;
 	try {
@@ -46,7 +52,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			.bind(user.id, tokenId, row.id)
 			.run();
 	} catch (e) {
-		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
+		console.error('POST /api/auth/cli/approve error:', e);
+		return json({ error: 'Failed to approve authentication' }, { status: 500 });
 	}
 
 	return json({ success: true });

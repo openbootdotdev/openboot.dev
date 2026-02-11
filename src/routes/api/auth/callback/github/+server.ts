@@ -1,13 +1,21 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { signToken, generateId } from '$lib/server/auth';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { validateReturnTo } from '$lib/server/validation';
 
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 const GITHUB_USER_URL = 'https://api.github.com/user';
 
-export const GET: RequestHandler = async ({ url, platform, cookies }) => {
+export const GET: RequestHandler = async ({ url, platform, cookies, request }) => {
 	const env = platform?.env;
 	if (!env) throw new Error('Platform env not available');
+
+	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
+	const rl = checkRateLimit(getRateLimitKey('auth-callback-github', clientIp), RATE_LIMITS.AUTH_CALLBACK);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
@@ -101,7 +109,8 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 		maxAge: thirtyDays
 	});
 
-	const returnTo = cookies.get('auth_return_to') || '/dashboard';
+	const returnToRaw = cookies.get('auth_return_to') || '/dashboard';
+	const returnTo = validateReturnTo(returnToRaw) ? returnToRaw : '/dashboard';
 	cookies.delete('auth_state', { path: '/' });
 	cookies.delete('auth_return_to', { path: '/' });
 

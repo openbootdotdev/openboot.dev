@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { validateReturnTo } from '$lib/server/validation';
 
 const GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize';
 const GOOGLE_AUTHORIZE_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -9,7 +10,8 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 	if (!env) throw new Error('Platform env not available');
 
 	const provider = url.searchParams.get('provider') || 'github';
-	const returnTo = url.searchParams.get('return_to') || '/dashboard';
+	const returnToParam = url.searchParams.get('return_to');
+	const returnTo = returnToParam && validateReturnTo(returnToParam) ? returnToParam : '/dashboard';
 	const state = crypto.randomUUID();
 
 	const cookieOptions = {

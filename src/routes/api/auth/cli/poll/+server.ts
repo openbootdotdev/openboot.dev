@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, url }) => {
 	const env = platform?.env;
@@ -7,6 +8,11 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 
 	const code_id = url.searchParams.get('code_id');
 	if (!code_id) return json({ error: 'code_id is required' }, { status: 400 });
+
+	const rl = checkRateLimit(getRateLimitKey('cli-poll', code_id), RATE_LIMITS.CLI_POLL);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	const row = await env.DB.prepare('SELECT * FROM cli_auth_codes WHERE id = ?')
 		.bind(code_id)

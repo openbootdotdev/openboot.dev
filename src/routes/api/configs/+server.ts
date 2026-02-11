@@ -1,6 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
+import { validateCustomScript, validateDotfilesRepo } from '$lib/server/validation';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
@@ -8,6 +10,12 @@ export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const rlKey = getRateLimitKey('config-read', user.id);
+	const rl = checkRateLimit(rlKey, RATE_LIMITS.CONFIG_READ);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	const { results } = await env.DB.prepare('SELECT id, slug, name, description, base_preset, is_public, alias, updated_at, snapshot, snapshot_at FROM configs WHERE user_id = ? ORDER BY updated_at DESC')
 		.bind(user.id)
@@ -36,6 +44,21 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	}
 
 	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+
+	const rlKeyW = getRateLimitKey('config-write', user.id);
+	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
+	if (!rlW.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } });
+	}
+
+	if (custom_script) {
+		const sv = validateCustomScript(custom_script);
+		if (!sv.valid) return json({ error: sv.error }, { status: 400 });
+	}
+	if (dotfiles_repo) {
+		const rv = validateDotfilesRepo(dotfiles_repo);
+		if (!rv.valid) return json({ error: rv.error }, { status: 400 });
+	}
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
 
@@ -76,7 +99,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			.bind(id, user.id, slug, name, description || '', base_preset || 'developer', JSON.stringify(packages || []), custom_script || '', is_public !== false ? 1 : 0, cleanAlias, dotfiles_repo || '', snapshot ? JSON.stringify(snapshot) : null, snapshot_at || null)
 			.run();
 	} catch (e) {
-		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
+		console.error('POST /api/configs error:', e);
+		return json({ error: 'Failed to create config' }, { status: 500 });
 	}
 
 	const installUrl = cleanAlias ? `${env.APP_URL}/${cleanAlias}` : `${env.APP_URL}/${user.username}/${slug}`;
