@@ -5,7 +5,7 @@ Snapshot captures your current Mac's development environment and turns it into a
 ## Install and Run
 
 ```
-curl -fsSL openboot.dev/install.sh | bash -s -- snapshot
+curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
 ```
 
 This downloads the OpenBoot binary (if not already installed) and immediately runs the snapshot command.
@@ -27,15 +27,15 @@ Snapshot scans the following:
 
 ### macOS Preferences
 
-A curated whitelist of 24 system settings that developers commonly customize:
+A curated whitelist of 23 system settings that developers commonly customize:
 
-- Dock: autohide, icon size, position, minimize effect
-- Finder: show extensions, show hidden files, default view style
-- Keyboard: key repeat rate, initial key repeat delay
-- Trackpad: tap to click, tracking speed
-- Screenshots: format, location, disable shadow
-- Global: reduce transparency, dark mode, accent color
-- Mission Control: spaces auto-rearrange, group windows by app
+- Global: show all file extensions, always show scrollbars, disable auto-correct, disable auto-capitalization, fast key repeat, short repeat delay
+- Finder: path bar, status bar, list view, no extension change warning, show hidden files
+- Dock: keep visible, hide recents, icon size, scale minimize effect
+- Screenshots: save location, PNG format, disable shadow
+- Safari: developer menu, WebKit developer extras
+- TextEdit: plain text mode, UTF-8 encoding
+- Time Machine: don't prompt for new backup disks
 
 Only these whitelisted preferences are captured — no arbitrary system data.
 
@@ -51,8 +51,7 @@ Only these whitelisted preferences are captured — no arbitrary system data.
 
 ### Dev Tools with Versions
 
-- Node.js, Go, Python, Rust, Ruby — detected with their installed versions
-- Package managers: npm, pnpm, yarn, pip, cargo
+- Go, Node.js, Python, Rust, Java, Ruby, Docker — detected with their installed versions
 
 ## Flags
 
@@ -61,6 +60,7 @@ Only these whitelisted preferences are captured — no arbitrary system data.
 | `--dry-run` | Preview what would be captured without uploading or saving |
 | `--json` | Output the snapshot as JSON to stdout (pipe to other tools) |
 | `--local` | Save the snapshot to `~/.openboot/snapshot.json` instead of uploading |
+| `--import <path>` | Restore from a local JSON file or URL |
 
 ### Examples
 
@@ -73,13 +73,20 @@ openboot snapshot --dry-run
 Pipe the JSON output to `jq`:
 
 ```
-openboot snapshot --json | jq '.homebrew.formulae'
+openboot snapshot --json | jq '.packages.formulae'
 ```
 
 Save locally for later:
 
 ```
 openboot snapshot --local
+```
+
+Restore from a snapshot file:
+
+```
+openboot snapshot --import my-setup.json
+openboot snapshot --import https://example.com/snapshot.json
 ```
 
 ## Interactive Flow

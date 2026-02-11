@@ -1,15 +1,22 @@
 # Getting Started
 
-OpenBoot is an open-source command-line tool that bootstraps your macOS development environment in minutes. Instead of manually installing Homebrew, CLI tools, GUI apps, configuring your shell, and tweaking macOS settings one by one, OpenBoot handles it all with a single command — through a beautiful interactive TUI that lets you pick exactly what you want.
+OpenBoot is an open-source command-line tool for macOS developers. Whether you're setting up a brand-new Mac or capturing an existing one, OpenBoot has you covered:
 
-## System Requirements
+- **New Mac?** Bootstrap your entire dev environment in minutes — Homebrew packages, GUI apps, dotfiles, shell config, and macOS preferences — all through an interactive TUI.
+- **Already set up?** Run `openboot snapshot` to capture what you have. Save it locally or share it as a config URL — your choice.
+
+Pick the path that fits:
+
+## Path 1: Bootstrap a New Mac
+
+### System Requirements
 
 - **macOS 12 (Monterey)** or later
 - **Apple Silicon (M1/M2/M3/M4)** and **Intel** Macs are both supported
 - An internet connection (packages are downloaded from Homebrew)
 - Admin privileges (you'll be prompted for your password during install)
 
-## Quick Install
+### Quick Install
 
 Open Terminal and run:
 
@@ -19,7 +26,7 @@ curl -fsSL https://openboot.dev/install.sh | bash
 
 That's it. One line.
 
-## What Happens When You Run It
+### What Happens When You Run It
 
 Here's exactly what the install script does, in order:
 
@@ -33,7 +40,7 @@ Here's exactly what the install script does, in order:
 
 5. **Installs your selections** — once you confirm, OpenBoot skips already-installed packages, then installs CLI tools in parallel and GUI apps sequentially (with terminal access for any password prompts). It also configures Oh-My-Zsh (with plugins and a theme), sets up useful shell aliases, and applies macOS preference tweaks.
 
-## First Run Experience
+### First Run Experience
 
 When the TUI launches, you'll see:
 
@@ -44,3 +51,21 @@ When the TUI launches, you'll see:
 The TUI shows which packages are already installed on your system (marked with a check) so you won't reinstall anything unnecessarily.
 
 After installation completes, restart your terminal or run `source ~/.zshrc` to pick up the new shell configuration.
+
+## Path 2: Snapshot Your Existing Mac
+
+Already have your Mac configured just the way you like it? Snapshot captures your current setup — Homebrew packages, macOS preferences, shell config, and git settings — so you can save it locally or share it.
+
+```
+curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
+```
+
+Or if you already have `openboot` installed:
+
+```
+openboot snapshot
+```
+
+Snapshot walks you through an interactive review of everything it found. You can toggle individual items on or off before deciding to save locally (`--local`) or upload to openboot.dev.
+
+For full details, see the [Snapshot](/docs#snapshot) documentation.
