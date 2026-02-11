@@ -35,3 +35,24 @@
 	--danger: #dc2626;
 	--danger-hover: #b91c1c;
 }
+
+/* Shiki dual-theme: dark mode (default) uses --shiki-dark, light mode uses --shiki-light */
+.shiki,
+.shiki span {
+	color: var(--shiki-dark) !important;
+	background-color: transparent !important;
+}
+
+[data-theme='light'] .shiki,
+[data-theme='light'] .shiki span {
+	color: var(--shiki-light) !important;
+	background-color: transparent !important;
+}
+
+.shiki {
+	background-color: var(--code-bg) !important;
+}
+
+[data-theme='light'] .shiki {
+	background-color: var(--code-bg) !important;
+}
