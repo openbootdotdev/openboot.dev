@@ -3,6 +3,22 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { auth } from '$lib/stores/auth';
 
+	interface PublicConfig {
+		id: string;
+		name: string;
+		slug: string;
+		base_preset: string;
+		username: string;
+		avatar_url: string | null;
+		install_count: number;
+		cliCount: number;
+		appsCount: number;
+		npmCount: number;
+		totalCount: number;
+	}
+
+	let { data }: { data: { publicConfigs: PublicConfig[] } } = $props();
+
 	let copied = $state('');
 	let starCount = $state(0);
 
@@ -187,6 +203,83 @@
 			</div>
 		</section>
 
+		{#if data.publicConfigs && data.publicConfigs.length > 0}
+			<section class="explore-section">
+				<div class="section-header">
+					<h2 class="section-title">Explore Configs</h2>
+					<p class="section-subtitle">See what others are building with</p>
+				</div>
+				<div class="explore-grid">
+					{#each data.publicConfigs as config}
+						<a href="/{config.username}/{config.slug}" class="explore-card">
+							<div class="explore-card-header">
+								{#if config.avatar_url}
+									<img src={config.avatar_url} alt={config.username} class="explore-avatar" />
+								{:else}
+									<div class="explore-avatar-placeholder">{config.username.charAt(0).toUpperCase()}</div>
+								{/if}
+								<div class="explore-user-info">
+									<span class="explore-username">@{config.username}</span>
+									<span class="explore-preset-badge">{config.base_preset}</span>
+								</div>
+							</div>
+							<h3 class="explore-config-name">{config.name}</h3>
+							<div class="explore-stats">
+								{#if config.cliCount > 0}
+									<span class="explore-stat">
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<polyline points="4 17 10 11 4 5"></polyline>
+											<line x1="12" y1="19" x2="20" y2="19"></line>
+										</svg>
+										{config.cliCount}
+									</span>
+								{/if}
+								{#if config.appsCount > 0}
+									<span class="explore-stat">
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+											<line x1="8" y1="21" x2="16" y2="21"></line>
+											<line x1="12" y1="17" x2="12" y2="21"></line>
+										</svg>
+										{config.appsCount}
+									</span>
+								{/if}
+								{#if config.npmCount > 0}
+									<span class="explore-stat">
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+											<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+											<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+											<line x1="12" y1="22.08" x2="12" y2="12"></line>
+										</svg>
+										{config.npmCount}
+									</span>
+								{/if}
+								<span class="explore-stat-installs">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+										<polyline points="7 10 12 15 17 10"></polyline>
+										<line x1="12" y1="15" x2="12" y2="3"></line>
+									</svg>
+									{config.install_count}
+								</span>
+							</div>
+							<div class="explore-view-link">
+								View →
+							</div>
+						</a>
+					{/each}
+				</div>
+				<div class="explore-cta">
+					<a href="/login?return_to=/dashboard" class="explore-cta-button">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+						</svg>
+						Create your own setup
+					</a>
+				</div>
+			</section>
+		{/if}
 
 	</div>
 </main>
@@ -707,6 +800,164 @@
 		font-size: 0.78rem;
 	}
 
+	/* ── Explore Section ─────────────────────────────── */
+
+	.explore-section {
+		margin-top: 80px;
+		margin-bottom: 40px;
+	}
+
+	.explore-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 20px;
+		margin-bottom: 32px;
+	}
+
+	.explore-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		padding: 20px;
+		text-decoration: none;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+
+	.explore-card:hover {
+		border-color: var(--accent);
+		transform: translateY(-4px);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+	}
+
+	.explore-card-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.explore-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		object-fit: cover;
+	}
+
+	.explore-avatar-placeholder {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		background: var(--accent);
+		color: #000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 0.9rem;
+	}
+
+	.explore-user-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+	}
+
+	.explore-username {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.explore-preset-badge {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.7rem;
+		color: var(--accent);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.explore-config-name {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		margin: 0;
+		line-height: 1.3;
+	}
+
+	.explore-stats {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+
+	.explore-stat {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		font-family: 'JetBrains Mono', monospace;
+	}
+
+	.explore-stat svg {
+		color: var(--accent);
+	}
+
+	.explore-stat-installs {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		font-family: 'JetBrains Mono', monospace;
+		margin-left: auto;
+	}
+
+	.explore-stat-installs svg {
+		color: var(--text-muted);
+	}
+
+	.explore-view-link {
+		font-size: 0.85rem;
+		color: var(--accent);
+		font-weight: 500;
+		margin-top: auto;
+		padding-top: 8px;
+		border-top: 1px solid var(--border);
+	}
+
+	.explore-cta {
+		text-align: center;
+	}
+
+	.explore-cta-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		padding: 14px 32px;
+		background: var(--accent);
+		color: #000;
+		border: none;
+		border-radius: 10px;
+		font-size: 1rem;
+		font-weight: 600;
+		text-decoration: none;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.explore-cta-button:hover {
+		background: var(--accent-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+	}
+
 	/* ── Responsive ───────────────────────────────────── */
 
 	@media (max-width: 960px) {
@@ -788,6 +1039,10 @@
 		.features-grid {
 			grid-template-columns: 1fr;
 			gap: 4px;
+		}
+
+		.explore-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>
