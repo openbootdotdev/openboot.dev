@@ -548,11 +548,11 @@
 								<span class="config-meta-item">Modified: <strong>{formatDate(config.updated_at)}</strong></span>
 							{/if}
 						</div>
-						<div class="config-url" onclick={(e) => e.stopPropagation()}>
+						<div class="config-url" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 							<code>curl -fsSL {getInstallUrl(config)} | bash</code>
 							<button class="copy-btn" onclick={() => copyToClipboard(`curl -fsSL https://${getInstallUrl(config)} | bash`, config.id)}>{copiedId === config.id ? 'Copied!' : 'Copy'}</button>
 						</div>
-						<div class="config-actions" onclick={(e) => e.stopPropagation()}>
+						<div class="config-actions" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
 							<Button variant="secondary" onclick={() => duplicateConfig(config.slug)}>Duplicate</Button>
 							<Button variant="secondary" onclick={() => shareConfig(config)}>Share</Button>
@@ -566,8 +566,8 @@
 </main>
 
 {#if showModal}
-	<div class="modal-overlay" onclick={closeModal}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-overlay" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} role="dialog" tabindex="0">
+		<div class="modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 			<div class="modal-header">
 				<h3 class="modal-title">{editingSlug ? 'Edit Configuration' : 'New Configuration'}</h3>
 				<button class="close-btn" onclick={closeModal}>&times;</button>
@@ -577,20 +577,20 @@
 					<div class="error-message">{error}</div>
 				{/if}
 
-				<div class="form-group">
-					<label class="form-label">Name</label>
-					<input type="text" class="form-input" bind:value={formData.name} placeholder="e.g. Frontend Team" />
-					<p class="form-hint">Will be used as the URL slug</p>
-				</div>
+			<div class="form-group">
+				<label class="form-label" for="config-name">Name</label>
+				<input id="config-name" type="text" class="form-input" bind:value={formData.name} placeholder="e.g. Frontend Team" />
+				<p class="form-hint">Will be used as the URL slug</p>
+			</div>
 
-				<div class="form-group">
-					<label class="form-label">Description</label>
-					<input type="text" class="form-input" bind:value={formData.description} placeholder="Optional description" />
-				</div>
+			<div class="form-group">
+				<label class="form-label" for="config-description">Description</label>
+				<input id="config-description" type="text" class="form-input" bind:value={formData.description} placeholder="Optional description" />
+			</div>
 
-				<div class="form-group">
-					<label class="form-label">Base Preset</label>
-					<select class="form-select" onchange={(e) => handlePresetChange(e.currentTarget.value)} value={formData.base_preset}>
+			<div class="form-group">
+				<label class="form-label" for="config-preset">Base Preset</label>
+				<select id="config-preset" class="form-select" onchange={(e) => handlePresetChange(e.currentTarget.value)} value={formData.base_preset}>
 						<option value="minimal">minimal - CLI essentials</option>
 						<option value="developer">developer - Ready-to-code setup</option>
 						<option value="full">full - Complete dev environment</option>
@@ -604,20 +604,20 @@
 					</label>
 				</div>
 
-				<div class="form-group">
-					<label class="form-label">Short Alias (Optional)</label>
-					<div class="alias-input">
-						<span class="alias-prefix">openboot.dev/</span>
-						<input type="text" class="form-input" bind:value={formData.alias} placeholder="e.g. myteam" />
-					</div>
-					<p class="form-hint">2-20 characters, lowercase letters, numbers, and dashes only.</p>
+			<div class="form-group">
+				<label class="form-label" for="config-alias">Short Alias (Optional)</label>
+				<div class="alias-input">
+					<span class="alias-prefix">openboot.dev/</span>
+					<input id="config-alias" type="text" class="form-input" bind:value={formData.alias} placeholder="e.g. myteam" />
 				</div>
+				<p class="form-hint">2-20 characters, lowercase letters, numbers, and dashes only.</p>
+			</div>
 
-				<div class="form-group">
-					<label class="form-label">Dotfiles Repository (Optional)</label>
-					<input type="text" class="form-input" bind:value={formData.dotfiles_repo} placeholder="https://github.com/username/dotfiles" />
-					<p class="form-hint">After installing packages, OpenBoot will clone this repo and deploy configs via stow.</p>
-				</div>
+			<div class="form-group">
+				<label class="form-label" for="config-dotfiles">Dotfiles Repository (Optional)</label>
+				<input id="config-dotfiles" type="text" class="form-input" bind:value={formData.dotfiles_repo} placeholder="https://github.com/username/dotfiles" />
+				<p class="form-hint">After installing packages, OpenBoot will clone this repo and deploy configs via stow.</p>
+			</div>
 
 				{#if true}
 			{@const grouped = getGroupedPackages()}
@@ -747,10 +747,10 @@
 			</div>
 			{/if}
 
-				<div class="form-group">
-					<label class="form-label">Custom Post-Install Script (Optional)</label>
-					<textarea class="form-textarea" bind:value={formData.custom_script} placeholder="#!/bin/bash&#10;# Commands to run after installation"></textarea>
-				</div>
+			<div class="form-group">
+				<label class="form-label" for="config-script">Custom Post-Install Script (Optional)</label>
+				<textarea id="config-script" class="form-textarea" bind:value={formData.custom_script} placeholder="#!/bin/bash&#10;# Commands to run after installation"></textarea>
+			</div>
 			</div>
 			<div class="modal-footer">
 				<Button variant="secondary" onclick={closeModal}>Cancel</Button>
@@ -761,8 +761,8 @@
 {/if}
 
 {#if showImportModal}
-	<div class="modal-overlay" onclick={() => showImportModal = false}>
-		<div class="modal import-modal" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-overlay" onclick={() => showImportModal = false} onkeydown={(e) => e.key === 'Escape' && (showImportModal = false)} role="dialog" tabindex="0">
+		<div class="modal import-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 			<div class="modal-header">
 				<h3 class="modal-title">Import Brewfile</h3>
 				<button class="close-btn" onclick={() => showImportModal = false}>&times;</button>
@@ -772,15 +772,16 @@
 					<div class="error-message">{importError}</div>
 				{/if}
 
-				<div class="form-group">
-					<label class="form-label">Paste your Brewfile content</label>
-					<textarea
-						class="form-textarea brewfile-input"
-						bind:value={brewfileContent}
-						placeholder={'tap "homebrew/cask"\nbrew "git"\nbrew "node"\ncask "visual-studio-code"\ncask "docker"'}
-					></textarea>
-					<p class="form-hint">Supports tap, brew, and cask entries</p>
-				</div>
+			<div class="form-group">
+				<label class="form-label" for="brewfile-input">Paste your Brewfile content</label>
+				<textarea
+					id="brewfile-input"
+					class="form-textarea brewfile-input"
+					bind:value={brewfileContent}
+					placeholder={'tap "homebrew/cask"\nbrew "git"\nbrew "node"\ncask "visual-studio-code"\ncask "docker"'}
+				></textarea>
+				<p class="form-hint">Supports tap, brew, and cask entries</p>
+			</div>
 			</div>
 			<div class="modal-footer">
 				<Button variant="secondary" onclick={() => showImportModal = false}>Cancel</Button>
@@ -791,8 +792,8 @@
 {/if}
 
 {#if showShareModal}
-	<div class="modal-overlay" onclick={closeShareModal} onkeydown={(e) => e.key === 'Escape' && closeShareModal()} role="dialog" tabindex="-1">
-		<div class="modal share-modal" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-overlay" onclick={closeShareModal} onkeydown={(e) => e.key === 'Escape' && closeShareModal()} role="dialog" tabindex="0">
+		<div class="modal share-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 			<div class="modal-header">
 				<h3 class="modal-title">Share Configuration</h3>
 				<button class="close-btn" onclick={closeShareModal}>&times;</button>

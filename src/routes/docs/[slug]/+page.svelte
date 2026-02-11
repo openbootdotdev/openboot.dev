@@ -37,7 +37,7 @@
 
 <article class="prose">
 	{#key slug}
-		<svelte:component this={Component} />
+		<Component />
 	{/key}
 </article>
 
