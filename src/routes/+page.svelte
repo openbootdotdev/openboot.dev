@@ -639,6 +639,16 @@
 	.hero-action-card .install-command {
 		margin-top: auto;
 		margin-bottom: 0;
+		align-items: flex-start;
+	}
+
+	.hero-action-card .install-command code {
+		white-space: normal;
+		overflow-wrap: break-word;
+		overflow: visible;
+		text-overflow: unset;
+		font-size: 0.82rem;
+		line-height: 1.5;
 	}
 
 	/* ── How It Works ────────────────────────────────── */
