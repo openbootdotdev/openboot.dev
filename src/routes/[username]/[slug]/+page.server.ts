@@ -8,9 +8,9 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 	if (!env) throw error(500, 'Platform env not available');
 
 	// 1. Find user
-	const targetUser = await env.DB.prepare('SELECT id, username FROM users WHERE username = ?')
+	const targetUser = await env.DB.prepare('SELECT id, username, avatar_url FROM users WHERE username = ?')
 		.bind(username)
-		.first<{ id: string; username: string }>();
+		.first<{ id: string; username: string; avatar_url: string | null }>();
 
 	if (!targetUser) throw error(404, 'User not found');
 
