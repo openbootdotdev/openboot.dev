@@ -40,7 +40,8 @@ function buildSvg(
 	preset: string,
 	homebrew: { name: string }[],
 	npm: { name: string }[],
-	total: number
+	total: number,
+	userInitial: string
 ): string {
 	const W = 1200;
 	const H = 630;
@@ -48,79 +49,86 @@ function buildSvg(
 
 	let tagsSvg = '';
 	let curX = pad;
-	let curY = 180;
-	const tagH = 28;
-	const tagGap = 8;
-	const tagPadX = 14;
+	let curY = 220;
+	const tagH = 32;
+	const tagGap = 10;
+	const tagPadX = 16;
 	const maxY = H - 70;
-	const charW = 8.4;
+	const charW = 9;
 
-	function addGroup(label: string, count: number, pkgs: { name: string }[], color: string) {
-		if (curY > maxY) return;
-		tagsSvg += `<text x="${pad}" y="${curY}" fill="#555" font-size="11" font-family="Inter" letter-spacing="1.5">${label} · ${count}</text>`;
-		curY += 20;
-		curX = pad;
+	function addGroup(pkgs: { name: string }[], color: string, maxShow: number = 5) {
+		if (curY > maxY || pkgs.length === 0) return;
+		
+		const displayPkgs = pkgs.slice(0, maxShow);
+		
+		for (let i = 0; i < displayPkgs.length; i++) {
+			if (curY > maxY) return;
 
-		for (let i = 0; i < pkgs.length; i++) {
-			if (curY > maxY) {
-				tagsSvg += `<text x="${curX}" y="${curY + 18}" fill="#555" font-size="13" font-family="Inter">+${pkgs.length - i} more</text>`;
-				curY += tagH + tagGap;
-				return;
-			}
-
-			const text = pkgs[i].name;
+			const text = displayPkgs[i].name;
 			const tw = text.length * charW + tagPadX * 2;
 
 			if (curX + tw > W - pad && curX !== pad) {
 				curX = pad;
 				curY += tagH + tagGap;
-				if (curY > maxY) {
-					tagsSvg += `<text x="${curX}" y="${curY + 18}" fill="#555" font-size="13" font-family="Inter">+${pkgs.length - i} more</text>`;
-					curY += tagH + tagGap;
-					return;
-				}
+				if (curY > maxY) return;
 			}
 
-			tagsSvg += `<rect x="${curX}" y="${curY}" width="${tw}" height="${tagH}" rx="6" fill="#141414" stroke="#252525" stroke-width="1"/>`;
-			tagsSvg += `<text x="${curX + tagPadX}" y="${curY + 18}" fill="${color}" font-size="13" font-family="Inter">${esc(text)}</text>`;
+			tagsSvg += `<rect x="${curX}" y="${curY}" width="${tw}" height="${tagH}" rx="8" fill="#1a1a1a" stroke="${color}" stroke-width="2"/>`;
+			tagsSvg += `<text x="${curX + tagPadX}" y="${curY + 21}" fill="${color}" font-size="15" font-weight="600" font-family="Inter">${esc(text)}</text>`;
 			curX += tw + tagGap;
 		}
-		curY += tagH + tagGap + 8;
+		
+		if (pkgs.length > maxShow) {
+			const remaining = pkgs.length - maxShow;
+			const tw = 80;
+			if (curX + tw > W - pad && curX !== pad) {
+				curX = pad;
+				curY += tagH + tagGap;
+			}
+			tagsSvg += `<rect x="${curX}" y="${curY}" width="${tw}" height="${tagH}" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>`;
+			tagsSvg += `<text x="${curX + tagPadX}" y="${curY + 21}" fill="#666" font-size="14" font-family="Inter">+${remaining} more</text>`;
+		}
+		
+		curY += tagH + tagGap + 12;
 		curX = pad;
 	}
 
-	if (homebrew.length > 0) addGroup('HOMEBREW', homebrew.length, homebrew, '#e0e0e0');
-	if (npm.length > 0) addGroup('NPM', npm.length, npm, '#22c55e');
+	if (homebrew.length > 0) addGroup(homebrew, '#22c55e', 5);
+	if (npm.length > 0) addGroup(npm, '#3b82f6', 3);
 
 	const descLine = description
-		? `<text x="${pad}" y="138" fill="#888" font-size="16" font-family="Inter">${esc(description.slice(0, 80))}</text>`
+		? `<text x="${pad + 80}" y="138" fill="#888" font-size="17" font-family="Inter">${esc(description.slice(0, 70))}</text>`
 		: '';
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
 		<defs>
 			<radialGradient id="glow" cx="0.2" cy="0.15" r="0.55">
-				<stop offset="0%" stop-color="#22c55e" stop-opacity="0.07"/>
-				<stop offset="40%" stop-color="#22c55e" stop-opacity="0.03"/>
+				<stop offset="0%" stop-color="#22c55e" stop-opacity="0.1"/>
+				<stop offset="40%" stop-color="#22c55e" stop-opacity="0.04"/>
 				<stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
 			</radialGradient>
 		</defs>
 		<rect width="${W}" height="${H}" fill="#0a0a0a"/>
 		<rect width="${W}" height="${H}" fill="url(#glow)"/>
 
-		<text x="${pad}" y="76" fill="#22c55e" font-size="28" font-weight="bold" font-family="Inter">OpenBoot</text>
-		<text x="${pad}" y="112" fill="#ffffff" font-size="28" font-weight="bold" font-family="Inter">${esc(name)}</text>
+		<text x="${pad}" y="64" fill="#22c55e" font-size="24" font-weight="bold" font-family="Inter">OpenBoot</text>
+
+		<circle cx="${pad + 32}" cy="118" r="32" fill="#22c55e"/>
+		<text x="${pad + 32}" y="128" fill="#000" font-size="28" font-weight="bold" font-family="Inter" text-anchor="middle">${userInitial}</text>
+
+		<text x="${pad + 80}" y="110" fill="#ffffff" font-size="32" font-weight="bold" font-family="Inter">${esc(name)}</text>
 		${descLine}
 
-		<text x="${W - pad}" y="68" fill="#666" font-size="15" font-family="Inter" text-anchor="end">@${esc(username)}</text>
-		<text x="${W - pad}" y="90" fill="#22c55e" font-size="15" font-family="Inter" text-anchor="end">${total} packages</text>
+		<text x="${W - pad}" y="68" fill="#666" font-size="16" font-family="Inter" text-anchor="end">@${esc(username)}</text>
+		<text x="${W - pad}" y="94" fill="#22c55e" font-size="16" font-family="Inter" text-anchor="end">${total} packages</text>
+		<text x="${W - pad}" y="118" fill="#666" font-size="15" font-family="Inter" text-anchor="end">${esc(preset)} preset</text>
 
-		<line x1="${pad}" y1="158" x2="${W - pad}" y2="158" stroke="#1a1a1a" stroke-width="1"/>
+		<line x1="${pad}" y1="178" x2="${W - pad}" y2="178" stroke="#1a1a1a" stroke-width="2"/>
 
 		${tagsSvg}
 
-		<line x1="${pad}" y1="${H - 56}" x2="${W - pad}" y2="${H - 56}" stroke="#1a1a1a" stroke-width="1"/>
-		<text x="${pad}" y="${H - 28}" fill="#444" font-size="14" font-family="Inter">openboot.dev</text>
-		<text x="${W - pad}" y="${H - 28}" fill="#444" font-size="13" font-family="Inter" text-anchor="end">${esc(preset)} preset</text>
+		<line x1="${pad}" y1="${H - 56}" x2="${W - pad}" y2="${H - 56}" stroke="#1a1a1a" stroke-width="2"/>
+		<text x="${pad}" y="${H - 28}" fill="#444" font-size="15" font-family="Inter">openboot.dev</text>
 	</svg>`;
 }
 
@@ -130,9 +138,9 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 
 	const { username, slug } = params;
 
-	const targetUser = await env.DB.prepare('SELECT id, username FROM users WHERE username = ?')
+	const targetUser = await env.DB.prepare('SELECT id, username, avatar_url FROM users WHERE username = ?')
 		.bind(username)
-		.first<{ id: string; username: string }>();
+		.first<{ id: string; username: string; avatar_url: string | null }>();
 
 	if (!targetUser) return new Response('Not found', { status: 404 });
 
@@ -164,6 +172,7 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 	const total = rawPkgs.length;
 
 	const fontBuffers = await loadFonts();
+	const userInitial = targetUser.username.charAt(0).toUpperCase();
 
 	const svg = buildSvg(
 		config.name,
@@ -172,7 +181,8 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 		config.base_preset,
 		homebrew,
 		npm,
-		total
+		total,
+		userInitial
 	);
 
 	try {

@@ -97,34 +97,34 @@
 		return `https://formulae.brew.sh/formula/${name}`;
 	}
 
-	const snapshot = data.config.snapshot || {};
-	const snapshotPkgs = snapshot.packages || {};
-	const macosPrefs = snapshot.macos_prefs || [];
-	const shell = snapshot.shell || {};
-	const git = snapshot.git || {};
-	const devTools = snapshot.dev_tools || [];
+	const snapshot = $derived(data.config.snapshot || {});
+	const snapshotPkgs = $derived(snapshot.packages || {});
+	const macosPrefs = $derived(snapshot.macos_prefs || []);
+	const shell = $derived(snapshot.shell || {});
+	const git = $derived(snapshot.git || {});
+	const devTools = $derived(snapshot.dev_tools || []);
 
-	const configPkgs: { name: string; type: string }[] = Array.isArray(data.config.packages)
+	const configPkgs: { name: string; type: string }[] = $derived(Array.isArray(data.config.packages)
 		? data.config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
-		: [];
+		: []);
 
-	const configCli = configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm');
-	const configApps = configPkgs.filter((p: any) => p.type === 'cask');
-	const configNpm = configPkgs.filter((p: any) => p.type === 'npm');
+	const configCli = $derived(configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm'));
+	const configApps = $derived(configPkgs.filter((p: any) => p.type === 'cask'));
+	const configNpm = $derived(configPkgs.filter((p: any) => p.type === 'npm'));
 
-	const formulae = snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name);
-	const casks = snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name);
-	const taps = snapshotPkgs.taps || [];
-	const hasSnapshot = !!(snapshotPkgs.formulae?.length || snapshotPkgs.casks?.length);
+	const formulae = $derived(snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name));
+	const casks = $derived(snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name));
+	const taps = $derived(snapshotPkgs.taps || []);
+	const hasSnapshot = $derived(!!(snapshotPkgs.formulae?.length || snapshotPkgs.casks?.length));
 
-	const tabs = [
+	const tabs = $derived([
 		{ id: 'overview', label: 'Overview' },
 		{ id: 'formulae', label: 'CLI' },
 		{ id: 'casks', label: 'Apps' },
 		...(configNpm.length > 0 ? [{ id: 'npm', label: 'NPM' }] : []),
 		...(macosPrefs.length > 0 ? [{ id: 'macos', label: 'macOS' }] : []),
 		...(shell.default || shell.oh_my_zsh ? [{ id: 'shell', label: 'Shell' }] : [])
-	];
+	]);
 </script>
 
 <svelte:head>
@@ -152,6 +152,11 @@
 <main class="container">
 	<section class="hero">
 		<div class="config-meta">
+			{#if data.configUser.avatar_url}
+				<img src={data.configUser.avatar_url} alt={data.configUser.username} class="user-avatar" />
+			{:else}
+				<div class="user-avatar-placeholder">{data.configUser.username.charAt(0).toUpperCase()}</div>
+			{/if}
 			<span class="author">@{data.configUser.username}</span>
 			<span class="separator">/</span>
 			<span class="config-slug">{data.config.slug}</span>
@@ -263,7 +268,7 @@
 					{/if}
 
 					{#if casks.length > 0}
-						<div class="category-card">
+						<div class="category-card apps-showcase">
 							<div class="category-header">
 								<span class="category-icon">🖥</span>
 								<div>
@@ -271,13 +276,16 @@
 									<span class="category-count">{casks.length} apps</span>
 								</div>
 							</div>
-							<div class="category-items">
-								{#each casks.slice(0, 6) as pkg}
-									<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="category-item">
-										<span class="item-name">{pkg}</span>
-										{#if data.packageDescriptions[pkg]}
-											<span class="item-desc">{data.packageDescriptions[pkg]}</span>
-										{/if}
+							<div class="apps-grid">
+								{#each casks.slice(0, 6) as pkg, i}
+									<a href={getPackageUrl(pkg, 'cask')} target="_blank" rel="noopener noreferrer" class="app-card" data-index={i}>
+										<div class="app-icon">{pkg.charAt(0).toUpperCase()}</div>
+										<div class="app-info">
+											<span class="app-name">{pkg}</span>
+											{#if data.packageDescriptions[pkg]}
+												<span class="app-desc">{data.packageDescriptions[pkg]}</span>
+											{/if}
+										</div>
 									</a>
 								{/each}
 							</div>
@@ -443,11 +451,26 @@
 			</div>
 		{/if}
 	</section>
+
+	<section class="cta-section">
+		<div class="cta-card">
+			<div class="cta-content">
+				<h3 class="cta-title">Like this setup?</h3>
+				<p class="cta-desc">Create your own config and share it with your team in minutes.</p>
+			</div>
+			<a href="/login?return_to=/dashboard" class="cta-button">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+				</svg>
+				Create Your Own
+			</a>
+		</div>
+	</section>
 </main>
 
 {#if showShareModal}
-	<div class="share-overlay" onclick={closeShareModal} role="dialog" tabindex="-1">
-		<div class="share-modal" onclick={(e) => e.stopPropagation()}>
+	<div class="share-overlay" onclick={closeShareModal} onkeydown={(e) => e.key === 'Escape' && closeShareModal()} role="dialog" tabindex="0">
+		<div class="share-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 			<div class="share-modal-header">
 				<h3 class="share-modal-title">Share Configuration</h3>
 				<button class="share-close-btn" onclick={closeShareModal}>&times;</button>
@@ -517,10 +540,32 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 4px;
+		gap: 8px;
 		font-size: 0.9rem;
 		color: var(--text-muted);
 		margin-bottom: 8px;
+	}
+
+	.user-avatar {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		object-fit: cover;
+	}
+
+	.user-avatar-placeholder {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		background: var(--accent);
+		color: #000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 1.2rem;
 	}
 
 	.author {
@@ -711,12 +756,6 @@
 		min-height: 300px;
 	}
 
-	.overview-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: 16px;
-	}
-
 	.overview-card {
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
@@ -743,31 +782,6 @@
 		color: var(--text-secondary);
 	}
 
-	.tool-list {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.tool-item {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 8px 12px;
-		background: var(--bg-tertiary);
-		border-radius: 6px;
-	}
-
-	.tool-name {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
-	}
-
-	.tool-version {
-		font-size: 0.8rem;
-		color: var(--text-muted);
-	}
-
 	.shell-info {
 		display: flex;
 		flex-direction: column;
@@ -778,11 +792,6 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-	}
-
-	.info-row.plugins {
-		flex-direction: column;
-		gap: 8px;
 	}
 
 	.info-label {
@@ -808,7 +817,7 @@
 		font-weight: 600;
 	}
 
-	.plugin-tags, .plugin-grid {
+	.plugin-grid {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 6px;
@@ -821,18 +830,6 @@
 		border-radius: 4px;
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.75rem;
-	}
-
-	.tap-list {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-
-	.tap-item {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
-		color: var(--text-secondary);
 	}
 
 	.package-grid {
@@ -907,6 +904,125 @@
 		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 20px;
+	}
+
+	.category-card.apps-showcase {
+		grid-column: 1 / -1;
+	}
+
+	.apps-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 12px;
+	}
+
+	.app-card {
+		display: flex;
+		align-items: flex-start;
+		gap: 14px;
+		padding: 16px;
+		background: var(--bg-tertiary);
+		border: 2px solid transparent;
+		border-radius: 10px;
+		text-decoration: none;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.app-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: var(--accent);
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+
+	.app-card:hover {
+		background: var(--bg-secondary);
+		border-color: var(--accent);
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+	}
+
+	.app-card:hover::before {
+		opacity: 1;
+	}
+
+	.app-card[data-index="0"] { border-color: rgba(34, 197, 94, 0.2); }
+	.app-card[data-index="1"] { border-color: rgba(59, 130, 246, 0.2); }
+	.app-card[data-index="2"] { border-color: rgba(168, 85, 247, 0.2); }
+	.app-card[data-index="3"] { border-color: rgba(251, 146, 60, 0.2); }
+	.app-card[data-index="4"] { border-color: rgba(236, 72, 153, 0.2); }
+	.app-card[data-index="5"] { border-color: rgba(14, 165, 233, 0.2); }
+
+	.app-icon {
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 1.5rem;
+		flex-shrink: 0;
+		background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+		color: #000;
+		box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+	}
+
+	.app-card[data-index="1"] .app-icon {
+		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+	}
+
+	.app-card[data-index="2"] .app-icon {
+		background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+		box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+	}
+
+	.app-card[data-index="3"] .app-icon {
+		background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+		box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
+	}
+
+	.app-card[data-index="4"] .app-icon {
+		background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+		box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+	}
+
+	.app-card[data-index="5"] .app-icon {
+		background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+		box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+	}
+
+	.app-info {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.app-name {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.app-desc {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		line-height: 1.4;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
 	.category-header {
@@ -1247,6 +1363,69 @@
 		font-weight: 500;
 	}
 
+	.cta-section {
+		margin-top: 48px;
+		padding-top: 48px;
+		border-top: 1px solid var(--border);
+	}
+
+	.cta-card {
+		background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.05) 100%);
+		border: 1px solid rgba(34, 197, 94, 0.2);
+		border-radius: 16px;
+		padding: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		transition: all 0.3s;
+	}
+
+	.cta-card:hover {
+		border-color: rgba(34, 197, 94, 0.4);
+		box-shadow: 0 8px 32px rgba(34, 197, 94, 0.1);
+	}
+
+	.cta-content {
+		flex: 1;
+	}
+
+	.cta-title {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 8px;
+		color: var(--text-primary);
+	}
+
+	.cta-desc {
+		font-size: 0.95rem;
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	.cta-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 14px 28px;
+		background: var(--accent);
+		color: #000;
+		border: none;
+		border-radius: 10px;
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-decoration: none;
+		cursor: pointer;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+	.cta-button:hover {
+		background: var(--accent-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+	}
+
 	@media (max-width: 600px) {
 		.config-name {
 			font-size: 1.5rem;
@@ -1268,6 +1447,20 @@
 
 		.package-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.apps-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.cta-card {
+			flex-direction: column;
+			text-align: center;
+		}
+
+		.cta-button {
+			width: 100%;
+			justify-content: center;
 		}
 	}
 </style>
