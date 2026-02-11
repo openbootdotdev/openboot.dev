@@ -66,6 +66,12 @@
 	<div class="header-container">
 		<a href="/" class="header-logo">OpenBoot</a>
 		<div class="header-right">
+			{#if $auth.user}
+				<a href="/dashboard" class="header-link">Dashboard</a>
+			{:else}
+				<a href="/login" class="header-link">Sign in</a>
+			{/if}
+			<a href="/docs" class="header-link">Docs</a>
 			<ThemeToggle />
 		</div>
 	</div>
@@ -320,7 +326,18 @@
 	.header-right {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 16px;
+	}
+
+	.header-link {
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--text-secondary);
+		transition: color 0.2s;
+	}
+
+	.header-link:hover {
+		color: var(--text-primary);
 	}
 
 	/* ── Main ──────────────────────────────────────────── */
