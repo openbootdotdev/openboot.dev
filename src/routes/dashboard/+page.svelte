@@ -210,7 +210,7 @@
 	onMount(async () => {
 		await auth.check();
 		if (!$auth.user && !$auth.loading) {
-			goto('/api/auth/login');
+			goto('/login?return_to=/dashboard');
 			return;
 		}
 		await loadConfigs();
