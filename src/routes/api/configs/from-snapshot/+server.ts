@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
@@ -8,6 +9,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const rl = checkRateLimit(getRateLimitKey('config-write', user.id), RATE_LIMITS.CONFIG_WRITE);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	let body;
 	try {
@@ -20,6 +26,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
 	if (!snapshot) return json({ error: 'Snapshot is required' }, { status: 400 });
+
+	const snapshotSize = JSON.stringify(snapshot).length;
+	if (snapshotSize > 100000) {
+		return json({ error: 'Snapshot payload too large (max 100KB)' }, { status: 400 });
+	}
 
 	const packages = snapshot.catalog_match?.matched || [];
 	const base_preset = snapshot.matched_preset || 'developer';
@@ -100,7 +111,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			)
 			.run();
 	} catch (e) {
-		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
+		console.error('POST /api/configs/from-snapshot error:', e);
+		return json({ error: 'Failed to create config from snapshot' }, { status: 500 });
 	}
 
 	const created = await env.DB.prepare(

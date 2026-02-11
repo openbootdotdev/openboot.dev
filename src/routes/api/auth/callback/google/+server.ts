@@ -1,13 +1,21 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { signToken, generateId, slugify } from '$lib/server/auth';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { validateReturnTo } from '$lib/server/validation';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
 
-export const GET: RequestHandler = async ({ url, platform, cookies }) => {
+export const GET: RequestHandler = async ({ url, platform, cookies, request }) => {
 	const env = platform?.env;
 	if (!env) throw new Error('Platform env not available');
+
+	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
+	const rl = checkRateLimit(getRateLimitKey('auth-callback-google', clientIp), RATE_LIMITS.AUTH_CALLBACK);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
@@ -103,7 +111,8 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 			maxAge: thirtyDays
 		});
 
-		const returnTo = cookies.get('auth_return_to') || '/dashboard';
+		const returnToRaw = cookies.get('auth_return_to') || '/dashboard';
+		const returnTo = validateReturnTo(returnToRaw) ? returnToRaw : '/dashboard';
 		cookies.delete('auth_state', { path: '/' });
 		cookies.delete('auth_return_to', { path: '/' });
 

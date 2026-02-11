@@ -1,15 +1,22 @@
+function sanitizeShellArg(value: string): string {
+	return value.replace(/[^a-zA-Z0-9_\-]/g, '');
+}
+
 export function generateInstallScript(
 	username: string,
 	slug: string,
 	customScript: string,
 	dotfilesRepo: string
 ): string {
+	const safeUsername = sanitizeShellArg(username);
+	const safeSlug = sanitizeShellArg(slug);
+
 	return `#!/bin/bash
 set -e
 
 echo "========================================"
 echo "  OpenBoot - Custom Install"
-echo "  Config: @${username}/${slug}"
+echo "  Config: @${safeUsername}/${safeSlug}"
 echo "========================================"
 echo ""
 
@@ -66,8 +73,8 @@ echo "Downloading OpenBoot..."
 curl -fsSL "\$OPENBOOT_URL" -o "\$OPENBOOT_BIN"
 chmod +x "\$OPENBOOT_BIN"
 
-echo "Using remote config: @${username}/${slug}"
-"\$OPENBOOT_BIN" --user ${username}/${slug} "\$@"
+echo "Using remote config: @${safeUsername}/${safeSlug}"
+"\$OPENBOOT_BIN" --user "${safeUsername}/${safeSlug}" "\$@"
 
 ${
 		customScript
@@ -75,7 +82,8 @@ ${
 echo ""
 echo "=== Running Custom Post-Install Script ==="
 set +e
-${customScript}
+CUSTOM_SCRIPT_B64="${btoa(unescape(encodeURIComponent(customScript)))}"
+echo "\$CUSTOM_SCRIPT_B64" | base64 -d | bash
 CUSTOM_SCRIPT_EXIT=$?
 set -e
 if [ $CUSTOM_SCRIPT_EXIT -ne 0 ]; then
@@ -93,6 +101,11 @@ echo ""
 echo "=== Setting up Dotfiles ==="
 DOTFILES_REPO="${dotfilesRepo}"
 DOTFILES_DIR="\$HOME/.dotfiles"
+
+if [[ ! "\$DOTFILES_REPO" =~ ^https:// ]]; then
+  echo "Error: Invalid dotfiles repo URL (must use HTTPS)"
+  exit 1
+fi
 
 if [ -d "\$DOTFILES_DIR" ]; then
   echo "Dotfiles directory already exists at \$DOTFILES_DIR"

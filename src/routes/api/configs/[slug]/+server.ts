@@ -1,6 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
+import { validateCustomScript, validateDotfilesRepo } from '$lib/server/validation';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
@@ -8,6 +10,12 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 
 	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const rlKey = getRateLimitKey('config-read', user.id);
+	const rl = checkRateLimit(rlKey, RATE_LIMITS.CONFIG_READ);
+	if (!rl.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	const config = await env.DB.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).first();
 	if (!config) return json({ error: 'Config not found' }, { status: 404 });
@@ -63,6 +71,22 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 	}
 
 	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+
+	const rlKeyW = getRateLimitKey('config-write', user.id);
+	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
+	if (!rlW.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } });
+	}
+
+	if (custom_script !== undefined && custom_script !== null && custom_script !== '') {
+		const sv = validateCustomScript(custom_script);
+		if (!sv.valid) return json({ error: sv.error }, { status: 400 });
+	}
+	if (dotfiles_repo !== undefined && dotfiles_repo !== null && dotfiles_repo !== '') {
+		const rv = validateDotfilesRepo(dotfiles_repo);
+		if (!rv.valid) return json({ error: rv.error }, { status: 400 });
+	}
+
 	const slug = params.slug;
 
 	const existing = await env.DB.prepare('SELECT id, alias FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, slug).first<{ id: string; alias: string | null }>();
@@ -129,7 +153,8 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 			)
 			.run();
 	} catch (e) {
-		return json({ error: 'Database error: ' + (e as Error).message }, { status: 500 });
+		console.error('PUT /api/configs/[slug] error:', e);
+		return json({ error: 'Failed to update config' }, { status: 500 });
 	}
 
 	const installUrl = newAlias ? `${env.APP_URL}/${newAlias}` : `${env.APP_URL}/${user.username}/${newSlug}`;
@@ -143,6 +168,12 @@ export const DELETE: RequestHandler = async ({ platform, cookies, params, reques
 
 	const user = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const rlKeyD = getRateLimitKey('config-write', user.id);
+	const rlD = checkRateLimit(rlKeyD, RATE_LIMITS.CONFIG_WRITE);
+	if (!rlD.allowed) {
+		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlD.retryAfter! / 1000)) } });
+	}
 
 	await env.DB.prepare('DELETE FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).run();
 
