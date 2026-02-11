@@ -24,7 +24,7 @@
 
 		if (!$auth.user && !$auth.loading) {
 			const returnTo = encodeURIComponent(`/cli-auth?code=${urlCode}`);
-			window.location.href = `/api/auth/login?return_to=${returnTo}`;
+			window.location.href = `/login?return_to=${returnTo}`;
 			return;
 		}
 

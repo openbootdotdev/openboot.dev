@@ -10,8 +10,15 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 	if (!env) throw new Error('Platform env not available');
 
 	const code = url.searchParams.get('code');
+	const state = url.searchParams.get('state');
+	const savedState = cookies.get('auth_state');
+
 	if (!code) {
-		redirect(302, `${env.APP_URL}?error=no_code`);
+		redirect(302, '/login?error=no_code');
+	}
+
+	if (state !== savedState) {
+		redirect(302, '/login?error=invalid_state');
 	}
 
 	const tokenResponse = await fetch(GITHUB_TOKEN_URL, {
@@ -94,5 +101,9 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 		maxAge: thirtyDays
 	});
 
-	redirect(302, '/dashboard');
+	const returnTo = cookies.get('auth_return_to') || '/dashboard';
+	cookies.delete('auth_state', { path: '/' });
+	cookies.delete('auth_return_to', { path: '/' });
+
+	redirect(302, returnTo);
 };

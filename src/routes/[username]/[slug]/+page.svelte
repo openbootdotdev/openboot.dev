@@ -57,7 +57,7 @@
 		try {
 			const authCheck = await fetch('/api/user');
 			if (!authCheck.ok) {
-				window.location.href = '/api/auth/login';
+				window.location.href = `/login?return_to=${encodeURIComponent(window.location.pathname)}`;
 				return;
 			}
 
