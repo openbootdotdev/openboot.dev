@@ -21,85 +21,98 @@ export const GET: RequestHandler = async ({ url, platform, cookies }) => {
 		redirect(302, '/login?error=invalid_state');
 	}
 
-	const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			client_id: env.GOOGLE_CLIENT_ID,
-			client_secret: env.GOOGLE_CLIENT_SECRET,
-			code,
-			redirect_uri: `${env.APP_URL}/api/auth/callback/google`,
-			grant_type: 'authorization_code'
-		})
-	});
+	try {
+		const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({
+				client_id: env.GOOGLE_CLIENT_ID,
+				client_secret: env.GOOGLE_CLIENT_SECRET,
+				code,
+				redirect_uri: `${env.APP_URL}/api/auth/callback/google`,
+				grant_type: 'authorization_code'
+			})
+		});
 
-	const tokenData = await tokenResponse.json();
-	if (tokenData.error || !tokenData.access_token) {
-		redirect(302, '/login?error=token_failed');
-	}
+		const tokenData = await tokenResponse.json();
+		if (tokenData.error || !tokenData.access_token) {
+			redirect(302, '/login?error=token_failed');
+		}
 
-	const userResponse = await fetch(GOOGLE_USERINFO_URL, {
-		headers: { Authorization: `Bearer ${tokenData.access_token}` }
-	});
+		const userResponse = await fetch(GOOGLE_USERINFO_URL, {
+			headers: { Authorization: `Bearer ${tokenData.access_token}` }
+		});
 
-	const googleUser = await userResponse.json();
-	if (!googleUser.id || !googleUser.email) {
-		redirect(302, '/login?error=user_failed');
-	}
+		const googleUser = await userResponse.json();
+		if (!googleUser.id || !googleUser.email) {
+			redirect(302, '/login?error=user_failed');
+		}
 
-	const userId = `google_${googleUser.id}`;
-	const reservedUsernames = ['openboot', 'admin', 'api', 'dashboard', 'install', 'login', 'logout', 'settings', 'help', 'support', 'docs', 'blog'];
-	
-	let username = slugify(googleUser.email.split('@')[0]);
-	if (reservedUsernames.includes(username.toLowerCase()) || username.length < 3) {
-		username = `user-${googleUser.id.slice(-8)}`;
-	}
+		const userId = `google_${googleUser.id}`;
+		const reservedUsernames = ['openboot', 'admin', 'api', 'dashboard', 'install', 'login', 'logout', 'settings', 'help', 'support', 'docs', 'blog'];
 
-	const existingUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
-	if (existingUser) {
-		username = (existingUser as { username: string }).username;
-	}
+		let username = slugify(googleUser.email.split('@')[0]);
+		if (reservedUsernames.includes(username.toLowerCase()) || username.length < 3) {
+			username = `user-${googleUser.id.slice(-8)}`;
+		}
 
-	await env.DB.prepare(
-		`
-		INSERT INTO users (id, username, email, avatar_url, updated_at)
-		VALUES (?, ?, ?, ?, datetime('now'))
-		ON CONFLICT(id) DO UPDATE SET
-			email = excluded.email,
-			avatar_url = excluded.avatar_url,
-			updated_at = datetime('now')
-	`
-	)
-		.bind(userId, username, googleUser.email, googleUser.picture || '')
-		.run();
+		const existingUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
+		if (existingUser) {
+			username = (existingUser as { username: string }).username;
+		} else {
+			const usernameTaken = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first();
+			if (usernameTaken) {
+				username = `${username}-${googleUser.id.slice(-6)}`;
+			}
+		}
 
-	const existingConfig = await env.DB.prepare('SELECT id FROM configs WHERE user_id = ? AND slug = ?').bind(userId, 'default').first();
-
-	if (!existingConfig) {
 		await env.DB.prepare(
 			`
-			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
-			VALUES (?, ?, 'default', 'Default', 'My default configuration', 'developer', '[]')
+			INSERT INTO users (id, username, email, avatar_url, updated_at)
+			VALUES (?, ?, ?, ?, datetime('now'))
+			ON CONFLICT(id) DO UPDATE SET
+				email = excluded.email,
+				avatar_url = excluded.avatar_url,
+				updated_at = datetime('now')
 		`
 		)
-			.bind(generateId(), userId)
+			.bind(userId, username, googleUser.email, googleUser.picture || '')
 			.run();
+
+		const existingConfig = await env.DB.prepare('SELECT id FROM configs WHERE user_id = ? AND slug = ?').bind(userId, 'default').first();
+
+		if (!existingConfig) {
+			await env.DB.prepare(
+				`
+				INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
+				VALUES (?, ?, 'default', 'Default', 'My default configuration', 'developer', '[]')
+			`
+			)
+				.bind(generateId(), userId)
+				.run();
+		}
+
+		const thirtyDays = 30 * 24 * 60 * 60;
+		const token = await signToken({ userId, username, exp: Date.now() + thirtyDays * 1000 }, env.JWT_SECRET);
+
+		cookies.set('session', token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'lax',
+			maxAge: thirtyDays
+		});
+
+		const returnTo = cookies.get('auth_return_to') || '/dashboard';
+		cookies.delete('auth_state', { path: '/' });
+		cookies.delete('auth_return_to', { path: '/' });
+
+		redirect(302, returnTo);
+	} catch (err) {
+		if (err && typeof err === 'object' && 'status' in err && 'location' in err) {
+			throw err;
+		}
+		console.error('Google auth callback error:', err);
+		redirect(302, '/login?error=server_error');
 	}
-
-	const thirtyDays = 30 * 24 * 60 * 60;
-	const token = await signToken({ userId, username, exp: Date.now() + thirtyDays * 1000 }, env.JWT_SECRET);
-
-	cookies.set('session', token, {
-		path: '/',
-		httpOnly: true,
-		secure: true,
-		sameSite: 'lax',
-		maxAge: thirtyDays
-	});
-
-	const returnTo = cookies.get('auth_return_to') || '/dashboard';
-	cookies.delete('auth_state', { path: '/' });
-	cookies.delete('auth_return_to', { path: '/' });
-
-	redirect(302, returnTo);
 };
