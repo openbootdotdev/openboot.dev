@@ -23,30 +23,7 @@
 		setTimeout(() => (copied = ''), 2000);
 	}
 
-	const presets = [
-		{
-			id: 'minimal',
-			name: 'minimal',
-			icon: '🎯',
-			description: 'CLI essentials for servers, containers, or minimalists. Fast and lightweight.',
-			tools: ['ripgrep', 'fd', 'bat', 'fzf', 'lazygit', 'gh']
-		},
-		{
-			id: 'developer',
-			name: 'developer',
-			icon: '⚡',
-			badge: 'Recommended',
-			description: 'Ready-to-code Mac setup. Everything you need to start building immediately.',
-			tools: ['node', 'go', 'docker', 'VS Code', 'Chrome', 'OrbStack']
-		},
-		{
-			id: 'full',
-			name: 'full',
-			icon: '🌟',
-			description: 'Complete dev environment with languages, DevOps, databases, and AI tools.',
-			tools: ['python', 'rustup', 'kubectl', 'terraform', 'ollama', 'Cursor']
-		}
-	];
+
 </script>
 
 <svelte:head>
@@ -195,7 +172,7 @@
 				<div class="step">
 					<div class="step-number">2</div>
 					<h3>Pick your tools</h3>
-					<p>Choose a preset or use the interactive TUI to toggle exactly what you want.</p>
+					<p>Use the interactive TUI to pick a preset or toggle exactly what you want.</p>
 				</div>
 				<div class="step">
 					<div class="step-number">3</div>
@@ -210,43 +187,7 @@
 			</div>
 		</section>
 
-		<section class="presets-section">
-			<div class="section-header">
-				<h2 class="section-title">Choose Your Preset</h2>
-				<p class="section-subtitle">Start with a preset, customize with the interactive selector</p>
-			</div>
-			<div class="presets-container">
-				{#each presets as preset}
-					<button
-						class="preset-card"
-						class:featured={preset.id === 'developer'}
-						class:copied={copied === preset.id}
-						onclick={() => copyCommand(`curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset ${preset.id}`, preset.id)}
-					>
-						<div class="preset-icon">{preset.icon}</div>
-						<div class="preset-header">
-							<h3>
-								{preset.name}
-								{#if preset.badge}
-									<span class="badge">{preset.badge}</span>
-								{/if}
-							</h3>
-						</div>
-						<p>{preset.description}</p>
-						<div class="preset-tools">
-							{#each preset.tools as tool}
-								<span>{tool}</span>
-							{/each}
-						</div>
-						<div class="command-preview">
-							<span class="cmd">curl ... | bash -s -- --preset {preset.id}</span>
-							<span class="hint">{copied === preset.id ? 'Copied!' : 'Click to copy'}</span>
-						</div>
-					</button>
-				{/each}
-		</div>
 
-	</section>
 	</div>
 </main>
 
@@ -714,158 +655,6 @@
 		margin: 0;
 	}
 
-	/* ── Presets Section ──────────────────────────────── */
-
-	.presets-section {
-		margin-bottom: 20px;
-	}
-
-	.section-header {
-		text-align: center;
-		margin-bottom: 40px;
-	}
-
-	.section-title {
-		font-size: 1.75rem;
-		font-weight: 700;
-		margin-bottom: 12px;
-		letter-spacing: -0.02em;
-	}
-
-	.section-subtitle {
-		color: var(--text-secondary);
-		font-size: 1rem;
-	}
-
-	.presets-container {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 16px;
-	}
-
-	.preset-card {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		padding: 28px;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		position: relative;
-		overflow: hidden;
-		cursor: pointer;
-		text-align: left;
-	}
-
-	.preset-card:hover {
-		border-color: var(--border-hover);
-		transform: translateY(-4px);
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--border-hover);
-	}
-
-	.preset-card.featured {
-		background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.06) 100%);
-		border-color: rgba(34, 197, 94, 0.3);
-	}
-
-	.preset-card.featured:hover {
-		border-color: rgba(34, 197, 94, 0.5);
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(34, 197, 94, 0.08);
-	}
-
-	.preset-card.copied {
-		border-color: var(--accent);
-		box-shadow: 0 0 16px rgba(34, 197, 94, 0.15);
-	}
-
-	.preset-icon {
-		width: 48px;
-		height: 48px;
-		border-radius: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.5rem;
-		margin-bottom: 16px;
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-	}
-
-	.preset-header h3 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 8px;
-	}
-
-	.badge {
-		font-size: 0.6rem;
-		padding: 3px 8px;
-		background: var(--accent);
-		color: #000;
-		border-radius: 20px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
-	.preset-card p {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		margin-bottom: 16px;
-		line-height: 1.5;
-	}
-
-	.preset-tools {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-	}
-
-	.preset-tools span {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.7rem;
-		padding: 4px 10px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 20px;
-		color: var(--text-secondary);
-		transition: all 0.2s;
-	}
-
-	.preset-card:hover .preset-tools span {
-		border-color: var(--border-hover);
-	}
-
-	.command-preview {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 12px 20px;
-		background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.7rem;
-		color: var(--accent);
-		opacity: 0;
-		transform: translateY(100%);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		border-radius: 0 0 16px 16px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.preset-card:hover .command-preview {
-		opacity: 1;
-		transform: translateY(0);
-	}
-
-	.command-preview .hint {
-		color: var(--text-muted);
-		font-size: 0.65rem;
-	}
-
 	/* ── Footer ───────────────────────────────────────── */
 
 	footer {
@@ -973,10 +762,6 @@
 	@media (max-width: 768px) {
 		.hero h1 {
 			font-size: 1.75rem;
-		}
-
-		.presets-container {
-			grid-template-columns: 1fr;
 		}
 
 		.install-command code {
