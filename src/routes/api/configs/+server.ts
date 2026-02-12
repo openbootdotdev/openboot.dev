@@ -21,10 +21,21 @@ export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 		.bind(user.id)
 		.all();
 
-	const configs = results.map((config: any) => ({
-		...config,
-		snapshot: config.snapshot ? JSON.parse(config.snapshot) : null
-	}));
+	const configs = results.map((config: any) => {
+		let snapshot = null;
+		if (config.snapshot) {
+			try {
+				snapshot = JSON.parse(config.snapshot);
+			} catch {
+				// Invalid JSON in database - return null instead of crashing
+				snapshot = null;
+			}
+		}
+		return {
+			...config,
+			snapshot
+		};
+	});
 
 	return json({ configs, username: user.username });
 };

@@ -61,11 +61,24 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE user_id = ? AND slug = ?'
 	).bind(user.id, config_slug).first();
 
-		return json({
-			...updated,
-			snapshot: JSON.parse((updated as any).snapshot),
-			packages: JSON.parse((updated as any).packages)
-		});
+	let parsedSnapshot = null;
+	let parsedPackages = [];
+	try {
+		parsedSnapshot = JSON.parse((updated as any).snapshot);
+	} catch {
+		parsedSnapshot = null;
+	}
+	try {
+		parsedPackages = JSON.parse((updated as any).packages);
+	} catch {
+		parsedPackages = [];
+	}
+
+	return json({
+		...updated,
+		snapshot: parsedSnapshot,
+		packages: parsedPackages
+	});
 	}
 
 	const configCount = await env.DB.prepare(
@@ -119,9 +132,22 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE id = ?'
 	).bind(id).first();
 
+	let createdSnapshot = null;
+	let createdPackages = [];
+	try {
+		createdSnapshot = JSON.parse((created as any).snapshot);
+	} catch {
+		createdSnapshot = null;
+	}
+	try {
+		createdPackages = JSON.parse((created as any).packages);
+	} catch {
+		createdPackages = [];
+	}
+
 	return json({
 		...created,
-		snapshot: JSON.parse((created as any).snapshot),
-		packages: JSON.parse((created as any).packages)
+		snapshot: createdSnapshot,
+		packages: createdPackages
 	}, { status: 201 });
 };
