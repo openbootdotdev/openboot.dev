@@ -46,13 +46,20 @@ In the dashboard, refine the config:
 
 ### 3. Share
 
-Every config gets a one-line install command:
+Every config gets installation instructions. Recommend Homebrew + CLI flag:
 
+```bash
+brew tap openbootdotdev/tap && brew install openboot
+openboot --user yourteam/frontend
 ```
+
+Or provide the one-line installer as an alternative:
+
+```bash
 curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash
 ```
 
-Put this in your:
+Put these in your:
 
 - **README.md** — under "Getting Started" or "Development Setup"
 - **Onboarding checklist** — as the first step
@@ -60,7 +67,7 @@ Put this in your:
 
 ### 4. New Developer Joins
 
-They open Terminal on their new Mac and run your command. That's it.
+They run the install command. That's it.
 
 OpenBoot handles Homebrew, installs all packages, sets up their shell, clones dotfiles, and applies macOS preferences. They're ready to code in minutes, not hours.
 
@@ -80,6 +87,6 @@ openboot.dev/yourteam/devops
 
 **Preview before installing.** New team members can preview what they'd get:
 
-```
-curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash -s -- --dry-run
+```bash
+openboot --user yourteam/frontend --dry-run
 ```
