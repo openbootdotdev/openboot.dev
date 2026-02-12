@@ -83,6 +83,42 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	const installShMatch = path.match(/^\/([a-z0-9_-]+)\/([a-z0-9_-]+)\/install\.sh$/i);
+	if (installShMatch) {
+		const env = event.platform?.env;
+		if (env) {
+			const username = installShMatch[1];
+			const slug = installShMatch[2];
+
+			const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first<{ id: string }>();
+			if (user) {
+				const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
+					.bind(user.id, slug)
+					.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
+
+				if (config) {
+					if (config.visibility === 'private') {
+						const script = generatePrivateInstallScript(env.APP_URL, username, slug);
+						return withSecurityHeaders(new Response(script, {
+							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
+						}));
+					}
+
+					const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+
+					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});
+
+					return withSecurityHeaders(new Response(script, {
+						headers: {
+							'Content-Type': 'text/plain; charset=utf-8',
+							'Cache-Control': 'no-cache'
+						}
+					}));
+				}
+			}
+		}
+	}
+
 	const twoSegMatch = path.match(/^\/([a-z0-9_-]+)\/([a-z0-9_-]+)$/i);
 	if (twoSegMatch) {
 		const ua = event.request.headers.get('user-agent') || '';

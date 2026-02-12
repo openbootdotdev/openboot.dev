@@ -99,7 +99,7 @@ Snapshot data attached to this config (auto-populated when creating from `openbo
 
 ### `alias`
 
-Short URL alias for easy sharing. If set, the config is accessible at `openboot.dev/install?alias=<alias>`.
+Short URL alias for easy sharing. If set, the config is accessible at `openboot.dev/<alias>` — for example, `curl -fsSL https://openboot.dev/my-setup | bash`.
 
 - **Type:** string
 - **Required:** no
