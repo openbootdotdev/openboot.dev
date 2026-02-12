@@ -58,8 +58,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			.run();
 
 		const updated = await env.DB.prepare(
-			'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, is_public FROM configs WHERE user_id = ? AND slug = ?'
-		).bind(user.id, config_slug).first();
+		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE user_id = ? AND slug = ?'
+	).bind(user.id, config_slug).first();
 
 		return json({
 			...updated,
@@ -96,8 +96,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	try {
 		await env.DB.prepare(
-			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, snapshot, snapshot_at, is_public)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 1)`
+			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'unlisted')`
 		)
 			.bind(
 				id,
@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	}
 
 	const created = await env.DB.prepare(
-		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, is_public FROM configs WHERE id = ?'
+		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE id = ?'
 	).bind(id).first();
 
 	return json({
