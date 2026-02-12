@@ -123,7 +123,7 @@ CREATE TABLE configs (
   dotfiles_repo TEXT,
   snapshot TEXT,
   alias TEXT UNIQUE,
-  is_public INTEGER DEFAULT 1,
+  visibility TEXT DEFAULT 'unlisted',
   created_at TEXT,
   updated_at TEXT
 );
