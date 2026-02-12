@@ -6,87 +6,134 @@ order: 8
 
 # For Teams
 
-Standardize your team's dev environment so every developer — new or existing — works with the same tools, same versions, same config.
+## The Doc
 
-## The Problem
+Every team has one. A Google Doc titled "Dev Environment Setup" with 47 steps, last edited eight months ago by someone who's since left. Step 12 says "install Node 18" but the project moved to 22 in March. Step 23 says "ask Sarah for the .env template." Sarah doesn't know what you're talking about. Step 31 references a Homebrew package that's been renamed.
 
-Without a standard setup, you get:
+New hire spends two days on this. Senior dev spends half a day answering the same setup questions for the fourth time this quarter. The team lead knows the doc is broken but hasn't updated it in months because who has time to maintain 47 steps.
 
-- "Works on my machine" — different tool versions, missing dependencies
-- Onboarding takes hours or days — "install this, then that, then configure..."
-- Tribal knowledge — setup steps live in someone's head, not in docs
+OpenBoot replaces The Doc with one command.
 
-## The Solution
+## First day, first commit
 
-Create one config. Share one command. Everyone gets the same environment.
+Your new hire opens the `CONTRIBUTING.md`. Step one:
 
-## Step by Step
-
-### 1. Create Your Team Config
-
-**Option A — Build from scratch:** Go to the [dashboard](/dashboard), create a new config, pick a base preset, and add your team's tools.
-
-**Option B — Snapshot a reference machine:** If a team member already has the ideal setup, have them run:
-
+```bash
+curl -fsSL https://openboot.dev/acme/frontend/install.sh | bash
 ```
+
+That's the entire setup section. They run it and go read the architecture docs while packages stream by:
+
+```text
+✓ Homebrew installed
+✓ node (22.0.0) · pnpm (9.1.0) · docker · mass-installing...
+✓ visual-studio-code · arc · orbstack
+✓ Oh-My-Zsh configured · macOS preferences applied
+✓ Running post-install script...
+✓ git clone acme/webapp → ~/acme/webapp
+✓ git clone acme/api → ~/acme/api
+✓ .env.example → .env (webapp, api)
+✓ pnpm install (webapp, api)
+✨ Setup complete. Restart your terminal.
+```
+
+Twenty minutes. They open `~/acme/webapp`, run `pnpm dev`, see the app in the browser. They push a fix to a typo they spotted in the README before lunch.
+
+The custom script at the end is what makes this work — it's not just "install your tools," it's "be ready to code." Repo cloning, `.env` files from templates, `pnpm install` — everything that used to live in The Doc is now automated and identical for everyone. See [Config Options](/docs/config-options) for the full custom script reference.
+
+## How the one-liner gets created
+
+The team lead spends 30 minutes building the config. In exchange, every new hire for the next two years skips two days of setup.
+
+There are two ways to create the config:
+
+**Snapshot a reference machine.** If someone on your team already has the ideal setup:
+
+```bash
 openboot snapshot
 ```
 
-This captures their Homebrew packages, shell config, and macOS preferences, then uploads it as a config.
+OpenBoot scans their Homebrew packages, macOS preferences, shell config, and git settings. A TUI editor opens where they uncheck personal tools — Spotify, 1Password, the personal notes app — and keep only what the team needs. Name it, upload it, done.
 
-### 2. Customize
+**Build from scratch in the [Dashboard](/dashboard).** Click **Create Config**, pick `developer` as the base, add `pnpm` and `playwright`, remove `postman`, set the slug to `frontend`. Five minutes of clicking.
 
-In the dashboard, refine the config:
+Either way, you end up on the same config page. Now comes the part most teams skip — and shouldn't.
 
-- Add project-specific tools (e.g., `kubectl`, `terraform`, `pnpm`)
-- Remove personal preferences (e.g., a specific browser or notes app)
-- Add a **custom script** for team-specific setup (clone repos, configure credentials, etc.)
-- Set a **dotfiles repo** if your team shares one
-- Give it a memorable slug like `frontend` or `backend-api`
+### The custom script
 
-### 3. Share
-
-Every config gets installation instructions. Recommend Homebrew + CLI flag:
+This is the difference between "install your tools" and "be ready to code." Click into the config and add a post-install script:
 
 ```bash
-brew tap openbootdotdev/tap && brew install openboot
-openboot --user yourteam/frontend
+# Clone team repos
+mkdir -p ~/acme
+git clone git@github.com:acme/webapp.git ~/acme/webapp
+git clone git@github.com:acme/api.git ~/acme/api
+
+# Local env files from templates
+cp ~/acme/webapp/.env.example ~/acme/webapp/.env
+cp ~/acme/api/.env.example ~/acme/api/.env
+
+# Install project dependencies
+cd ~/acme/webapp && pnpm install
+cd ~/acme/api && pnpm install
 ```
 
-Or provide the one-line installer as an alternative:
+This runs after all packages are installed, so `git`, `pnpm`, and every other tool the script depends on are already available. Every step that used to be "ask someone" or "check the wiki" is now code that runs itself.
+
+### Share it
+
+Add the install command to your `CONTRIBUTING.md`:
+
+```markdown
+## Development Setup
+
+    curl -fsSL https://openboot.dev/acme/frontend/install.sh | bash
+
+Or install via Homebrew:
+
+    brew tap openbootdotdev/tap && brew install openboot
+    openboot --user acme/frontend
+
+Preview first: `openboot --user acme/frontend --dry-run`
+```
+
+The URL never changes. When the stack changes, update the config in the [Dashboard](/dashboard). Everyone who runs the command next gets the latest version. No more editing a 47-step Google Doc.
+
+Want to show your tech stack to candidates? Add the config URL to your README or job posts. They see exactly what they'd be working with.
+
+Set visibility to **unlisted** (URL works, but not listed publicly) or **private** (requires authentication) depending on your needs. See [Custom Configs](/docs/custom-configs) for details.
+
+## Multiple teams, one system
+
+Company grows. Backend needs Go, PostgreSQL, Redis. DevOps needs kubectl, helm, k9s. Create separate configs:
+
+```text
+openboot.dev/acme/frontend   → Node, pnpm, Playwright
+openboot.dev/acme/backend    → Go, PostgreSQL, Redis
+openboot.dev/acme/devops     → kubectl, helm, k9s, awscli
+```
+
+Each has its own custom script. Backend clones the API monorepo and seeds the local database. DevOps sets up `kubectl` contexts.
+
+Full-stack dev working across teams? Run both. OpenBoot skips what's already installed.
 
 ```bash
-curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash
+openboot --user acme/frontend
+openboot --user acme/backend
 ```
 
-Put these in your:
+## Keeping everyone in sync
 
-- **README.md** — under "Getting Started" or "Development Setup"
-- **Onboarding checklist** — as the first step
-- **Slack / Teams channel** — pinned for easy access
+Three months in. Someone reports a bug. Only reproduces on their machine. Team calls, tries everything — clear caches, restart Docker, check env vars. An hour later, someone asks "what Node version?" They're on 18. Everyone else is on 22.
 
-### 4. New Developer Joins
+This is drift. Have everyone run `openboot snapshot`, compare output. You'll find what you didn't know — someone never installed `playwright`, a contractor is on old OrbStack, two people have local `postgresql` while everyone else uses Docker.
 
-They run the install command. That's it.
+Update the team config, ping Slack, everyone re-runs. Back in sync.
 
-OpenBoot handles Homebrew, installs all packages, sets up their shell, clones dotfiles, and applies macOS preferences. They're ready to code in minutes, not hours.
+Six months from now, you upgrade to Node 24. Update the config. Everyone pulls it down on their next sync. No announcement. No "did everyone update yet?" in Slack. The config is the truth.
 
-## Tips
+## What's Next
 
-**Keep the config updated.** When your stack changes (new tool, version bump, removed dependency), update the config in the dashboard. The install URL stays the same.
-
-**Use Snapshot for audits.** Periodically have team members run `openboot snapshot --json` to compare their environments against the team config.
-
-**Multiple configs are fine.** Frontend team and backend team might need different tools. Create separate configs:
-
-```
-openboot.dev/yourteam/frontend
-openboot.dev/yourteam/backend
-openboot.dev/yourteam/devops
-```
-
-**Preview before installing.** New team members can preview what they'd get:
-
-```bash
-openboot --user yourteam/frontend --dry-run
-```
+- [Presets](/docs/presets) — pick your base
+- [Custom Configs](/docs/custom-configs) and [Config Options](/docs/config-options) — full config reference
+- [Snapshot](/docs/snapshot) — capture a reference machine
