@@ -70,7 +70,11 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, is_public, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+	const { name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+
+	if (visibility !== undefined && !['public', 'unlisted', 'private'].includes(visibility)) {
+		return json({ error: 'Invalid visibility. Must be public, unlisted, or private' }, { status: 400 });
+	}
 
 	const rlKeyW = getRateLimitKey('config-write', user.id);
 	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
@@ -127,7 +131,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 				base_preset = COALESCE(?, base_preset),
 				packages = COALESCE(?, packages),
 				custom_script = COALESCE(?, custom_script),
-				is_public = COALESCE(?, is_public),
+				visibility = COALESCE(?, visibility),
 				alias = ?,
 				dotfiles_repo = COALESCE(?, dotfiles_repo),
 				snapshot = ?,
@@ -143,7 +147,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 				base_preset || null,
 				packages ? JSON.stringify(packages) : null,
 				custom_script !== undefined ? custom_script : null,
-				is_public !== undefined ? (is_public ? 1 : 0) : null,
+				visibility !== undefined ? visibility : null,
 				newAlias,
 				dotfiles_repo !== undefined ? dotfiles_repo : null,
 				snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
