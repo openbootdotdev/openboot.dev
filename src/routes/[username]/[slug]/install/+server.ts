@@ -12,15 +12,15 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return new Response('User not found', { status: 404 });
 	}
 
-	const config = await env.DB.prepare('SELECT custom_script, is_public, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
+	const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
 		.bind(user.id, params.slug)
-		.first<{ custom_script: string; is_public: number; dotfiles_repo: string }>();
+		.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
 
 	if (!config) {
 		return new Response('Config not found', { status: 404 });
 	}
 
-	if (!config.is_public) {
+	if (config.visibility === 'private') {
 		return new Response('Config is private', { status: 403 });
 	}
 

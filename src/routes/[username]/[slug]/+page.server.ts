@@ -23,11 +23,10 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 
 	if (!config) throw error(404, 'Configuration not found');
 
-	// 3. Check visibility
-	if (!config.is_public) {
+	if (config.visibility === 'private') {
 		const currentUser = await getCurrentUser(request, cookies, env.DB, env.JWT_SECRET);
 		if (!currentUser || currentUser.id !== targetUser.id) {
-			throw error(404, 'Configuration not found'); // Hide private configs
+			throw error(404, 'Configuration not found');
 		}
 	}
 
