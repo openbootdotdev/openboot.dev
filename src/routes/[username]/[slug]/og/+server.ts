@@ -145,18 +145,18 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 	if (!targetUser) return new Response('Not found', { status: 404 });
 
 	const config = await env.DB.prepare(
-		'SELECT name, description, packages, is_public, base_preset FROM configs WHERE user_id = ? AND slug = ?'
+		'SELECT name, description, packages, visibility, base_preset FROM configs WHERE user_id = ? AND slug = ?'
 	)
 		.bind(targetUser.id, slug)
 		.first<{
 			name: string;
 			description: string;
 			packages: string;
-			is_public: number;
+			visibility: string;
 			base_preset: string;
 		}>();
 
-	if (!config || !config.is_public) return new Response('Not found', { status: 404 });
+	if (!config || config.visibility === 'private') return new Response('Not found', { status: 404 });
 
 	const rawPkgs: { name: string; type: string }[] = (() => {
 		try {

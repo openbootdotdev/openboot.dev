@@ -48,8 +48,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const env = event.platform?.env;
 
 		if (env) {
-			const config = await env.DB.prepare('SELECT c.slug, c.custom_script, c.dotfiles_repo, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.alias = ? AND c.is_public = 1')
-				.bind(alias)
+			const config = await env.DB.prepare('SELECT c.slug, c.custom_script, c.dotfiles_repo, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.alias = ? AND c.visibility IN (?, ?)')
+				.bind(alias, 'public', 'unlisted')
 				.first<{ slug: string; username: string; custom_script: string; dotfiles_repo: string }>();
 
 			if (config) {
@@ -88,11 +88,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 				const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first<{ id: string }>();
 				if (user) {
-					const config = await env.DB.prepare('SELECT custom_script, is_public, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
-						.bind(user.id, slug)
-						.first<{ custom_script: string; is_public: number; dotfiles_repo: string }>();
+				const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
+					.bind(user.id, slug)
+					.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
 
-					if (config && config.is_public) {
+				if (config && config.visibility !== 'private') {
 						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
 
 						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});
