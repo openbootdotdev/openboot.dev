@@ -121,8 +121,8 @@
 			<div class="panel-install">
 				<div class="install-command" id="install">
 					<div class="install-prompt">$</div>
-					<code>brew tap openbootdotdev/tap && brew install openboot</code>
-					<button class="copy-btn" onclick={() => copyCommand('brew tap openbootdotdev/tap && brew install openboot', 'main')}>
+				<code>brew install openbootdotdev/tap/openboot</code>
+				<button class="copy-btn" onclick={() => copyCommand('brew install openbootdotdev/tap/openboot', 'main')}>
 						{#if copied === 'main'}
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 							Copied!
@@ -133,50 +133,7 @@
 					</button>
 				</div>
 				<p class="install-alt">Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code></p>
-			</div>
-
-			<div class="panel-divider"></div>
-
-			<div class="panel-usage">
-				<div class="usage-option">
-					<div class="usage-text">
-						<h3 class="usage-title">Set up your Mac</h3>
-						<p class="usage-desc">Fresh Mac? One command to install 80+ dev tools, dotfiles, and macOS preferences.</p>
-					</div>
-					<div class="install-command">
-						<div class="install-prompt">$</div>
-						<code>openboot</code>
-						<button class="copy-btn" onclick={() => copyCommand('openboot', 'setup')}>
-							{#if copied === 'setup'}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								Copied!
-							{:else}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-								Copy
-							{/if}
-						</button>
-					</div>
-				</div>
-
-				<div class="usage-option">
-					<div class="usage-text">
-						<h3 class="usage-title">Capture your setup</h3>
-						<p class="usage-desc">Already set up? Snapshot your current tools and share the config with your team.</p>
-					</div>
-					<div class="install-command">
-						<div class="install-prompt">$</div>
-						<code>openboot snapshot</code>
-						<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
-							{#if copied === 'snapshot'}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								Copied!
-							{:else}
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-								Copy
-							{/if}
-						</button>
-					</div>
-				</div>
+			<p class="install-next">Then run <code>openboot</code> to set up your Mac, or <code>openboot snapshot</code> to capture your current setup.</p>
 			</div>
 		</div>
 	</section>
@@ -546,10 +503,14 @@
 
 	.get-started-panel {
 		margin-top: 56px;
+		max-width: 680px;
+		margin-left: auto;
+		margin-right: auto;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 16px;
 		overflow: hidden;
+		text-align: center;
 	}
 
 	.panel-install {
@@ -571,53 +532,16 @@
 		font-size: 0.73rem;
 	}
 
-	.panel-divider {
-		height: 1px;
-		background: var(--border);
-		margin: 0 28px;
+	.install-next {
+		color: var(--text-muted);
+		font-size: 0.8rem;
+		margin: 8px 0 0;
 	}
 
-	.panel-usage {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0;
-	}
-
-	.usage-option {
-		padding: 24px 28px;
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
-	}
-
-	.usage-option:first-child {
-		border-right: 1px solid var(--border);
-	}
-
-	.usage-text {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		flex: 1;
-	}
-
-	.usage-title {
-		font-size: 1.05rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		color: var(--text-primary);
-		margin: 0;
-	}
-
-	.usage-desc {
+	.install-next code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
-		font-size: 0.85rem;
-		line-height: 1.55;
-		margin: 0;
-	}
-
-	.usage-option .install-command {
-		margin-bottom: 0;
 	}
 
 	/* ── How It Works ────────────────────────────────── */
@@ -776,17 +700,6 @@
 
 		.subtitle {
 			max-width: 100%;
-		}
-	}
-
-	@media (max-width: 960px) {
-		.panel-usage {
-			grid-template-columns: 1fr;
-		}
-
-		.usage-option:first-child {
-			border-right: none;
-			border-bottom: 1px solid var(--border);
 		}
 	}
 
