@@ -118,8 +118,8 @@
 		</div>
 
 		<div class="hero-actions">
-			<div class="hero-action-card">
-				<div class="hero-action-label">Installation</div>
+			<div class="hero-action-card hero-action-install">
+				<div class="hero-action-label">Install</div>
 				<h3 class="hero-action-title">Install OpenBoot</h3>
 				<p class="hero-action-desc">Install via Homebrew (recommended) for easy updates, or use the one-line installer as a fallback.</p>
 				<div class="install-command" id="install">
@@ -135,40 +135,48 @@
 						{/if}
 					</button>
 				</div>
-				<p class="hero-action-desc" style="margin-top: 12px; font-size: 0.8rem; opacity: 0.7;">
-					Alternative: <code style="font-size: 0.75rem;">curl -fsSL openboot.dev/install.sh | bash</code>
+				<p class="hero-action-alt">
+					Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code>
 				</p>
 			</div>
 
-			<div class="hero-action-card hero-action-snapshot">
-				<div class="hero-action-label">Usage</div>
-				<h3 class="hero-action-title">Set up or snapshot</h3>
-				<p class="hero-action-desc">Run <code>openboot</code> to install dev tools on a fresh Mac, or <code>openboot snapshot</code> to capture your current setup.</p>
-				<div class="install-command">
-					<div class="install-prompt">$</div>
-					<code>openboot</code>
-					<button class="copy-btn" onclick={() => copyCommand('openboot', 'setup')}>
-						{#if copied === 'setup'}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-							Copied!
-						{:else}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-							Copy
-						{/if}
-					</button>
+			<div class="hero-action-pair">
+				<div class="hero-action-card">
+					<div class="hero-action-label">Set Up</div>
+					<h3 class="hero-action-title">Set up your Mac</h3>
+					<p class="hero-action-desc">Fresh Mac? One command to install 80+ dev tools, dotfiles, and macOS preferences.</p>
+					<div class="install-command">
+						<div class="install-prompt">$</div>
+						<code>openboot</code>
+						<button class="copy-btn" onclick={() => copyCommand('openboot', 'setup')}>
+							{#if copied === 'setup'}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+								Copied!
+							{:else}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+								Copy
+							{/if}
+						</button>
+					</div>
 				</div>
-				<div class="install-command" style="margin-top: 12px;">
-					<div class="install-prompt">$</div>
-					<code>openboot snapshot</code>
-					<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
-						{#if copied === 'snapshot'}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-							Copied!
-						{:else}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-							Copy
-						{/if}
-					</button>
+
+				<div class="hero-action-card">
+					<div class="hero-action-label">Snapshot</div>
+					<h3 class="hero-action-title">Capture your setup</h3>
+					<p class="hero-action-desc">Already set up? Snapshot your current tools and share the config with your team.</p>
+					<div class="install-command">
+						<div class="install-prompt">$</div>
+						<code>openboot snapshot</code>
+						<button class="copy-btn" onclick={() => copyCommand('openboot snapshot', 'snapshot')}>
+							{#if copied === 'snapshot'}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+								Copied!
+							{:else}
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+								Copy
+							{/if}
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -535,11 +543,11 @@
 		background: #1e1e2e;
 	}
 
-	/* ── Hero Actions (Dual CTA Cards) ──────────────── */
+	/* ── Hero Actions ────────────────────────────────── */
 
 	.hero-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
+		display: flex;
+		flex-direction: column;
 		gap: 20px;
 		margin-top: 48px;
 	}
@@ -562,14 +570,33 @@
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 	}
 
-	.hero-action-card:first-child {
+	/* Full-width install card */
+	.hero-action-install {
 		border-color: rgba(34, 197, 94, 0.3);
 		background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.04) 100%);
 	}
 
-	.hero-action-card:first-child:hover {
+	.hero-action-install:hover {
 		border-color: rgba(34, 197, 94, 0.5);
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(34, 197, 94, 0.08);
+	}
+
+	.hero-action-alt {
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		opacity: 0.7;
+		margin: 0;
+	}
+
+	.hero-action-alt code {
+		font-size: 0.75rem;
+	}
+
+	/* Two-column pair for setup / snapshot */
+	.hero-action-pair {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 20px;
 	}
 
 	.hero-action-label {
@@ -775,7 +802,7 @@
 	}
 
 	@media (max-width: 960px) {
-		.hero-actions {
+		.hero-action-pair {
 			grid-template-columns: 1fr;
 		}
 	}
