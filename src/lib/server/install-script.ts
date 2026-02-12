@@ -2,6 +2,84 @@ function sanitizeShellArg(value: string): string {
 	return value.replace(/[^a-zA-Z0-9_\-]/g, '');
 }
 
+export function generatePrivateInstallScript(
+	appUrl: string,
+	username: string,
+	slug: string
+): string {
+	const safeUsername = sanitizeShellArg(username);
+	const safeSlug = sanitizeShellArg(slug);
+
+	return `#!/bin/bash
+set -e
+
+echo "========================================"
+echo "  OpenBoot - Private Config Install"
+echo "  Config: @${safeUsername}/${safeSlug}"
+echo "========================================"
+echo ""
+echo "This config is private. Browser authorization required."
+echo ""
+
+APP_URL="${appUrl}"
+
+auth_response=$(curl -fsSL -X POST "\$APP_URL/api/auth/cli/start" \\
+  -H "Content-Type: application/json" \\
+  -d '{}')
+
+CODE_ID=$(echo "\$auth_response" | grep -o '"code_id":"[^"]*"' | cut -d'"' -f4)
+CODE=$(echo "\$auth_response" | grep -o '"code":"[^"]*"' | cut -d'"' -f4)
+
+if [ -z "\$CODE_ID" ] || [ -z "\$CODE" ]; then
+  echo "Error: Failed to start authentication"
+  exit 1
+fi
+
+AUTH_URL="\$APP_URL/cli-auth?code=\$CODE"
+echo "Opening browser for authorization..."
+echo "  Code: \$CODE"
+echo "  URL:  \$AUTH_URL"
+echo ""
+
+if command -v open &>/dev/null; then
+  open "\$AUTH_URL"
+elif command -v xdg-open &>/dev/null; then
+  xdg-open "\$AUTH_URL"
+else
+  echo "Please open this URL in your browser:"
+  echo "  \$AUTH_URL"
+fi
+
+echo "Waiting for authorization..."
+TOKEN=""
+for i in $(seq 1 60); do
+  sleep 2
+  poll_response=$(curl -fsSL "\$APP_URL/api/auth/cli/poll?code_id=\$CODE_ID" 2>/dev/null || echo '{}')
+  poll_status=$(echo "\$poll_response" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+
+  if [ "\$poll_status" = "approved" ]; then
+    TOKEN=$(echo "\$poll_response" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+    break
+  elif [ "\$poll_status" = "expired" ]; then
+    echo "Error: Authorization expired. Please try again."
+    exit 1
+  fi
+  printf "."
+done
+echo ""
+
+if [ -z "\$TOKEN" ]; then
+  echo "Error: Authorization timed out. Please try again."
+  exit 1
+fi
+
+echo "Authorized! Fetching install script..."
+echo ""
+
+exec bash <(curl -fsSL -H "Authorization: Bearer \$TOKEN" "\$APP_URL/${safeUsername}/${safeSlug}/install")
+`;
+}
+
 export function generateInstallScript(
 	username: string,
 	slug: string,
