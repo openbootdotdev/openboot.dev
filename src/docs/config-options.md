@@ -114,7 +114,11 @@ Controls who can see and install this config.
 - **Options:**
   - `"public"` — listed on your profile, install URL works for everyone
   - `"unlisted"` — not listed on your profile, but install URL still works if shared
-  - `"private"` — only you can see it, install URL returns 403 for others
+  - `"private"` — only you can access. Installing via `curl | bash` will open a browser for authorization, then proceed automatically
+
+## Export
+
+You can export any config as a JSON file from the dashboard. Click the **Export** button on a config card to download a `.json` file containing all config data (name, packages, custom script, dotfiles repo, snapshot, visibility, and alias).
 
 ## macOS Preferences Whitelist
 
