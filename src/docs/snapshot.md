@@ -24,6 +24,8 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
 |----------|---------------|-----|
 | **Homebrew Formulae** | Top-level CLI tools (not dependencies) | `brew leaves` |
 | **Homebrew Casks** | All installed GUI apps | `brew list --cask` |
+| **Homebrew Taps** | Third-party repositories | `brew tap` |
+| **NPM Global Packages** | Globally installed npm packages | `npm list -g` |
 | **macOS Preferences** | 23 whitelisted developer settings | Curated list |
 | **Shell Config** | Oh-My-Zsh plugins, theme, aliases | `.zshrc` parsing |
 | **Git Config** | user.name, user.email, editor, default branch | `~/.gitconfig` |
@@ -45,10 +47,10 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
 
 **Step 2 — Review.** A full-screen TUI editor lets you customize what's included:
 
-- **3 tabs**: Formulae, Casks, macOS Preferences
+- **Tabs**: Formulae, Casks, NPM Packages, macOS Preferences
 - **Space** to toggle individual items on/off
 - **`/`** to search, **`a`** to select all in a category
-- Shell, Git, and Dev Tools are shown as a read-only summary
+- Taps, Shell, Git, and Dev Tools are shown as a read-only summary
 
 **Step 3 — Save.** Choose where it goes:
 

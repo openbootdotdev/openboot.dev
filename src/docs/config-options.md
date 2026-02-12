@@ -15,11 +15,14 @@ Every OpenBoot config — whether created from a preset, a snapshot, or the dash
   "name": "frontend-team",
   "description": "Standard setup for our frontend developers",
   "base_preset": "developer",
-  "packages": {
-    "formulae": ["node", "pnpm", "ripgrep", "fd", "bat", "gh", "jq"],
-    "casks": ["visual-studio-code", "arc", "figma", "warp", "raycast"],
-    "npm": ["typescript", "tsx", "eslint", "prettier"]
-  },
+  "packages": [
+    { "name": "node", "type": "formula" },
+    { "name": "pnpm", "type": "formula" },
+    { "name": "ripgrep", "type": "formula" },
+    { "name": "visual-studio-code", "type": "cask" },
+    { "name": "arc", "type": "cask" },
+    { "name": "typescript", "type": "npm" }
+  ],
   "custom_script": "mkdir -p ~/projects\ngit clone git@github.com:yourorg/main-repo.git ~/projects/main-repo",
   "dotfiles_repo": "https://github.com/yourorg/team-dotfiles.git",
   "snapshot": null,
@@ -57,13 +60,13 @@ Which preset to start from. The preset's packages are included unless individual
 
 ### `packages`
 
-The tools and apps to install.
+The tools and apps to install. Stored as an array of package objects, each with a `name` and `type`.
 
-- **`formulae`** — CLI tools installed via `brew install`
-- **`casks`** — GUI apps installed via `brew install --cask`
+- **`formula`** — CLI tools installed via `brew install`
+- **`cask`** — GUI apps installed via `brew install --cask`
 - **`npm`** — Global npm packages installed via `npm install -g`
 
-All three are arrays of package name strings. Names must match Homebrew or npm package names exactly.
+Each entry is an object: `{ "name": "package-name", "type": "formula" | "cask" | "npm" }`. Names must match Homebrew or npm package names exactly.
 
 ### `custom_script`
 
@@ -71,7 +74,7 @@ Shell commands that run after all packages are installed. Use this for project-s
 
 - **Type:** string (newline-separated commands)
 - **Required:** no
-- **Runs as:** `bash -e` (stops on first error)
+- **Runs as:** `bash` (errors are logged but don't stop the install)
 
 ```
 mkdir -p ~/projects

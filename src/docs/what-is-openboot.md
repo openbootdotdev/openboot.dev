@@ -15,7 +15,7 @@ OpenBoot is an open-source CLI that sets up your entire macOS development enviro
 - **Packages & Apps** — Install CLI tools (`node`, `go`, `docker`, `ripgrep`...) and GUI apps (`VS Code`, `Chrome`, `Warp`...) from Homebrew, all at once
 - **Shell Configuration** — Oh-My-Zsh with plugins, a clean theme, and useful aliases, configured automatically
 - **Dotfiles** — Clone and link your dotfiles repo so your personal config follows you to any machine
-- **macOS Preferences** — Developer-friendly system settings (fast key repeat, Finder path bar, Dock autohide...) applied in one pass
+- **macOS Preferences** — Developer-friendly system settings (fast key repeat, Finder path bar, Dock icon size...) applied in one pass
 - **Snapshot** — Capture your current Mac's setup and turn it into a shareable config URL
 
 ## How It Works
