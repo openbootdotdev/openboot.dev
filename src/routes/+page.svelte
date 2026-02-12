@@ -117,11 +117,8 @@
 			</div>
 		</div>
 
-		<div class="hero-actions">
-			<div class="hero-action-card hero-action-install">
-				<div class="hero-action-label">Install</div>
-				<h3 class="hero-action-title">Install OpenBoot</h3>
-				<p class="hero-action-desc">Install via Homebrew (recommended) for easy updates, or use the one-line installer as a fallback.</p>
+		<div class="get-started-panel">
+			<div class="panel-install">
 				<div class="install-command" id="install">
 					<div class="install-prompt">$</div>
 					<code>brew tap openbootdotdev/tap && brew install openboot</code>
@@ -135,16 +132,17 @@
 						{/if}
 					</button>
 				</div>
-				<p class="hero-action-alt">
-					Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code>
-				</p>
+				<p class="install-alt">Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code></p>
 			</div>
 
-			<div class="hero-action-pair">
-				<div class="hero-action-card">
-					<div class="hero-action-label">Set Up</div>
-					<h3 class="hero-action-title">Set up your Mac</h3>
-					<p class="hero-action-desc">Fresh Mac? One command to install 80+ dev tools, dotfiles, and macOS preferences.</p>
+			<div class="panel-divider"></div>
+
+			<div class="panel-usage">
+				<div class="usage-option">
+					<div class="usage-text">
+						<h3 class="usage-title">Set up your Mac</h3>
+						<p class="usage-desc">Fresh Mac? One command to install 80+ dev tools, dotfiles, and macOS preferences.</p>
+					</div>
 					<div class="install-command">
 						<div class="install-prompt">$</div>
 						<code>openboot</code>
@@ -160,10 +158,11 @@
 					</div>
 				</div>
 
-				<div class="hero-action-card">
-					<div class="hero-action-label">Snapshot</div>
-					<h3 class="hero-action-title">Capture your setup</h3>
-					<p class="hero-action-desc">Already set up? Snapshot your current tools and share the config with your team.</p>
+				<div class="usage-option">
+					<div class="usage-text">
+						<h3 class="usage-title">Capture your setup</h3>
+						<p class="usage-desc">Already set up? Snapshot your current tools and share the config with your team.</p>
+					</div>
 					<div class="install-command">
 						<div class="install-prompt">$</div>
 						<code>openboot snapshot</code>
@@ -543,103 +542,82 @@
 		background: #1e1e2e;
 	}
 
-	/* ── Hero Actions ────────────────────────────────── */
+	/* ── Get Started Panel ───────────────────────────── */
 
-	.hero-actions {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-		margin-top: 48px;
-	}
-
-	.hero-action-card {
+	.get-started-panel {
+		margin-top: 56px;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 16px;
-		padding: 28px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		min-width: 0;
+		overflow: hidden;
 	}
 
-	.hero-action-card:hover {
-		border-color: var(--border-hover);
-		transform: translateY(-4px);
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+	.panel-install {
+		padding: 28px 28px 20px;
 	}
 
-	/* Full-width install card */
-	.hero-action-install {
-		border-color: rgba(34, 197, 94, 0.3);
-		background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(34, 197, 94, 0.04) 100%);
+	.panel-install .install-command {
+		margin-bottom: 8px;
 	}
 
-	.hero-action-install:hover {
-		border-color: rgba(34, 197, 94, 0.5);
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(34, 197, 94, 0.08);
-	}
-
-	.hero-action-alt {
-		color: var(--text-secondary);
-		font-size: 0.8rem;
-		opacity: 0.7;
+	.install-alt {
+		color: var(--text-muted);
+		font-size: 0.78rem;
 		margin: 0;
 	}
 
-	.hero-action-alt code {
-		font-size: 0.75rem;
+	.install-alt code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.73rem;
 	}
 
-	/* Two-column pair for setup / snapshot */
-	.hero-action-pair {
+	.panel-divider {
+		height: 1px;
+		background: var(--border);
+		margin: 0 28px;
+	}
+
+	.panel-usage {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 20px;
+		gap: 0;
 	}
 
-	.hero-action-label {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.65rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--accent);
-		padding: 4px 10px;
-		background: var(--accent-glow);
-		border-radius: 20px;
-		width: fit-content;
+	.usage-option {
+		padding: 24px 28px;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
-	.hero-action-title {
-		font-size: 1.15rem;
+	.usage-option:first-child {
+		border-right: 1px solid var(--border);
+	}
+
+	.usage-text {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		flex: 1;
+	}
+
+	.usage-title {
+		font-size: 1.05rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
 		color: var(--text-primary);
 		margin: 0;
 	}
 
-	.hero-action-desc {
+	.usage-desc {
 		color: var(--text-secondary);
-		font-size: 0.875rem;
-		line-height: 1.6;
+		font-size: 0.85rem;
+		line-height: 1.55;
 		margin: 0;
 	}
 
-	.hero-action-card .install-command {
-		margin-top: auto;
+	.usage-option .install-command {
 		margin-bottom: 0;
-		align-items: flex-start;
-	}
-
-	.hero-action-card .install-command code {
-		white-space: normal;
-		overflow-wrap: break-word;
-		overflow: visible;
-		text-overflow: unset;
-		font-size: 0.82rem;
-		line-height: 1.5;
 	}
 
 	/* ── How It Works ────────────────────────────────── */
@@ -802,8 +780,13 @@
 	}
 
 	@media (max-width: 960px) {
-		.hero-action-pair {
+		.panel-usage {
 			grid-template-columns: 1fr;
+		}
+
+		.usage-option:first-child {
+			border-right: none;
+			border-bottom: 1px solid var(--border);
 		}
 	}
 
