@@ -60,7 +60,7 @@ export function validateDotfilesRepo(url: string | null | undefined): Validation
 			return { valid: false, error: 'Invalid dotfiles repo URL path' };
 		}
 
-		if (!/^\/[\w\-\.\/]+(?:\.git)?$/.test(parsed.pathname)) {
+		if (!/^\/[a-zA-Z0-9\-_\.\/]+(?:\.git)?$/.test(parsed.pathname)) {
 			return { valid: false, error: 'Invalid dotfiles repo URL format' };
 		}
 
