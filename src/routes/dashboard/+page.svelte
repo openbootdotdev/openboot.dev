@@ -12,7 +12,7 @@
 		name: string;
 		description: string;
 		base_preset: string;
-		is_public: number;
+		visibility: string;
 		alias: string | null;
 		packages?: any[];
 		custom_script?: string;
@@ -34,7 +34,7 @@
 		name: '',
 		description: '',
 		base_preset: 'developer',
-		is_public: true,
+		visibility: 'unlisted' as string,
 		alias: '',
 		packages: [] as string[],
 		custom_script: '',
@@ -238,7 +238,7 @@
 				name: config.name,
 				description: config.description || '',
 				base_preset: config.base_preset,
-				is_public: config.is_public === 1,
+				visibility: config.visibility || 'unlisted',
 				alias: config.alias || '',
 				packages: config.packages || [],
 				custom_script: config.custom_script || '',
@@ -267,7 +267,7 @@
 				name: '',
 				description: '',
 				base_preset: 'developer',
-				is_public: true,
+				visibility: 'unlisted',
 				alias: '',
 				packages: [],
 				custom_script: '',
@@ -441,7 +441,7 @@
 				name: 'Imported Config',
 				description: `Imported from Brewfile (${data.packages.length} packages)`,
 				base_preset: 'minimal',
-				is_public: true,
+				visibility: 'unlisted',
 				alias: '',
 				packages: data.packages,
 				custom_script: '',
@@ -535,9 +535,9 @@
 									{/if}
 								</div>
 							</div>
-							<span class="badge" class:public={config.is_public} class:private={!config.is_public}>
-								{config.is_public ? 'Public' : 'Private'}
-							</span>
+						<span class="badge" class:public={config.visibility === 'public'} class:unlisted={config.visibility === 'unlisted'} class:private={config.visibility === 'private'}>
+							{config.visibility}
+						</span>
 						</div>
 						{#if config.description}
 							<p class="config-description">{config.description}</p>
@@ -598,11 +598,14 @@
 				</div>
 
 				<div class="form-group">
-					<label class="checkbox-label">
-						<input type="checkbox" bind:checked={formData.is_public} />
-						<span>Public (anyone can use this install URL)</span>
-					</label>
-				</div>
+				<label class="form-label" for="config-visibility">Visibility</label>
+				<select id="config-visibility" class="form-select" bind:value={formData.visibility}>
+					<option value="public">Public — listed on profile, install URL works</option>
+					<option value="unlisted">Unlisted — not listed, but install URL works</option>
+					<option value="private">Private — only you can access</option>
+				</select>
+				<p class="form-hint">Unlisted configs can still be installed by anyone with the URL.</p>
+			</div>
 
 			<div class="form-group">
 				<label class="form-label" for="config-alias">Short Alias (Optional)</label>
@@ -1034,6 +1037,11 @@
 		color: var(--accent);
 	}
 
+	.badge.unlisted {
+		background: rgba(234, 179, 8, 0.2);
+		color: #eab308;
+	}
+
 	.badge.private {
 		background: rgba(239, 68, 68, 0.2);
 		color: var(--danger);
@@ -1153,18 +1161,7 @@
 		margin-top: 6px;
 	}
 
-	.checkbox-label {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		cursor: pointer;
-	}
 
-	.checkbox-label input {
-		width: 16px;
-		height: 16px;
-		accent-color: var(--accent);
-	}
 
 	.alias-input {
 		display: flex;

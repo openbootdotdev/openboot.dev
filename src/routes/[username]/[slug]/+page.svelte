@@ -69,7 +69,7 @@
 				description: `Forked from @${data.configUser.username}`,
 				base_preset: data.config.base_preset,
 				packages: data.config.packages,
-				is_public: true,
+				visibility: 'unlisted',
 				custom_script: data.config.custom_script || '',
 				dotfiles_repo: data.config.dotfiles_repo || '',
 				snapshot: data.config.snapshot || null,
