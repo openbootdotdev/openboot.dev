@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { generateInstallScript } from '$lib/server/install-script';
+import { generateInstallScript, generatePrivateInstallScript } from '$lib/server/install-script';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
@@ -48,9 +48,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const env = event.platform?.env;
 
 		if (env) {
-			const config = await env.DB.prepare('SELECT c.slug, c.custom_script, c.dotfiles_repo, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.alias = ? AND c.visibility IN (?, ?)')
-				.bind(alias, 'public', 'unlisted')
-				.first<{ slug: string; username: string; custom_script: string; dotfiles_repo: string }>();
+			const config = await env.DB.prepare('SELECT c.slug, c.custom_script, c.dotfiles_repo, c.visibility, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.alias = ?')
+				.bind(alias)
+				.first<{ slug: string; username: string; custom_script: string; dotfiles_repo: string; visibility: string }>();
 
 			if (config) {
 				const ua = event.request.headers.get('user-agent') || '';
@@ -59,6 +59,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 				const isBrowser = accept.includes('text/html');
 
 				if (isCurl || !isBrowser) {
+					if (config.visibility === 'private') {
+						const script = generatePrivateInstallScript(env.APP_URL, config.username, config.slug);
+						return withSecurityHeaders(new Response(script, {
+							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
+						}));
+					}
+
 					const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
 
 					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch(() => {});
@@ -92,7 +99,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 					.bind(user.id, slug)
 					.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
 
-				if (config && config.visibility !== 'private') {
+				if (config) {
+						if (config.visibility === 'private') {
+							const script = generatePrivateInstallScript(env.APP_URL, username, slug);
+							return withSecurityHeaders(new Response(script, {
+								headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
+							}));
+						}
+
 						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
 
 						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});

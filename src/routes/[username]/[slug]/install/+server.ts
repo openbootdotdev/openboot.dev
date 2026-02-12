@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { generateInstallScript } from '$lib/server/install-script';
 
-export const GET: RequestHandler = async ({ platform, params }) => {
+export const GET: RequestHandler = async ({ platform, params, request }) => {
 	const env = platform?.env;
 	if (!env) {
 		return new Response('Platform env not available', { status: 500 });
@@ -21,7 +21,17 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 	}
 
 	if (config.visibility === 'private') {
-		return new Response('Config is private', { status: 403 });
+		const authHeader = request.headers.get('authorization') || '';
+		const token = authHeader.replace(/^Bearer\s+/i, '');
+		if (!token) {
+			return new Response('Config is private', { status: 403 });
+		}
+		const tokenRow = await env.DB.prepare(
+			"SELECT user_id FROM api_tokens WHERE token = ? AND expires_at > datetime('now')"
+		).bind(token).first<{ user_id: string }>();
+		if (!tokenRow || tokenRow.user_id !== user.id) {
+			return new Response('Config is private', { status: 403 });
+		}
 	}
 
 	const script = generateInstallScript(params.username, params.slug, config.custom_script, config.dotfiles_repo || '');
