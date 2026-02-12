@@ -39,7 +39,7 @@ It scans your Homebrew packages, macOS preferences, shell config, and git settin
 After uploading, you get a link:
 
 ```
-curl -fsSL https://openboot.dev/yourname/my-setup | bash
+curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
 ```
 
 Next time you switch machines, run that one command. You can also save locally without uploading:
