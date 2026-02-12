@@ -25,9 +25,17 @@ CLI essentials. Fast and lightweight.
 
 **GUI apps:** Warp, Raycast, Maccy, Stats, Rectangle
 
+```bash
+openboot --preset minimal
 ```
+
+<details>
+<summary>Or use the one-line installer</summary>
+
+```bash
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
 ```
+</details>
 
 ## developer
 
@@ -37,9 +45,17 @@ The recommended starting point. Everything you need to start building, nothing y
 - **CLI:** node, go, pnpm, docker, docker-compose, lazydocker, tmux, neovim, httpie, pre-commit
 - **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser, TablePlus, AppCleaner
 
+```bash
+openboot --preset developer
 ```
+
+<details>
+<summary>Or use the one-line installer</summary>
+
+```bash
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
 ```
+</details>
 
 ## full
 
@@ -49,9 +65,17 @@ Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
 - **CLI:** python, uv, rustup, deno, bun, cmake, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm, tig, dive
 - **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, ngrok, Shottr, Miniconda
 
+```bash
+openboot --preset full
 ```
+
+<details>
+<summary>Or use the one-line installer</summary>
+
+```bash
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
 ```
+</details>
 
 ## Customizing During Install
 
@@ -68,14 +92,14 @@ Want `developer` but with `kubectl`? Select `developer`, then toggle `kubectl` o
 
 For scripted installs, use `--silent` to install a preset exactly as defined:
 
-```
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --silent
+```bash
+openboot --preset developer --silent
 ```
 
 Preview what would be installed first with `--dry-run`:
 
-```
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer --dry-run
+```bash
+openboot --preset developer --dry-run
 ```
 
 See [CLI Reference](/docs/cli-reference) for automation details.

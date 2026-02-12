@@ -16,7 +16,21 @@ Homebrew installs packages. OpenBoot sets up your **entire** environment — pac
 
 If you're happy managing each of those separately, you don't need OpenBoot. If you'd rather do it in 5 minutes instead of an hour, give it a try.
 
-## Is it safe to pipe curl to bash?
+## Should I use Homebrew or the one-line installer?
+
+**Use Homebrew** (`brew install openboot`) if you:
+- Already have Homebrew installed
+- Want cleaner updates (`brew upgrade openboot`)
+- Prefer package managers over `curl | bash`
+
+**Use the one-line installer** if you:
+- Don't have Homebrew yet (it installs Homebrew for you)
+- Want the absolute fastest setup on a fresh Mac
+- Are running in CI/automation environments
+
+Both methods install the exact same binary.
+
+## Is the one-line installer safe?
 
 Fair question. Here's how OpenBoot handles it:
 
@@ -26,9 +40,11 @@ Fair question. Here's how OpenBoot handles it:
 - The binary is downloaded from GitHub Releases with **SHA256 checksum verification**
 - You can inspect the script before running it:
 
-```
+```bash
 curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh
 ```
+
+If you prefer, install via Homebrew instead (see above).
 
 ## What if I already have Homebrew?
 
@@ -49,11 +65,21 @@ An account (GitHub or Google OAuth) is needed to:
 
 ## How do I update OpenBoot?
 
+**If installed via Homebrew:**
+
+```bash
+brew upgrade openboot
 ```
+
+**If installed via the one-line installer:**
+
+```bash
 openboot update --self
 ```
 
-Or re-run the install script — it downloads the latest binary and replaces the old one. Your configs, snapshots, and auth tokens are unaffected.
+Or re-run the install script — it downloads the latest binary and replaces the old one.
+
+Your configs, snapshots, and auth tokens are unaffected by updates.
 
 ## Where is my data stored?
 

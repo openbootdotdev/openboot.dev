@@ -20,14 +20,24 @@ OpenBoot is an open-source CLI that sets up your entire macOS development enviro
 
 ## How It Works
 
+**Install via Homebrew (recommended):**
+
+```bash
+brew tap openbootdotdev/tap
+brew install openboot
+openboot
 ```
+
+**Or use the one-line installer:**
+
+```bash
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-This one command:
+The installer:
 
-1. Downloads the `openboot` binary
-2. Installs Xcode Command Line Tools and Homebrew (if needed)
+1. Installs Xcode Command Line Tools and Homebrew (if needed)
+2. Downloads the `openboot` binary
 3. Launches an interactive TUI where you pick your packages
 4. Installs everything, configures your shell, and applies macOS preferences
 

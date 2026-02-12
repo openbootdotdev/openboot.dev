@@ -10,18 +10,26 @@ New Mac, unboxed to coding in 5 minutes. Here's the typical flow for individual 
 
 ## New Mac: Start from Scratch
 
-Open Terminal, one command:
+**Install OpenBoot:**
 
+```bash
+brew tap openbootdotdev/tap && brew install openboot
 ```
-curl -fsSL https://openboot.dev/install.sh | bash
+
+Or use the one-line installer: `curl -fsSL https://openboot.dev/install.sh | bash`
+
+**Run setup:**
+
+```bash
+openboot
 ```
 
 The TUI pops up — pick the packages you want, hit Enter to confirm. After installation, restart your terminal and start coding.
 
 If you already know what you need, use a preset to skip the picker:
 
-```
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
+```bash
+openboot --preset developer
 ```
 
 See [Presets](/docs/presets) for what's in each. Not sure which one? Go with `developer`.
@@ -62,10 +70,10 @@ Next time you reinstall or switch machines, one command restores everything.
 
 ## Day-to-Day Maintenance
 
-```
+```bash
 openboot doctor        # check environment health
 openboot update        # update all Homebrew packages
-openboot update --self # update OpenBoot itself
+brew upgrade openboot  # update OpenBoot itself (if installed via Homebrew)
 ```
 
 ## Typical Flow
