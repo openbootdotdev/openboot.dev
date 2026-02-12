@@ -381,6 +381,34 @@
 		}
 	}
 
+	async function exportConfig(slug: string) {
+		try {
+			const response = await fetch(`/api/configs/${slug}`);
+			const data = await response.json();
+			const config = data.config;
+			const exported = {
+				name: config.name,
+				description: config.description || '',
+				base_preset: config.base_preset,
+				packages: config.packages || [],
+				custom_script: config.custom_script || '',
+				dotfiles_repo: config.dotfiles_repo || '',
+				snapshot: config.snapshot || null,
+				visibility: config.visibility || 'unlisted',
+				alias: config.alias || null
+			};
+			const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `${slug}.json`;
+			a.click();
+			URL.revokeObjectURL(url);
+		} catch (e) {
+			alert('Failed to export configuration');
+		}
+	}
+
 	function copyToClipboard(text: string, configId: string) {
 		navigator.clipboard.writeText(text);
 		copiedId = configId;
@@ -556,6 +584,7 @@
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
 							<Button variant="secondary" onclick={() => duplicateConfig(config.slug)}>Duplicate</Button>
 							<Button variant="secondary" onclick={() => shareConfig(config)}>Share</Button>
+							<Button variant="secondary" onclick={() => exportConfig(config.slug)}>Export</Button>
 							<Button variant="danger" onclick={() => deleteConfig(config.slug)}>Delete</Button>
 						</div>
 					</div>
