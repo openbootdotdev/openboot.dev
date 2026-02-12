@@ -21,7 +21,7 @@ Three curated starting points. Pick one, then customize it in the TUI before ins
 
 CLI essentials. Fast and lightweight.
 
-**CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tldr, gh, git-delta, lazygit, stow
+**CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tealdeer, gh, git-delta, lazygit, stow
 
 **GUI apps:** Warp, Raycast, Maccy, Stats
 
