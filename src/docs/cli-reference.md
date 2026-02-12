@@ -36,6 +36,8 @@ Install from a custom config hosted on openboot.dev.
 openboot --user sarah/frontend-team
 ```
 
+For private configs, run `openboot login` first — the CLI sends your auth token automatically.
+
 ### Install Flags
 
 | Flag | Description |
@@ -96,6 +98,26 @@ openboot snapshot --import https://example.com/snapshot.json
 | `--json` | Output as JSON to stdout |
 | `--dry-run` | Preview without saving or uploading |
 | `--import <path>` | Restore from a local file or URL |
+
+## Authentication
+
+### `openboot login`
+
+Authenticate with openboot.dev via browser. Required for installing private configs and uploading snapshots.
+
+```
+openboot login
+```
+
+Opens your browser to approve the login. After approval, a token is saved at `~/.openboot/auth.json`.
+
+### `openboot logout`
+
+Remove the stored authentication token from this machine.
+
+```
+openboot logout
+```
 
 ## Maintain Your Environment
 

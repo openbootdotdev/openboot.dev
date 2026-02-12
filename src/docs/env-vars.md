@@ -50,6 +50,8 @@ These are used by the `openboot` binary at runtime.
 | `OPENBOOT_PRESET` | Default preset to use (overridden by `--preset` flag) |
 | `OPENBOOT_USER` | Default remote config to use (overridden by `--user` flag) |
 | `OPENBOOT_DOTFILES` | Dotfiles repository URL (overridden by config's `dotfiles_repo`) |
+| `OPENBOOT_API_URL` | Override the API base URL (default: `https://openboot.dev`) |
+| `OPENBOOT_DISABLE_AUTOUPDATE` | Set to `1` to disable auto-update checks |
 
 ### Examples
 
@@ -74,6 +76,6 @@ These aren't environment variables, but useful to know:
 | Path | What's There |
 |------|-------------|
 | `~/.openboot/bin/openboot` | The OpenBoot binary |
-| `~/.openboot/auth.json` | Auth token (after `openboot snapshot` upload) |
+| `~/.openboot/auth.json` | Auth token (after `openboot login` or snapshot upload) |
 | `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
 | `~/.dotfiles/` | Cloned dotfiles repo (when configured) |
