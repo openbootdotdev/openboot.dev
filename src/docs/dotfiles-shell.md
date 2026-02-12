@@ -44,7 +44,7 @@ Control how OpenBoot handles dotfiles with the `--dotfiles` flag:
 
 | Mode | What it does |
 |------|-------------|
-| `clone` | Clone the repo (default) |
+| `clone` | Clone the repo to `~/.dotfiles` |
 | `link` | Clone and symlink with `stow` |
 | `skip` | Don't touch dotfiles |
 

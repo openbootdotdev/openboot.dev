@@ -19,7 +19,7 @@ curl -fsSL https://openboot.dev/install.sh | bash
 What happens next:
 
 ```
-✓ Downloaded OpenBoot v0.4.0
+✓ Downloaded OpenBoot
 ✓ Xcode Command Line Tools ready
 ✓ Homebrew ready
 🚀 Launching interactive installer...

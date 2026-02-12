@@ -10,7 +10,7 @@ Build your own setup, save it on openboot.dev, and share it as a one-line instal
 
 ## Creating a Config
 
-1. **Sign in** with GitHub — click **Login** in the header (no email/password needed)
+1. **Sign in** with GitHub or Google — click **Login** in the header (no email/password needed)
 2. Go to your **[Dashboard](/dashboard)**
 3. Click **Create Config**
 4. Pick a **base preset** (`minimal`, `developer`, or `full`) as your starting point

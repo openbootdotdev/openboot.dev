@@ -13,17 +13,17 @@ Three curated starting points. Pick one, then customize it in the TUI before ins
 | | minimal | developer | full |
 |---|---------|-----------|------|
 | **Best for** | Minimalists, servers | Most developers | Polyglot / DevOps |
-| **CLI tools** | 18 | 26 | 40 |
-| **GUI apps** | 4 | 11 | 20 |
+| **CLI tools** | 19 | 29 | 48 |
+| **GUI apps** | 5 | 14 | 25 |
 | **Includes** | Essentials | Essentials + languages + editors | Everything |
 
 ## minimal
 
 CLI essentials. Fast and lightweight.
 
-**CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tealdeer, gh, git-delta, lazygit, stow
+**CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tealdeer, gh, git-delta, git-lfs, lazygit, stow
 
-**GUI apps:** Warp, Raycast, Maccy, Stats
+**GUI apps:** Warp, Raycast, Maccy, Stats, Rectangle
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
@@ -34,8 +34,8 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
 The recommended starting point. Everything you need to start building, nothing you don't.
 
 **Adds over minimal:**
-- **CLI:** node, go, pnpm, docker, docker-compose, tmux, neovim, httpie
-- **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser
+- **CLI:** node, go, pnpm, docker, docker-compose, lazydocker, tmux, neovim, httpie, pre-commit
+- **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser, TablePlus, AppCleaner
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
@@ -46,8 +46,8 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
 Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
 
 **Adds over developer:**
-- **CLI:** python, uv, rustup, deno, bun, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm
-- **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, Rectangle
+- **CLI:** python, uv, rustup, deno, bun, cmake, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm, tig, dive
+- **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, ngrok, Shottr, Miniconda
 
 ```
 curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
