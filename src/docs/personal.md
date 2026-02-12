@@ -6,86 +6,117 @@ order: 7
 
 # For You
 
-New Mac, unboxed to coding in 5 minutes. Here's the typical flow for individual developers.
+## Ninety minutes into a new Mac setup
 
-## New Mac: Start from Scratch
+You've just Googled "mac fast key repeat rate terminal" for the fifth time in your career. You recognize the Stack Overflow answer. You upvoted it last time.
 
-**Install OpenBoot:**
+Homebrew's installed. Xcode tools took 20 minutes for reasons you've stopped questioning. Now you're staring at Terminal trying to remember if you use `ripgrep` or `rg` or both. Was it `bat` or `batcat`? You had `fzf` on the old machine. Or was that only on your work Mac?
 
-```bash
-brew tap openbootdotdev/tap && brew install openboot
-```
+By 3pm you still haven't written a line of code.
 
-Or use the one-line installer: `curl -fsSL https://openboot.dev/install.sh | bash`
-
-**Run setup:**
+This time, you open Terminal and type one line:
 
 ```bash
-openboot
+curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-The TUI pops up — pick the packages you want, hit Enter to confirm. After installation, restart your terminal and start coding.
+OpenBoot handles everything, then drops you into a TUI. You pick the `developer` preset — Node, Go, Docker, VS Code. You swap Postman for httpie, toggle on `fzf`. Hit Enter, go make coffee.
 
-If you already know what you need, use a preset to skip the picker:
+```text
+✓ Homebrew installed
+✓ Installing 29 formulae and 14 casks...
+✓ node (22.0.0) · go (1.23.0) · docker · mass-installing...
+✓ visual-studio-code · arc · orbstack
+✓ Oh-My-Zsh configured (git, zsh-autosuggestions, zsh-syntax-highlighting)
+✓ macOS preferences applied (Fast Key Repeat, Finder Path Bar, Show Hidden Files)
+✓ Dotfiles cloned and linked
+✨ Setup complete. Restart your terminal.
+```
+
+You come back, open a new tab, type `node --version`. It works. `git config user.email` — it's there. The Dock is clean, Finder shows hidden files, key repeat is fast. It's your machine.
+
+Twenty minutes. You're writing code before lunch.
+
+See [Presets](/docs/presets) for what's in `minimal`, `developer`, and `full`.
+
+## Your memory is the worst package manager you've ever used
+
+Two years on this Mac. Thirty-two Homebrew packages, but you couldn't list fifteen of them without checking `brew list`. Your `.zshrc` has aliases you don't remember writing. Did you install `tldr` or `tealdeer`? Both? You Googled the `defaults` command to make key repeat instant — good luck finding that again.
+
+Last month someone asked what's in your dev environment. You sent them a list you typed from memory. Three tools were missing. Two you listed twice under different names.
+
+Your memory is a terrible package manager. It doesn't track dependencies. It has no changelog. The `--version` flag is unreliable.
 
 ```bash
-openboot --preset developer
-```
-
-See [Presets](/docs/presets) for what's in each. Not sure which one? Go with `developer`.
-
-## Existing Mac: Save Your Setup
-
-You've been using your Mac for a while — tools installed, configs tuned just right. Don't want to redo all that next time you switch machines? Snapshot it:
-
-```
 openboot snapshot
 ```
 
-It scans your Homebrew packages, macOS preferences, shell config, and git settings. You review everything in the TUI, deselect anything you don't want to share, then upload.
+OpenBoot scans your machine — Homebrew packages, casks, macOS preferences, shell config, git identity — and opens a TUI editor. You uncheck personal stuff (Spotify, Slack), keep the dev tools. Name it, upload it. One minute.
 
-After uploading, you get a link:
-
-```
-curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
-```
-
-Next time you switch machines, run that one command. You can also save locally without uploading:
-
-```
-openboot snapshot --local
+```text
+✓ Homebrew Formulae    32 found
+✓ Homebrew Casks       15 found
+✓ macOS Preferences    12 found
+✓ Shell & Git Config   scanned
+✓ Uploaded → https://openboot.dev/alex/my-setup
 ```
 
-## Customize Your Environment
+Now you have a URL. Next time someone asks "what's your dev environment?" you send them a link. The list is complete. The versions are accurate. Your memory is off the hook.
 
-Presets not enough? Build your own config on the [Dashboard](/dashboard):
-
-1. Pick a preset as your base
-2. Search and add the packages you need
-3. Set a dotfiles repo (if you have one)
-4. Add a custom script (e.g. clone your commonly used repos)
-5. Save and get your personal install URL
-
-Next time you reinstall or switch machines, one command restores everything.
-
-## Day-to-Day Maintenance
+Want more than just packages? Add a **custom script** in the [Dashboard](/dashboard):
 
 ```bash
-openboot doctor        # check environment health
-openboot update        # update all Homebrew packages
-brew upgrade openboot  # update OpenBoot itself (if installed via Homebrew)
+# Directory structure
+mkdir -p ~/projects/{personal,work,oss}
+
+# Fresh SSH key
+ssh-keygen -t ed25519 -C "alex@hey.com" -f ~/.ssh/id_ed25519 -N ""
+eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_ed25519
+
+# Repos you always need
+git clone git@github.com:alex/dotfiles.git ~/projects/personal/dotfiles
+git clone git@github.com:alex/side-project.git ~/projects/personal/side-project
 ```
 
-## Typical Flow
+Everything that isn't a package — directory structure, SSH keys, repo cloning — becomes part of your config. See [Custom Configs](/docs/custom-configs) for more on what custom scripts can do.
 
+When the new machine arrives, or when IT finally sends that hardware refresh email:
+
+```bash
+curl -fsSL https://openboot.dev/alex/my-setup/install.sh | bash
 ```
-New Mac → curl one-liner → TUI picks → start working
-                ↓
-         use it for a while
-                ↓
-     openboot snapshot → save your setup
-                ↓
-         next machine
-                ↓
-     curl your snapshot URL → everything restored
+
+Everything restored. Twenty minutes, done.
+
+## Work Mac, home Mac, same setup
+
+Monday morning at the office. You install `jq` for a quick script. It's useful, so you keep using it all week.
+
+Friday night at home. You pull down the same project on your personal Mac. Run the script. `jq: command not found`. Right. You forgot to install it here too.
+
+Now you're manually remembering what you installed at work, typing `brew install jq` again, wondering what else is out of sync. This happens every time you add a new tool.
+
+With OpenBoot, you don't remember. You just sync.
+
+After installing `jq` at work:
+
+```bash
+openboot snapshot
 ```
+
+Updates your config. At home:
+
+```bash
+openboot --user alex/my-setup
+```
+
+OpenBoot sees `jq` is in your config but not installed. Adds it. Two commands, both machines in sync. Works the other way too — install something at home, snapshot, pull it down at work next Monday.
+
+Your config becomes the source of truth. Not your memory.
+
+## What's Next
+
+- [Presets](/docs/presets) — see what's in each starting point
+- [Snapshot](/docs/snapshot) — the full capture walkthrough
+- [Custom Configs](/docs/custom-configs) — build and share your own setup
+
