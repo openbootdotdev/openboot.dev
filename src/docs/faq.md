@@ -42,7 +42,10 @@ Yes. No account needed for:
 - Using the interactive TUI
 - Running `openboot snapshot --local` or `--json`
 
-An account (GitHub OAuth) is only needed to upload configs to openboot.dev and share them via URL.
+An account (GitHub or Google OAuth) is needed to:
+
+- Upload configs to openboot.dev and share them via URL
+- Install private configs (run `openboot login` first)
 
 ## How do I update OpenBoot?
 
@@ -61,7 +64,7 @@ Or re-run the install script — it downloads the latest binary and replaces the
 | Local snapshots | `~/.openboot/snapshot.json` (local) |
 | OpenBoot binary | `~/.openboot/bin/openboot` (local) |
 
-Configs are public by default. You can mark them private in the dashboard — they'll be hidden from your profile but the install URL still works if shared.
+Configs are **unlisted** by default — not listed on your profile, but the install URL works if shared. You can set them to **public** (listed on profile) or **private** (requires authentication to install). See [Custom Configs — Visibility](/docs/custom-configs#visibility) for details.
 
 ## What shell does OpenBoot set up?
 

@@ -114,7 +114,7 @@ Controls who can see and install this config.
 - **Options:**
   - `"public"` — listed on your profile, install URL works for everyone
   - `"unlisted"` — not listed on your profile, but install URL still works if shared
-  - `"private"` — only you can access. Installing via `curl | bash` will open a browser for authorization, then proceed automatically
+  - `"private"` — only you can access. Via `curl | bash`, the script opens a browser for authorization. Via the CLI, run `openboot login` first, then `openboot --user yourname/slug`
 
 ## Export
 

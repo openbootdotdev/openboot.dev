@@ -49,10 +49,30 @@ You can also install via the CLI directly:
 openboot --user sarah/frontend-team
 ```
 
-## Public vs Private
+## Visibility
 
-- **Public** (default) — anyone can view the config page and install
-- **Private** — hidden from your profile, but the install URL still works if shared
+Every config has a visibility setting you can change in the dashboard:
+
+| Visibility | Listed on Profile | Install URL | Config Page |
+|------------|:-:|:-:|:-:|
+| **Public** | Yes | Works for everyone | Viewable by anyone |
+| **Unlisted** (default) | No | Works for everyone | Viewable with direct link |
+| **Private** | No | Requires auth | Owner only |
+
+### Installing Private Configs
+
+**Via `curl | bash`** — the install script automatically opens your browser for authorization, then proceeds with the install:
+
+```
+curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
+```
+
+**Via the CLI** — run `openboot login` first, then use `--user` as usual. The CLI sends your auth token automatically:
+
+```
+openboot login
+openboot --user yourname/my-setup
+```
 
 ## Short URLs
 
