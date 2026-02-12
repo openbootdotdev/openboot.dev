@@ -45,8 +45,8 @@ These are used by the `openboot` binary at runtime.
 
 | Variable | Description |
 |----------|-------------|
-| `OPENBOOT_GIT_NAME` | Git user name — required in `--silent` mode if Git isn't configured |
-| `OPENBOOT_GIT_EMAIL` | Git user email — required in `--silent` mode if Git isn't configured |
+| `OPENBOOT_GIT_NAME` | Git user name — **only read in `--silent` mode** (required if Git isn't configured) |
+| `OPENBOOT_GIT_EMAIL` | Git user email — **only read in `--silent` mode** (required if Git isn't configured) |
 | `OPENBOOT_PRESET` | Default preset to use (overridden by `--preset` flag) |
 | `OPENBOOT_USER` | Default remote config to use (overridden by `--user` flag) |
 | `OPENBOOT_DOTFILES` | Dotfiles repository URL (overridden by config's `dotfiles_repo`) |

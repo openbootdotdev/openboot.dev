@@ -80,3 +80,7 @@ Config slugs are auto-generated, but you can edit them in the dashboard. Keep th
 
 - `openboot.dev/yourname/ios` instead of `openboot.dev/yourname/ios-development-team-2024`
 - `openboot.dev/yourname/ml` instead of `openboot.dev/yourname/machine-learning-setup`
+
+## Install Tracking
+
+Each config tracks the number of times it's been installed. The install count is visible on your dashboard and config page. This helps you understand which configs are most popular and widely used.

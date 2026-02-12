@@ -22,7 +22,7 @@
 |-------|-----------|
 | Framework | [SvelteKit 5](https://svelte.dev/) + TypeScript |
 | Styling | CSS variables (dark/light theme) |
-| Auth | GitHub OAuth |
+| Auth | GitHub & Google OAuth |
 | Database | Cloudflare D1 (SQLite) |
 | Hosting | Cloudflare Workers + Pages |
 
@@ -31,11 +31,8 @@
 ```bash
 npm install
 
-wrangler d1 create openboot-local
-wrangler d1 execute openboot-local --local --file=migrations/0001_init.sql
-wrangler d1 execute openboot-local --local --file=migrations/0002_add_alias.sql
-wrangler d1 execute openboot-local --local --file=migrations/0003_add_dotfiles_repo.sql
-wrangler d1 execute openboot-local --local --file=migrations/0004_add_snapshot_and_auth.sql
+# Apply all migrations automatically
+wrangler d1 migrations apply openboot --local
 
 npm run dev
 ```
@@ -73,8 +70,9 @@ GitHub repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/auth/login` | GitHub OAuth login redirect |
-| `GET /api/auth/callback` | GitHub OAuth callback |
+| `GET /api/auth/login` | GitHub/Google OAuth login redirect |
+| `GET /api/auth/callback/github` | GitHub OAuth callback |
+| `GET /api/auth/callback/google` | Google OAuth callback |
 | `GET /api/auth/logout` | Clear session |
 | `POST /api/auth/cli/start` | Start CLI device auth flow |
 | `POST /api/auth/cli/approve` | Approve CLI auth request |
@@ -98,6 +96,7 @@ GitHub repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_
 |----------|-------------|
 | `POST /api/brewfile/parse` | Parse Brewfile content into packages |
 | `GET /api/homebrew/search?q=` | Search Homebrew packages |
+| `GET /api/npm/search?q=` | Search NPM packages |
 
 ## Database Schema
 
@@ -124,6 +123,7 @@ CREATE TABLE configs (
   snapshot TEXT,
   alias TEXT UNIQUE,
   visibility TEXT DEFAULT 'unlisted',
+  install_count INTEGER DEFAULT 0,
   created_at TEXT,
   updated_at TEXT
 );

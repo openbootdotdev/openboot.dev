@@ -43,7 +43,7 @@ For private configs, run `openboot login` first — the CLI sends your auth toke
 | Flag | Description |
 |------|-------------|
 | `-p, --preset <name>` | Use a preset: `minimal`, `developer`, `full` |
-| `-u, --user <name>` | Install from an openboot.dev config |
+| `-u, --user <username/slug>` | Install from a config hosted on openboot.dev |
 | `-s, --silent` | Non-interactive mode — no TUI, no prompts |
 | `--dry-run` | Preview what would be installed without installing |
 | `--resume` | Resume an interrupted installation |
@@ -134,10 +134,14 @@ openboot doctor
 ✓ Disk space (48 GB free)
 ✓ Homebrew installed
 ✓ Homebrew health
+✓ Outdated packages (5 updates available)
 ✓ Git installed
 ✓ Git identity
 ✓ Oh-My-Zsh installed
 ✓ .zshrc exists
+
+Suggested fixes:
+  Run 'openboot update' to upgrade outdated packages
 
 All checks passed! Your environment is healthy.
 ```
@@ -158,6 +162,13 @@ Update the OpenBoot binary to the latest version.
 ```
 openboot update --self
 ```
+
+### Update Flags
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview what packages would be updated without upgrading |
+| `--self` | Update the OpenBoot binary itself to the latest version |
 
 ### `openboot version`
 

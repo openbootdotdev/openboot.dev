@@ -15,6 +15,7 @@ Three curated starting points. Pick one, then customize it in the TUI before ins
 | **Best for** | Minimalists, servers | Most developers | Polyglot / DevOps |
 | **CLI tools** | 19 | 29 | 48 |
 | **GUI apps** | 5 | 14 | 25 |
+| **NPM packages** | 0 | 5 | 9 |
 | **Includes** | Essentials | Essentials + languages + editors | Everything |
 
 ## minimal
@@ -44,6 +45,7 @@ The recommended starting point. Everything you need to start building, nothing y
 **Adds over minimal:**
 - **CLI:** node, go, pnpm, docker, docker-compose, lazydocker, tmux, neovim, httpie, pre-commit
 - **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser, TablePlus, AppCleaner
+- **NPM:** typescript, tsx, eslint, prettier, nodemon
 
 ```bash
 openboot --preset developer
@@ -64,6 +66,7 @@ Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
 **Adds over developer:**
 - **CLI:** python, uv, rustup, deno, bun, cmake, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm, tig, dive
 - **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, ngrok, Shottr, Miniconda
+- **NPM:** pm2, serve, vercel, wrangler
 
 ```bash
 openboot --preset full
