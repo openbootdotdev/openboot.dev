@@ -24,7 +24,7 @@ Every OpenBoot config — whether created from a preset, a snapshot, or the dash
   "dotfiles_repo": "https://github.com/yourorg/team-dotfiles.git",
   "snapshot": null,
   "alias": "fe",
-  "is_public": true
+  "visibility": "unlisted"
 }
 ```
 
@@ -105,14 +105,16 @@ Short URL alias for easy sharing. If set, the config is accessible at `openboot.
 - **Required:** no
 - **Must be:** unique across all configs
 
-### `is_public`
+### `visibility`
 
-Whether the config page is publicly visible.
+Controls who can see and install this config.
 
-- **Type:** boolean
-- **Default:** `true`
-- **`true`** — anyone can view and install
-- **`false`** — hidden from profile, but install URL still works if shared
+- **Type:** string
+- **Default:** `"unlisted"`
+- **Options:**
+  - `"public"` — listed on your profile, install URL works for everyone
+  - `"unlisted"` — not listed on your profile, but install URL still works if shared
+  - `"private"` — only you can see it, install URL returns 403 for others
 
 ## macOS Preferences Whitelist
 
