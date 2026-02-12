@@ -46,11 +46,20 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		return p;
 	});
 
+	let parsedSnapshot = null;
+	if (config.snapshot) {
+		try {
+			parsedSnapshot = JSON.parse(config.snapshot as string);
+		} catch {
+			parsedSnapshot = null;
+		}
+	}
+
 	return json({
 		config: {
 			...config,
 			packages,
-			snapshot: config.snapshot ? JSON.parse(config.snapshot as string) : null
+			snapshot: parsedSnapshot
 		},
 		install_url: installUrl
 	});
