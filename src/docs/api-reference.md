@@ -1,5 +1,6 @@
 ---
 title: API Reference
+description: REST API for configs, package search, Brewfile parsing, and authentication. All endpoints at openboot.dev.
 group: Reference
 order: 13
 ---

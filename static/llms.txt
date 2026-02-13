@@ -1,0 +1,47 @@
+# OpenBoot
+
+> One-command macOS developer environment setup. Open-source CLI + web dashboard.
+
+OpenBoot automates your entire Mac dev environment — Homebrew packages, GUI apps, shell config, dotfiles, and macOS preferences — in minutes instead of hours.
+
+## Quick Links
+
+- Install: `brew tap openbootdotdev/tap && brew install openboot`
+- Website: https://openboot.dev
+- GitHub: https://github.com/openbootdotdev
+
+## Docs
+
+- [What is OpenBoot](/docs/what-is-openboot): Open-source CLI that sets up your entire macOS dev environment — packages, apps, shell, dotfiles, and preferences — in one command.
+- [Quick Start](/docs/quick-start): Install OpenBoot via Homebrew or the one-line installer and set up your Mac in minutes.
+- [Presets](/docs/presets): Three curated package sets — minimal, developer, and full — as starting points you can customize before installing.
+- [Snapshot](/docs/snapshot): Capture your current Mac's packages, preferences, and shell config, then share it as a one-line install URL.
+- [Custom Configs](/docs/custom-configs): Build your own setup on the dashboard with packages, scripts, and dotfiles, then share it as a one-line install command.
+- [Dotfiles & Shell](/docs/dotfiles-shell): Automatic Oh-My-Zsh setup, dotfiles linking with GNU Stow, and developer-friendly macOS preferences.
+- [For You](/docs/personal): How OpenBoot saves you hours on new Mac setup, keeps your machines in sync, and replaces your memory as a package manager.
+- [For Teams](/docs/teams): Replace your 47-step setup doc with one command. Onboard new hires in minutes, keep everyone in sync.
+- [CLI Commands](/docs/cli-reference): Complete reference for all openboot commands — install, snapshot, login, doctor, update, and their flags.
+- [Config Options](/docs/config-options): Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 23 macOS preferences whitelist.
+- [Environment Variables](/docs/env-vars): All environment variables for the install script and CLI — version pinning, install directory, Git identity, and more.
+- [FAQ](/docs/faq): Common questions about OpenBoot — pricing, safety, Homebrew vs installer, Linux support, uninstalling, and more.
+- [API Reference](/docs/api-reference): REST API for configs, package search, Brewfile parsing, and authentication. All endpoints at openboot.dev.
+
+## API
+
+Base URL: `https://openboot.dev`
+
+- `GET /api/configs` — List user configs (auth required)
+- `POST /api/configs` — Create config (auth required)
+- `GET /api/configs/:slug` — Get config details
+- `PUT /api/configs/:slug` — Update config (auth required)
+- `DELETE /api/configs/:slug` — Delete config (auth required)
+- `POST /api/configs/from-snapshot` — Create config from CLI snapshot (auth required)
+- `GET /:username/:slug/config` — Get config JSON
+- `GET /:username/:slug/install` — Get install script (shell)
+- `GET /api/homebrew/search?q=` — Search Homebrew packages
+- `GET /api/npm/search?q=` — Search npm packages
+- `POST /api/brewfile/parse` — Parse a Brewfile
+
+## Optional
+
+- [Full docs for LLMs](/llms-full.txt): Complete documentation in a single file

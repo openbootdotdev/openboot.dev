@@ -1,5 +1,6 @@
 ---
 title: What is OpenBoot
+description: Open-source CLI that sets up your entire macOS dev environment — packages, apps, shell, dotfiles, and preferences — in one command.
 group: Overview
 order: 1
 ---

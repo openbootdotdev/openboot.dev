@@ -1,5 +1,6 @@
 ---
 title: For Teams
+description: Replace your 47-step setup doc with one command. Onboard new hires in minutes, keep everyone in sync.
 group: Use Cases
 order: 8
 ---

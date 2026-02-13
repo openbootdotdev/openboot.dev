@@ -1,5 +1,6 @@
 ---
 title: Dotfiles & Shell
+description: Automatic Oh-My-Zsh setup, dotfiles linking with GNU Stow, and developer-friendly macOS preferences.
 group: Features
 order: 6
 ---

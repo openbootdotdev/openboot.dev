@@ -2,6 +2,7 @@ import type { Component } from 'svelte';
 
 export interface DocMeta {
 	title: string;
+	description: string;
 	group: string;
 	order: number;
 	slug: string;
@@ -17,7 +18,7 @@ const GROUP_ORDER = ['Overview', 'Features', 'Use Cases', 'Reference', ''];
 
 export const modules = import.meta.glob<{
 	default: Component;
-	metadata: { title: string; group: string; order: number };
+	metadata: { title: string; description: string; group: string; order: number };
 }>('/src/docs/*.md', { eager: true });
 
 const rawModules = import.meta.glob<string>('/src/docs/*.md', {
@@ -31,6 +32,7 @@ function buildDocStructure(): DocGroup[] {
 		const slug = path.replace('/src/docs/', '').replace('.md', '');
 		return {
 			title: mod.metadata.title,
+			description: mod.metadata.description ?? '',
 			group: mod.metadata.group ?? '',
 			order: mod.metadata.order,
 			slug

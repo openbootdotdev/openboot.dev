@@ -1,5 +1,6 @@
 ---
 title: Quick Start
+description: Install OpenBoot via Homebrew or the one-line installer and set up your Mac in minutes.
 group: Overview
 order: 2
 ---

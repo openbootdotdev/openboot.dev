@@ -1,5 +1,6 @@
 ---
 title: For You
+description: How OpenBoot saves you hours on new Mac setup, keeps your machines in sync, and replaces your memory as a package manager.
 group: Use Cases
 order: 7
 ---
