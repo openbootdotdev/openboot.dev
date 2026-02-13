@@ -23,14 +23,14 @@
 
 <svelte:head>
 	<title>OpenBoot - Set up your Mac or capture your setup in one command</title>
-	<meta name="description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
+	<meta name="description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
 	<meta property="og:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta property="og:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
+	<meta property="og:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
 	<meta property="og:image" content="https://openboot.dev/og-image.png" />
 	<meta property="og:url" content="https://openboot.dev" />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta name="twitter:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
+	<meta name="twitter:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
@@ -49,7 +49,7 @@
 					Stop wasting your first day<br />setting up a new Mac
 				</h1>
 				<p class="hero-subtitle">
-					One command installs Git, Node, Docker, VS Code, and 80+ other tools. Fresh Mac to fully productive in 15 minutes. Then share your exact setup with your team so they can do the same.
+					One command installs Git, Node, Docker, VS Code, and 75+ other tools. Fresh Mac to fully productive in minutes. Then share your exact setup with your team so they can do the same.
 				</p>
 
 				<div class="features-list">
