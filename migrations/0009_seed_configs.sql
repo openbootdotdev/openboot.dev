@@ -1,7 +1,7 @@
 -- Seed official openboot user and 20 curated starter configs
 
 INSERT INTO users (id, username, email, avatar_url)
-VALUES ('openboot-official', 'openboot', 'hello@openboot.dev', 'https://github.com/openbootdev.png');
+VALUES ('openboot-official', 'openboot', 'hello@openboot.dev', 'https://avatars.githubusercontent.com/u/258731499?v=4');
 
 -- 1. Frontend - React
 INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, install_count, featured)

@@ -85,9 +85,9 @@ export const GET: RequestHandler = async ({ url, platform, cookies, request }) =
 		.bind(userId, username, email, githubUser.avatar_url || '')
 		.run();
 
-	const existingConfig = await env.DB.prepare('SELECT id FROM configs WHERE user_id = ? AND slug = ?').bind(userId, 'default').first();
+	const configCount = await env.DB.prepare('SELECT COUNT(*) as count FROM configs WHERE user_id = ?').bind(userId).first<{ count: number }>();
 
-	if (!existingConfig) {
+	if (!configCount || configCount.count === 0) {
 		await env.DB.prepare(
 			`
 			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
