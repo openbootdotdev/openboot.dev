@@ -75,7 +75,11 @@ These aren't environment variables, but useful to know:
 
 | Path | What's There |
 |------|-------------|
-| `~/.openboot/bin/openboot` | The OpenBoot binary |
+| `~/.openboot/bin/openboot` | The OpenBoot binary (one-line installer only) |
 | `~/.openboot/auth.json` | Auth token (after `openboot login` or snapshot upload) |
 | `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
+| `~/.openboot/config.json` | Auto-update settings |
+| `~/.openboot/install_state.json` | Tracks what was installed and when |
+| `~/.openboot/state.json` | UI reminder state |
+| `~/.openboot/update_state.json` | Auto-update check state |
 | `~/.dotfiles/` | Cloned dotfiles repo (when configured) |
