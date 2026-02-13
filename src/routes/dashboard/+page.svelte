@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { PRESET_PACKAGES, getPresetPackages } from '$lib/presets';
@@ -519,15 +518,6 @@
 	<title>Dashboard - OpenBoot</title>
 </svelte:head>
 
-<header class="header">
-	<a href="/" class="logo">OpenBoot</a>
-	<div class="user-info">
-		<ThemeToggle />
-		<span class="username">@{$auth.user?.username || '...'}</span>
-		<Button href="/api/auth/logout" variant="ghost">Logout</Button>
-	</div>
-</header>
-
 <main class="container">
 	{#if loading}
 		<div class="loading">Loading...</div>
@@ -863,36 +853,10 @@
 {/if}
 
 <style>
-	.header {
-		background: var(--bg-secondary);
-		border-bottom: 1px solid var(--border);
-		padding: 16px 24px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.logo {
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: var(--accent);
-	}
-
-	.user-info {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.username {
-		color: var(--text-secondary);
-		font-size: 0.9rem;
-	}
-
 	.container {
 		max-width: 1000px;
 		margin: 0 auto;
-		padding: 40px 24px;
+		padding: 80px 24px 40px;
 	}
 
 	.loading {
@@ -923,7 +887,13 @@
 
 	.header-actions {
 		display: flex;
-		gap: 8px;
+		gap: 12px;
+		align-items: center;
+	}
+
+	.username {
+		color: var(--text-secondary);
+		font-size: 0.9rem;
 	}
 
 	.import-modal {
