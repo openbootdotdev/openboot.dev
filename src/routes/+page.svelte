@@ -97,38 +97,8 @@
 						<p class="install-alt">
 							Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code>
 						</p>
-					</div>
-
-					<div class="cta-buttons">
-						{#if $auth.user}
-							<a href="/dashboard" class="btn-primary">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<rect x="3" y="3" width="7" height="7" />
-									<rect x="14" y="3" width="7" height="7" />
-									<rect x="14" y="14" width="7" height="7" />
-									<rect x="3" y="14" width="7" height="7" />
-								</svg>
-								Dashboard
-							</a>
-						{:else}
-							<a href="/login" class="btn-primary">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-									<polyline points="10 17 15 12 10 7"/>
-									<line x1="15" y1="12" x2="3" y2="12"/>
-								</svg>
-								Sign in
-							</a>
-						{/if}
-				<a href="/docs" class="btn-secondary">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-						<polyline points="14 2 14 8 20 8"/>
-					</svg>
-					Documentation
-				</a>
-					</div>
 				</div>
+			</div>
 
 				<div class="hero-visual">
 					<div class="terminal-window">
