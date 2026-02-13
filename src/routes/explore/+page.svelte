@@ -13,11 +13,12 @@
 		username: string;
 		avatar_url: string;
 		packages?: any[];
+		featured?: number;
 	}
 
 	let configs = $state<Config[]>([]);
 	let loading = $state(true);
-	let sortBy = $state<'installs' | 'recent'>('installs');
+	let sortBy = $state<'featured' | 'installs' | 'trending' | 'new' | 'recent'>('featured');
 	let offset = $state(0);
 	let total = $state(0);
 	let limit = 24;
@@ -49,7 +50,7 @@
 		}
 	}
 
-	function handleSortChange(newSort: 'installs' | 'recent') {
+	function handleSortChange(newSort: 'featured' | 'installs' | 'trending' | 'new' | 'recent') {
 		sortBy = newSort;
 		loadConfigs(true);
 	}
@@ -128,25 +129,22 @@
 				{#if total > 0}
 					<p class="hero-count">{total} public configurations shared by developers like you</p>
 				{/if}
-			</div>
-			<div class="sort-controls">
-				<button 
-					class="sort-btn" 
-					class:active={sortBy === 'installs'}
-					onclick={() => handleSortChange('installs')}
-				>
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-					Most Installed
-				</button>
-				<button 
-					class="sort-btn" 
-					class:active={sortBy === 'recent'}
-					onclick={() => handleSortChange('recent')}
-				>
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-					Recent
-				</button>
-			</div>
+		</div>
+		<div class="sort-controls">
+			<label for="sort-select" class="sort-label">Sort by:</label>
+			<select 
+				id="sort-select"
+				class="sort-select"
+				bind:value={sortBy}
+				onchange={() => handleSortChange(sortBy)}
+			>
+				<option value="featured">Featured</option>
+				<option value="installs">Most Installed</option>
+				<option value="trending">This Week</option>
+				<option value="new">New</option>
+				<option value="recent">Recent</option>
+			</select>
+		</div>
 		</section>
 
 		{#if loading && configs.length === 0}
@@ -200,6 +198,12 @@
 								/>
 								<span class="username">@{config.username}</span>
 							</div>
+							{#if config.featured === 1}
+								<span class="featured-badge">
+									<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+									Featured
+								</span>
+							{/if}
 						</div>
 						<h3 class="config-name">{config.name}</h3>
 						{#if config.description}
@@ -352,37 +356,50 @@
 
 	.sort-controls {
 		display: flex;
-		gap: 8px;
-		padding: 4px;
-		background: var(--bg-tertiary);
-		border-radius: 12px;
-		border: 1px solid var(--border);
+		align-items: center;
+		gap: 12px;
 	}
 
-	.sort-btn {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 20px;
-		background: transparent;
-		border: none;
-		border-radius: 8px;
+	.sort-label {
+		font-size: 0.9rem;
 		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.sort-select {
+		padding: 10px 16px;
+		padding-right: 36px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		color: var(--text-primary);
 		font-size: 0.9rem;
 		font-weight: 500;
+		font-family: inherit;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		font-family: inherit;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 12px center;
 	}
 
-	.sort-btn:hover {
+	.sort-select:hover {
+		border-color: var(--accent);
+		background-color: var(--bg-tertiary);
+	}
+
+	.sort-select:focus {
+		outline: none;
+		border-color: var(--accent);
+		box-shadow: 0 0 0 3px var(--accent-glow);
+	}
+
+	.sort-select option {
+		background: var(--bg-secondary);
 		color: var(--text-primary);
-	}
-
-	.sort-btn.active {
-		background: var(--accent);
-		color: #000;
-		box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 	}
 
 	.configs-grid {
@@ -595,6 +612,20 @@
 		font-weight: 500;
 	}
 
+	.featured-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: color-mix(in srgb, var(--accent) 15%, transparent);
+		color: var(--accent);
+		border-radius: 6px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
 	.config-name {
 		font-size: 1.1rem;
 		font-weight: 600;
@@ -795,11 +826,12 @@
 
 		.sort-controls {
 			width: 100%;
+			flex-direction: column;
+			align-items: stretch;
 		}
 
-		.sort-btn {
-			flex: 1;
-			justify-content: center;
+		.sort-select {
+			width: 100%;
 		}
 
 		.cta-title {
