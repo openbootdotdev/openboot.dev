@@ -118,10 +118,10 @@ openboot snapshot
 
 Snapshot scans your Homebrew packages, macOS preferences, shell config, and git settings. You'll review everything in a TUI editor before uploading or saving locally.
 
-After uploading, you get a shareable URL:
+After uploading, you get a shareable install command:
 
 ```
-curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
+openboot install yourname/my-setup
 ```
 
 ## Team Setup? Share a Config
@@ -132,17 +132,10 @@ If you're setting up a team's standard environment:
 2. **Share installation instructions** in your README or onboarding docs:
 
 ```bash
-brew tap openbootdotdev/tap && brew install openboot
-openboot --user yourteam/frontend
+openboot install yourteam/frontend
 ```
 
-Or use the one-line installer as an alternative:
-
-```bash
-curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash
-```
-
-3. **New team members** run the commands and get your exact setup
+3. **New team members** run the command and get your exact setup
 
 ---
 
@@ -302,13 +295,13 @@ Build your own setup, save it on openboot.dev, and share it as a one-line instal
 
 ## Sharing
 
-Every config gets a URL:
+Every config gets an install command:
 
 ```
-curl -fsSL https://openboot.dev/sarah/frontend-team/install.sh | bash
+openboot install sarah/frontend-team
 ```
 
-You can also install via the CLI directly:
+Alternatively, use the --user flag:
 
 ```
 openboot --user sarah/frontend-team
