@@ -29,13 +29,15 @@ openboot --preset developer
 
 You can still customize in the TUI. To skip the TUI entirely, add `--silent`.
 
-### `openboot --user <username>/<slug>`
+### `openboot install <username>/<slug>`
 
 Install from a custom config hosted on openboot.dev.
 
 ```
-openboot --user sarah/frontend-team
+openboot install sarah/frontend-team
 ```
+
+Alternatively, use the `--user` flag: `openboot --user sarah/frontend-team` (same effect).
 
 For private configs, run `openboot login` first — the CLI sends your auth token automatically.
 
