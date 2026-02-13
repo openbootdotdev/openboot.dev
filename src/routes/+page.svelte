@@ -528,7 +528,6 @@
 	.cta-buttons {
 		display: flex;
 		gap: 12px;
-		flex-wrap: wrap;
 	}
 
 	.btn-primary {
@@ -937,6 +936,18 @@
 		}
 	}
 
+	@media (max-width: 900px) {
+		.cta-buttons {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.btn-primary,
+		.btn-secondary {
+			justify-content: center;
+		}
+	}
+
 	@media (max-width: 640px) {
 		.hero-title {
 			font-size: 2rem;
@@ -976,15 +987,9 @@
 			font-size: 0.9rem;
 		}
 
-		.cta-buttons {
-			flex-direction: column;
-			width: 100%;
-		}
-
 		.btn-primary,
 		.btn-secondary {
 			width: 100%;
-			justify-content: center;
 		}
 	}
 </style>
