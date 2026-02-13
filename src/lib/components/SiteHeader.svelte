@@ -52,9 +52,9 @@
 		margin: 0 auto;
 		padding: 14px 24px;
 		display: flex;
-		justify-content: space-between;
+		justify-content: flex-start;
 		align-items: center;
-		gap: 32px;
+		gap: 20px;
 	}
 
 	.header-logo {
@@ -74,8 +74,7 @@
 	.header-nav {
 		display: flex;
 		align-items: center;
-		gap: 24px;
-		flex: 1;
+		gap: 20px;
 	}
 
 	.header-nav a {
@@ -112,7 +111,7 @@
 	.header-right {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 16px;
 	}
 
 	.header-dashboard-link,
