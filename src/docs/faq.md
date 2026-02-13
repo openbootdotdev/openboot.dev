@@ -81,6 +81,46 @@ Or re-run the install script — it downloads the latest binary and replaces the
 
 Your configs, snapshots, and auth tokens are unaffected by updates.
 
+## How do I uninstall OpenBoot?
+
+### 1. Remove the binary
+
+**If installed via Homebrew:**
+
+```bash
+brew uninstall openboot
+brew untap openbootdotdev/tap
+```
+
+**If installed via the one-line installer:**
+
+```bash
+rm -f ~/.openboot/bin/openboot
+```
+
+### 2. Remove OpenBoot data
+
+```bash
+rm -rf ~/.openboot
+```
+
+This deletes your auth token, local snapshots, install state, and update config. If you want to keep anything, back it up first — see [File Locations](/docs/env-vars#file-locations) for what's in there.
+
+### 3. Clean up shell config (optional)
+
+If OpenBoot configured your shell, open `~/.zshrc` and remove the block starting with `# OpenBoot additions` — it includes Homebrew init, PATH changes, CLI aliases, and tool integrations. If you're not sure which lines, look for the block between `# OpenBoot additions` and the next blank line or section.
+
+If you used dotfiles linking, OpenBoot created `.openboot.bak` backups of your original files. To restore them:
+
+```bash
+# Example: restore a backed-up .zshrc
+mv ~/.zshrc.openboot.bak ~/.zshrc
+```
+
+### 4. Packages and apps (optional)
+
+OpenBoot doesn't remove Homebrew packages or casks when you uninstall it — they're yours to keep. If you want to remove packages that were installed via OpenBoot, use `brew uninstall <package>` individually.
+
 ## Where is my data stored?
 
 | What | Where |
