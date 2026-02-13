@@ -10,7 +10,9 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
 	const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
 
-	const orderClause = sort === 'installs' ? 'c.install_count DESC' : 'c.updated_at DESC';
+	const orderClause = sort === 'installs' 
+		? 'c.install_count DESC, c.updated_at DESC' 
+		: 'c.updated_at DESC, c.install_count DESC';
 
 	let query: string;
 	let bindings: unknown[];
@@ -35,6 +37,16 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			FROM configs c
 			JOIN users u ON c.user_id = u.id
 			WHERE c.visibility = 'public'
+			  AND (
+			    c.install_count > 0
+			    OR (
+			      c.name != 'Default'
+			      AND c.description IS NOT NULL
+			      AND c.description != ''
+			      AND c.description != 'My default configuration'
+			      AND json_array_length(c.packages) >= 5
+			    )
+			  )
 			ORDER BY ${orderClause}
 			LIMIT ? OFFSET ?
 		`;
@@ -50,9 +62,21 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		).bind('public', username).first<{ count: number }>();
 		total = countResult?.count || 0;
 	} else {
-		const countResult = await env.DB.prepare(
-			'SELECT COUNT(*) as count FROM configs WHERE visibility = ?'
-		).bind('public').first<{ count: number }>();
+		const countResult = await env.DB.prepare(`
+			SELECT COUNT(*) as count 
+			FROM configs c 
+			WHERE c.visibility = 'public'
+			  AND (
+			    c.install_count > 0
+			    OR (
+			      c.name != 'Default'
+			      AND c.description IS NOT NULL
+			      AND c.description != ''
+			      AND c.description != 'My default configuration'
+			      AND json_array_length(c.packages) >= 5
+			    )
+			  )
+		`).first<{ count: number }>();
 		total = countResult?.count || 0;
 	}
 
