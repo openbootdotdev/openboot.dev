@@ -426,11 +426,11 @@
 		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	}
 
-	function getInstallUrl(config: Config): string {
+	function getInstallCommand(config: Config): string {
 		if (config.alias) {
-			return `openboot.dev/${config.alias}`;
+			return `openboot install ${config.alias}`;
 		}
-		return `openboot.dev/${$auth.user?.username}/${config.slug}`;
+		return `openboot install ${$auth.user?.username}/${config.slug}`;
 	}
 
 	async function importBrewfile() {
@@ -606,8 +606,8 @@
 							{/if}
 						</div>
 						<div class="config-url" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
-							<code>curl -fsSL {getInstallUrl(config)} | bash</code>
-							<button class="copy-btn" onclick={() => copyToClipboard(`curl -fsSL https://${getInstallUrl(config)} | bash`, config.id)}>{copiedId === config.id ? 'Copied!' : 'Copy'}</button>
+							<code>{getInstallCommand(config)}</code>
+							<button class="copy-btn" onclick={() => copyToClipboard(getInstallCommand(config), config.id)}>{copiedId === config.id ? 'Copied!' : 'Copy'}</button>
 						</div>
 						<div class="config-actions" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 							<Button variant="secondary" onclick={() => editConfig(config.slug)}>Edit</Button>
