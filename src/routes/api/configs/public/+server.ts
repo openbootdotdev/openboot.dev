@@ -10,9 +10,24 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
 	const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
 
-	const orderClause = sort === 'installs' 
-		? 'c.install_count DESC, c.updated_at DESC' 
-		: 'c.updated_at DESC, c.install_count DESC';
+	let orderClause: string;
+	let whereClause = `c.visibility = 'public'`;
+
+	if (sort === 'featured') {
+		orderClause = 'c.featured DESC, c.install_count DESC, c.updated_at DESC';
+	} else if (sort === 'installs') {
+		orderClause = 'c.install_count DESC, c.updated_at DESC';
+	} else if (sort === 'trending') {
+		// This Week: only configs updated in last 7 days, sorted by installs
+		whereClause += ` AND c.updated_at >= datetime('now', '-7 days')`;
+		orderClause = 'c.install_count DESC, c.updated_at DESC';
+	} else if (sort === 'new') {
+		// Newest: sort by created_at descending
+		orderClause = 'c.created_at DESC';
+	} else {
+		// recent (default)
+		orderClause = 'c.updated_at DESC, c.install_count DESC';
+	}
 
 	let query: string;
 	let bindings: unknown[];
@@ -20,11 +35,11 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	if (username) {
 		query = `
 			SELECT c.id, c.slug, c.name, c.description, c.base_preset, c.packages, c.install_count,
-				   c.updated_at, c.created_at, c.forked_from,
+				   c.updated_at, c.created_at, c.forked_from, c.featured,
 				   u.username, u.avatar_url
 			FROM configs c
 			JOIN users u ON c.user_id = u.id
-			WHERE c.visibility = 'public' AND u.username = ?
+			WHERE ${whereClause} AND u.username = ?
 			ORDER BY ${orderClause}
 			LIMIT ? OFFSET ?
 		`;
@@ -32,11 +47,11 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	} else {
 		query = `
 			SELECT c.id, c.slug, c.name, c.description, c.base_preset, c.packages, c.install_count,
-				   c.updated_at, c.created_at, c.forked_from,
+				   c.updated_at, c.created_at, c.forked_from, c.featured,
 				   u.username, u.avatar_url
 			FROM configs c
 			JOIN users u ON c.user_id = u.id
-			WHERE c.visibility = 'public'
+			WHERE ${whereClause}
 			  AND (
 			    c.install_count > 0
 			    OR (
@@ -57,15 +72,14 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 
 	let total = 0;
 	if (username) {
-		const countResult = await env.DB.prepare(
-			'SELECT COUNT(*) as count FROM configs c JOIN users u ON c.user_id = u.id WHERE c.visibility = ? AND u.username = ?'
-		).bind('public', username).first<{ count: number }>();
+		const countQuery = `SELECT COUNT(*) as count FROM configs c JOIN users u ON c.user_id = u.id WHERE ${whereClause} AND u.username = ?`;
+		const countResult = await env.DB.prepare(countQuery).bind(username).first<{ count: number }>();
 		total = countResult?.count || 0;
 	} else {
-		const countResult = await env.DB.prepare(`
+		const countQuery = `
 			SELECT COUNT(*) as count 
 			FROM configs c 
-			WHERE c.visibility = 'public'
+			WHERE ${whereClause}
 			  AND (
 			    c.install_count > 0
 			    OR (
@@ -76,7 +90,8 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			      AND json_array_length(c.packages) >= 5
 			    )
 			  )
-		`).first<{ count: number }>();
+		`;
+		const countResult = await env.DB.prepare(countQuery).first<{ count: number }>();
 		total = countResult?.count || 0;
 	}
 

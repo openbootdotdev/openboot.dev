@@ -23,14 +23,14 @@
 
 <svelte:head>
 	<title>OpenBoot - Set up your Mac or capture your setup in one command</title>
-	<meta name="description" content="One command to install 80+ dev tools on a fresh Mac — or snapshot your current setup and share it with your team. Open source, zero telemetry." />
+	<meta name="description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
 	<meta property="og:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta property="og:description" content="Install 80+ dev tools on a fresh Mac, or snapshot your current setup and share it. Homebrew, dotfiles, macOS prefs — done in minutes." />
+	<meta property="og:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
 	<meta property="og:image" content="https://openboot.dev/og-image.png" />
 	<meta property="og:url" content="https://openboot.dev" />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta name="twitter:description" content="Install 80+ dev tools on a fresh Mac, or snapshot your current setup and share it. Homebrew, dotfiles, macOS prefs — done in minutes." />
+	<meta name="twitter:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 80+ other dev tools in 15 minutes." />
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
@@ -45,44 +45,44 @@
 		<div class="container">
 			<section class="hero">
 				<div class="hero-content">
-					<h1 class="hero-title">
-						Set up your Mac —<br />or capture the one you have
-					</h1>
-					<p class="hero-subtitle">
-						One command to install 80+ dev tools on a fresh Mac. Or snapshot your current setup and share it with your team.
-					</p>
+				<h1 class="hero-title">
+					Stop wasting your first day<br />setting up a new Mac
+				</h1>
+				<p class="hero-subtitle">
+					One command installs Git, Node, Docker, VS Code, and 80+ other tools. Fresh Mac to fully productive in 15 minutes. Then share your exact setup with your team so they can do the same.
+				</p>
 
 					<div class="features-list">
-						<div class="feature-item">
-							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-								<polyline points="20 6 9 17 4 12"/>
-							</svg>
-							<span>80+ curated dev tools</span>
-						</div>
-						<div class="feature-item">
-							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-								<polyline points="20 6 9 17 4 12"/>
-							</svg>
-							<span>Smart install — skips what's already there</span>
-						</div>
-						<div class="feature-item">
-							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-								<polyline points="20 6 9 17 4 12"/>
-							</svg>
-							<span>Dotfiles + Oh-My-Zsh built in</span>
-						</div>
-						<div class="feature-item">
-							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-								<polyline points="20 6 9 17 4 12"/>
-							</svg>
-							<span>Share configs with your team</span>
-						</div>
-						<div class="feature-item">
-							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-								<polyline points="20 6 9 17 4 12"/>
-							</svg>
-							<span>100% open source, zero telemetry</span>
-						</div>
+					<div class="feature-item">
+						<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+							<polyline points="20 6 9 17 4 12"/>
+						</svg>
+						<span>No more Googling "Mac setup for developers" — it's all here</span>
+					</div>
+					<div class="feature-item">
+						<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+							<polyline points="20 6 9 17 4 12"/>
+						</svg>
+						<span>Resume exactly where you left off after wiping your Mac</span>
+					</div>
+					<div class="feature-item">
+						<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+							<polyline points="20 6 9 17 4 12"/>
+						</svg>
+						<span>Your terminal looks professional out of the box</span>
+					</div>
+					<div class="feature-item">
+						<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+							<polyline points="20 6 9 17 4 12"/>
+						</svg>
+						<span>New teammate onboards in 10 minutes, not 2 days</span>
+					</div>
+					<div class="feature-item">
+						<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+							<polyline points="20 6 9 17 4 12"/>
+						</svg>
+						<span>No tracking, no account required, no vendor lock-in</span>
+					</div>
 					</div>
 
 					<div class="install-section">
