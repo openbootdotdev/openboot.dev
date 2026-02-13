@@ -90,12 +90,7 @@ Add the install command to your `CONTRIBUTING.md`:
 
     openboot install acme/frontend
 
-Or install via Homebrew:
-
-    brew tap openbootdotdev/tap && brew install openboot
-    openboot --user acme/frontend
-
-Preview first: `openboot --user acme/frontend --dry-run`
+Preview first: `openboot install acme/frontend --dry-run`
 ```
 
 The URL never changes. When the stack changes, update the config in the [Dashboard](/dashboard). Everyone who runs the command next gets the latest version. No more editing a 47-step Google Doc.
@@ -119,8 +114,8 @@ Each has its own custom script. Backend clones the API monorepo and seeds the lo
 Full-stack dev working across teams? Run both. OpenBoot skips what's already installed.
 
 ```bash
-openboot --user acme/frontend
-openboot --user acme/backend
+openboot install acme/frontend
+openboot install acme/backend
 ```
 
 ## Keeping everyone in sync

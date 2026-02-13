@@ -108,7 +108,7 @@ openboot snapshot
 Updates your config. At home:
 
 ```bash
-openboot --user alex/my-setup
+openboot install alex/my-setup
 ```
 
 OpenBoot sees `jq` is in your config but not installed. Adds it. Two commands, both machines in sync. Works the other way too — install something at home, snapshot, pull it down at work next Monday.
