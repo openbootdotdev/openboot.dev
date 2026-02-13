@@ -108,6 +108,8 @@ browser openboot.dev/user/slug → [username]/[slug]/+page.server.ts → config 
 - **Slug generation**: `slugify()` from `$lib/server/auth` — lowercase, alphanumeric + hyphens
 - **Error handling**: Return `json({ error: '...' }, { status: N })`, never throw in API routes
 - **Svelte 5**: Uses `$state`, `$derived`, `$props()` runes (not legacy `$:` reactive)
+- **Commits**: Commit messages must follow Conventional Commits (`type(scope): subject`), e.g. `feat(api): add public config filter`
+- **History fix**: If a commit message is not conventional, amend it and push with `git push --force-with-lease` (do not leave non-conforming commits on `main`)
 
 ## ANTI-PATTERNS
 
