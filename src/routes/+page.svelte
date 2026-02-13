@@ -357,7 +357,7 @@
 	}
 
 	.hero {
-		padding: 80px 0 120px;
+		padding: 80px 0 60px;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 80px;
@@ -677,7 +677,7 @@
 	}
 
 	.how-it-works {
-		padding: 80px 0 120px;
+		padding: 60px 0 120px;
 		position: relative;
 	}
 
