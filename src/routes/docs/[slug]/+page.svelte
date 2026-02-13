@@ -6,7 +6,7 @@
 		groups: DocGroup[];
 		allDocs: DocMeta[];
 		component: SvelteComponent;
-		meta: { title: string; group: string; order: number };
+		meta: { title: string; description: string; group: string; order: number };
 		slug: string;
 	}
 
@@ -26,10 +26,10 @@
 	<title>{meta?.title ?? 'Docs'} — OpenBoot Docs</title>
 	<meta
 		name="description"
-		content="Documentation for OpenBoot — the open-source macOS development environment setup tool."
+		content={meta?.description || 'Documentation for OpenBoot — the open-source macOS development environment setup tool.'}
 	/>
 	<meta property="og:title" content="{meta?.title ?? 'Docs'} — OpenBoot Docs" />
-	<meta property="og:description" content="Documentation for OpenBoot — the open-source macOS development environment setup tool." />
+	<meta property="og:description" content={meta?.description || 'Documentation for OpenBoot — the open-source macOS development environment setup tool.'} />
 	<meta property="og:url" content="https://openboot.dev/docs/{slug}" />
 	<meta property="og:type" content="article" />
 	<link rel="canonical" href="https://openboot.dev/docs/{slug}" />

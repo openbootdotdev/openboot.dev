@@ -1,5 +1,6 @@
 ---
 title: CLI Commands
+description: Complete reference for all openboot commands — install, snapshot, login, doctor, update, and their flags.
 group: Reference
 order: 9
 ---

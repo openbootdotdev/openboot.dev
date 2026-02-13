@@ -1,5 +1,6 @@
 ---
 title: Presets
+description: Three curated package sets — minimal, developer, and full — as starting points you can customize before installing.
 group: Features
 order: 3
 ---

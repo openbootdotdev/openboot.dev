@@ -1,5 +1,6 @@
 ---
 title: Config Options
+description: Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 23 macOS preferences whitelist.
 group: Reference
 order: 10
 ---

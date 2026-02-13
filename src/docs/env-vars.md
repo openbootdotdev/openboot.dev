@@ -1,5 +1,6 @@
 ---
 title: Environment Variables
+description: All environment variables for the install script and CLI — version pinning, install directory, Git identity, and more.
 group: Reference
 order: 11
 ---

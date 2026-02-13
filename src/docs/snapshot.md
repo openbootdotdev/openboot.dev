@@ -1,5 +1,6 @@
 ---
 title: Snapshot
+description: Capture your current Mac's packages, preferences, and shell config, then share it as a one-line install URL.
 group: Features
 order: 4
 ---

@@ -1,5 +1,6 @@
 ---
 title: Custom Configs
+description: Build your own setup on the dashboard with packages, scripts, and dotfiles, then share it as a one-line install command.
 group: Features
 order: 5
 ---

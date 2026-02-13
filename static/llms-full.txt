@@ -1,0 +1,710 @@
+# OpenBoot — Complete Documentation
+
+> One-command macOS developer environment setup. Open-source CLI + web dashboard.
+> Website: https://openboot.dev | Install: `brew tap openbootdotdev/tap && brew install openboot`
+
+---
+
+# What is OpenBoot
+
+One command. Your Mac is ready to code.
+
+OpenBoot is an open-source CLI that sets up your entire macOS development environment — Homebrew packages, GUI apps, shell config, dotfiles, and macOS preferences — in minutes instead of hours.
+
+## What You Get
+
+- **Packages & Apps** — Install CLI tools (`node`, `go`, `docker`, `ripgrep`...) and GUI apps (`VS Code`, `Chrome`, `Warp`...) from Homebrew, all at once
+- **Shell Configuration** — Oh-My-Zsh with plugins, a clean theme, and useful aliases, configured automatically
+- **Dotfiles** — Clone and link your dotfiles repo so your personal config follows you to any machine
+- **macOS Preferences** — Developer-friendly system settings (fast key repeat, Finder path bar, Dock icon size...) applied in one pass
+- **Snapshot** — Capture your current Mac's setup and turn it into a shareable config URL
+
+## How It Works
+
+**Install via Homebrew (recommended):**
+
+```bash
+brew tap openbootdotdev/tap
+brew install openboot
+openboot
+```
+
+**Or use the one-line installer:**
+
+```bash
+curl -fsSL https://openboot.dev/install.sh | bash
+```
+
+The installer:
+
+1. Installs Xcode Command Line Tools and Homebrew (if needed)
+2. Downloads the `openboot` binary
+3. Launches an interactive TUI where you pick your packages
+4. Installs everything, configures your shell, and applies macOS preferences
+
+Already have your Mac set up? Run `openboot snapshot` to capture what you have and share it.
+
+## Three Ways to Use It
+
+**Start from a preset** — Choose `minimal`, `developer`, or `full`. Each is a curated package set you can customize in the TUI before installing.
+
+**Create a custom config** — Build your own setup on the dashboard, then share it as a one-line install URL. Great for teams.
+
+**Snapshot your existing Mac** — Scan your installed packages, shell config, and preferences. Upload to openboot.dev or save locally.
+
+## System Requirements
+
+- **macOS 12 (Monterey)** or later
+- **Apple Silicon** and **Intel** Macs supported
+- Internet connection
+- Admin privileges (you'll be prompted when needed)
+
+---
+
+# Quick Start
+
+Pick the path that fits your situation.
+
+## Installation
+
+### Homebrew (Recommended)
+
+If you already have Homebrew installed:
+
+```bash
+brew tap openbootdotdev/tap
+brew install openboot
+```
+
+Then run `openboot` to start the interactive setup.
+
+### One-Line Installer
+
+If you don't have Homebrew yet, or prefer the all-in-one installer:
+
+```bash
+curl -fsSL https://openboot.dev/install.sh | bash
+```
+
+This installer will:
+- Install Xcode Command Line Tools (if needed)
+- Install Homebrew (if needed)
+- Download and run OpenBoot
+
+## New Mac? Bootstrap It
+
+After installing OpenBoot using either method above, run:
+
+```bash
+openboot
+```
+
+The TUI opens with the `developer` preset pre-selected. Use **arrow keys** to navigate, **Space** to toggle packages, **Enter** to confirm. After installation, restart your terminal or run `source ~/.zshrc`.
+
+Want a different starting point? Use `--preset`:
+
+```bash
+openboot --preset minimal
+openboot --preset full
+```
+
+## Already Set Up? Snapshot It
+
+Capture your current Mac's dev environment and save it:
+
+```bash
+openboot snapshot
+```
+
+Snapshot scans your Homebrew packages, macOS preferences, shell config, and git settings. You'll review everything in a TUI editor before uploading or saving locally.
+
+After uploading, you get a shareable URL:
+
+```
+curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
+```
+
+## Team Setup? Share a Config
+
+If you're setting up a team's standard environment:
+
+1. **Create a config** on the dashboard — pick a base preset, add/remove packages, set up custom scripts
+2. **Share installation instructions** in your README or onboarding docs:
+
+```bash
+brew tap openbootdotdev/tap && brew install openboot
+openboot --user yourteam/frontend
+```
+
+Or use the one-line installer as an alternative:
+
+```bash
+curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash
+```
+
+3. **New team members** run the commands and get your exact setup
+
+---
+
+# Presets
+
+Three curated starting points. Pick one, then customize it in the TUI before installing — add what you want, remove what you don't.
+
+## At a Glance
+
+| | minimal | developer | full |
+|---|---------|-----------|------|
+| **Best for** | Minimalists, servers | Most developers | Polyglot / DevOps |
+| **CLI tools** | 19 | 29 | 48 |
+| **GUI apps** | 5 | 14 | 25 |
+| **NPM packages** | 0 | 5 | 9 |
+| **Includes** | Essentials | Essentials + languages + editors | Everything |
+
+## minimal
+
+CLI essentials. Fast and lightweight.
+
+**CLI tools:** curl, wget, jq, yq, ripgrep, fd, bat, eza, fzf, zoxide, htop, btop, tree, tealdeer, gh, git-delta, git-lfs, lazygit, stow
+
+**GUI apps:** Warp, Raycast, Maccy, Stats, Rectangle
+
+```bash
+openboot --preset minimal
+```
+
+## developer
+
+The recommended starting point. Everything you need to start building, nothing you don't.
+
+**Adds over minimal:**
+- **CLI:** node, go, pnpm, docker, docker-compose, lazydocker, tmux, neovim, httpie, pre-commit
+- **GUI:** VS Code, OrbStack, Chrome, Arc, Postman, Notion, Scroll Reverser, TablePlus, AppCleaner
+- **NPM:** typescript, tsx, eslint, prettier, nodemon
+
+```bash
+openboot --preset developer
+```
+
+## full
+
+Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
+
+**Adds over developer:**
+- **CLI:** python, uv, rustup, deno, bun, cmake, kubectl, helm, k9s, terraform, awscli, sqlite, postgresql, redis, duckdb, ollama, llm, tig, dive
+- **GUI:** Cursor, Firefox, Proxyman, Obsidian, Figma, IINA, Keka, AlDente, ngrok, Shottr, Miniconda
+- **NPM:** pm2, serve, vercel, wrangler
+
+```bash
+openboot --preset full
+```
+
+## Customizing During Install
+
+Presets are just the starting selection. When the TUI launches:
+
+1. The preset's packages come **pre-selected**
+2. Use **arrow keys** to navigate, **Tab** to switch between formulae and casks
+3. Press **Space** to toggle any package on or off
+4. Press **Enter** to confirm and install
+
+## Skipping the TUI
+
+For scripted installs, use `--silent` to install a preset exactly as defined:
+
+```bash
+openboot --preset developer --silent
+```
+
+Preview what would be installed first with `--dry-run`:
+
+```bash
+openboot --preset developer --dry-run
+```
+
+---
+
+# Snapshot
+
+Capture your current Mac's dev environment and turn it into a shareable config — without building anything from scratch.
+
+```
+openboot snapshot
+```
+
+## What It Captures
+
+| Category | What's Scanned | How |
+|----------|---------------|-----|
+| **Homebrew Formulae** | Top-level CLI tools (not dependencies) | `brew leaves` |
+| **Homebrew Casks** | All installed GUI apps | `brew list --cask` |
+| **Homebrew Taps** | Third-party repositories | `brew tap` |
+| **NPM Global Packages** | Globally installed npm packages | `npm list -g` |
+| **macOS Preferences** | 23 whitelisted developer settings | Curated list |
+| **Shell Config** | Oh-My-Zsh plugins, theme, aliases | `.zshrc` parsing |
+| **Git Config** | user.name, user.email, editor, default branch | `~/.gitconfig` |
+| **Dev Tools** | Go, Node.js, Python, Rust, Java, Ruby, Docker | Version detection |
+
+> Only whitelisted data is captured. No SSH keys, API tokens, `.env` files, or credentials — ever.
+
+## How It Works
+
+**Step 1 — Scan.** OpenBoot scans your system with real-time progress.
+
+**Step 2 — Review.** A full-screen TUI editor lets you customize what's included:
+- **Tabs**: Formulae, Casks, NPM Packages, macOS Preferences
+- **Space** to toggle individual items on/off
+- **`/`** to search, **`a`** to select all in a category
+
+**Step 3 — Save.** Choose where it goes:
+- **Upload to openboot.dev** — get a shareable install URL
+- **Save locally** — stored at `~/.openboot/snapshot.json`
+
+## Flags
+
+| Flag | What it does |
+|------|-------------|
+| `--dry-run` | Preview what would be captured, without saving or uploading |
+| `--json` | Output snapshot as JSON to stdout — great for piping to `jq` |
+| `--local` | Save to `~/.openboot/snapshot.json` instead of uploading |
+| `--import <path>` | Restore from a local file or URL |
+
+## Privacy & Safety
+
+- **Paths sanitized** — home directory references replaced with `~/`
+- **Whitelisted preferences only** — no arbitrary system data is read
+- **No secrets captured** — SSH keys, tokens, credentials are never included
+- **Full control** — you review and deselect anything before uploading
+
+---
+
+# Custom Configs
+
+Build your own setup, save it on openboot.dev, and share it as a one-line install command. Anyone with the URL can install your exact environment.
+
+## Creating a Config
+
+1. **Sign in** with GitHub or Google
+2. Go to your **Dashboard**
+3. Click **Create Config**
+4. Pick a **base preset** (`minimal`, `developer`, or `full`) as your starting point
+5. **Add or remove packages** using the search
+6. Save
+
+## What a Config Can Include
+
+| Feature | Description |
+|---------|-------------|
+| **Homebrew formulae** | CLI tools installed via `brew install` |
+| **Homebrew casks** | GUI apps installed via `brew install --cask` |
+| **Custom scripts** | Shell commands that run after packages install (SSH setup, repo cloning, etc.) |
+| **Dotfiles repo** | A Git URL — gets cloned and linked with `stow` |
+| **macOS preferences** | Whitelisted system settings (Dock, Finder, key repeat, etc.) |
+
+## Sharing
+
+Every config gets a URL:
+
+```
+curl -fsSL https://openboot.dev/sarah/frontend-team/install.sh | bash
+```
+
+You can also install via the CLI directly:
+
+```
+openboot --user sarah/frontend-team
+```
+
+## Visibility
+
+| Visibility | Listed on Profile | Install URL | Config Page |
+|------------|:-:|:-:|:-:|
+| **Public** | Yes | Works for everyone | Viewable by anyone |
+| **Unlisted** (default) | No | Works for everyone | Viewable with direct link |
+| **Private** | No | Requires auth | Owner only |
+
+---
+
+# Dotfiles & Shell
+
+OpenBoot configures your shell environment and can link your dotfiles — so your personal setup follows you to any Mac.
+
+## Shell Configuration
+
+OpenBoot sets up **Zsh** with **Oh-My-Zsh** automatically:
+- **Plugins**: git, zsh-autosuggestions, zsh-syntax-highlighting
+- **Theme**: A clean, informative prompt
+- **Aliases**: Common shortcuts for developer workflows
+
+If you already have Oh-My-Zsh installed, OpenBoot merges its plugin recommendations without overwriting your existing config.
+
+### Skipping Shell Setup
+
+```
+openboot --shell skip
+```
+
+## Dotfiles
+
+If you keep your config files in a Git repo (`.zshrc`, `.gitconfig`, `.vimrc`, etc.), OpenBoot can clone and link them automatically.
+
+### How It Works
+
+1. Set a **dotfiles repo URL** in your config (via the dashboard or config JSON)
+2. During install, OpenBoot clones the repo to `~/.dotfiles`
+3. Files are symlinked into your home directory using GNU Stow
+
+### Dotfiles Modes
+
+| Mode | What it does |
+|------|-------------|
+| `clone` | Clone the repo to `~/.dotfiles` |
+| `link` | Clone and symlink with `stow` |
+| `skip` | Don't touch dotfiles |
+
+## macOS Preferences
+
+OpenBoot applies a curated set of developer-friendly macOS settings. These are all reversible system preferences — nothing destructive.
+
+Settings include: show all file extensions, fast key repeat, Finder path bar, show hidden files, clean Dock, screenshots to ~/Screenshots as PNG, Safari developer menu, TextEdit plain text mode.
+
+---
+
+# CLI Commands
+
+All commands for the `openboot` CLI, organized by what you're trying to do.
+
+## Set Up an Environment
+
+### `openboot`
+
+Launch the interactive TUI installer. Browse packages, toggle what you want, and install.
+
+### `openboot --preset <name>`
+
+Start with a preset's packages pre-selected. Available: `minimal`, `developer`, `full`.
+
+### `openboot --user <username>/<slug>`
+
+Install from a custom config hosted on openboot.dev.
+
+### Install Flags
+
+| Flag | Description |
+|------|-------------|
+| `-p, --preset <name>` | Use a preset: `minimal`, `developer`, `full` |
+| `-u, --user <username/slug>` | Install from a config hosted on openboot.dev |
+| `-s, --silent` | Non-interactive mode — no TUI, no prompts |
+| `--dry-run` | Preview what would be installed without installing |
+| `--resume` | Resume an interrupted installation |
+| `--packages-only` | Install packages only, skip shell/macOS/dotfiles config |
+| `--shell <mode>` | `install` or `skip` |
+| `--macos <mode>` | `configure` or `skip` |
+| `--dotfiles <mode>` | `clone`, `link`, or `skip` |
+| `--update` | Update Homebrew before installing |
+| `--rollback` | Restore backed-up config files |
+
+## Capture Your Environment
+
+### `openboot snapshot`
+
+Scan your Mac's current setup and upload or save it.
+
+### Snapshot Flags
+
+| Flag | Description |
+|------|-------------|
+| `--local` | Save to `~/.openboot/snapshot.json` |
+| `--json` | Output as JSON to stdout |
+| `--dry-run` | Preview without saving or uploading |
+| `--import <path>` | Restore from a local file or URL |
+
+## Authentication
+
+### `openboot login`
+
+Authenticate with openboot.dev via browser. Required for installing private configs and uploading snapshots.
+
+### `openboot logout`
+
+Remove the stored authentication token from this machine.
+
+## Maintain Your Environment
+
+### `openboot doctor`
+
+Run diagnostic checks — network, disk space, Homebrew health, Git config, shell setup.
+
+### `openboot update`
+
+Update Homebrew and upgrade all installed packages.
+
+### `openboot update --self`
+
+Update the OpenBoot binary to the latest version.
+
+### `openboot version`
+
+Print the current OpenBoot version.
+
+---
+
+# Config Options
+
+Every OpenBoot config follows the same structure:
+
+```json
+{
+  "name": "frontend-team",
+  "description": "Standard setup for our frontend developers",
+  "base_preset": "developer",
+  "packages": [
+    { "name": "node", "type": "formula" },
+    { "name": "pnpm", "type": "formula" },
+    { "name": "visual-studio-code", "type": "cask" },
+    { "name": "typescript", "type": "npm" }
+  ],
+  "custom_script": "mkdir -p ~/projects\ngit clone git@github.com:yourorg/main-repo.git ~/projects/main-repo",
+  "dotfiles_repo": "https://github.com/yourorg/team-dotfiles.git",
+  "snapshot": null,
+  "alias": "fe",
+  "visibility": "unlisted"
+}
+```
+
+## Fields
+
+- **name** (string, required): Display name for the config
+- **description** (string, optional): Shown on the config page
+- **base_preset** (string, optional): `"minimal"`, `"developer"`, or `"full"`
+- **packages** (array): Objects with `name` and `type` (`"formula"`, `"cask"`, or `"npm"`)
+- **custom_script** (string, optional): Shell commands that run after packages install
+- **dotfiles_repo** (string, optional): Git URL to a dotfiles repository
+- **snapshot** (object or null): Auto-populated from `openboot snapshot`
+- **alias** (string, optional): Short URL alias (must be unique)
+- **visibility** (string): `"public"`, `"unlisted"` (default), or `"private"`
+
+## macOS Preferences Whitelist
+
+23 developer-friendly system settings that OpenBoot can configure:
+
+**Global:** Show all file extensions, always show scrollbars, disable auto-correct, disable auto-capitalization, fast key repeat, short key repeat delay
+
+**Finder:** Show path bar, show status bar, default to list view, no extension change warning, show hidden files
+
+**Dock:** Keep Dock visible, hide recent applications, icon size (48px), scale minimize effect
+
+**Screenshots:** Save to ~/Screenshots, PNG format, disable shadow
+
+**Safari:** Developer menu, WebKit developer extras
+
+**TextEdit:** Plain text mode, UTF-8 encoding
+
+**Time Machine:** Don't prompt for new disks
+
+---
+
+# Environment Variables
+
+## Install Script Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENBOOT_VERSION` | Install a specific version instead of latest | Latest release |
+| `OPENBOOT_INSTALL_DIR` | Where to put the binary | `~/.openboot/bin` |
+| `OPENBOOT_DRY_RUN` | Set to `true` to preview without changes | — |
+| `OPENBOOT_SKIP_CHECKSUM` | Set to `true` to skip SHA256 verification | — |
+
+## CLI Variables
+
+| Variable | Description |
+|----------|-------------|
+| `OPENBOOT_GIT_NAME` | Git user name (only in `--silent` mode) |
+| `OPENBOOT_GIT_EMAIL` | Git user email (only in `--silent` mode) |
+| `OPENBOOT_PRESET` | Default preset to use |
+| `OPENBOOT_USER` | Default remote config to use |
+| `OPENBOOT_DOTFILES` | Dotfiles repository URL |
+| `OPENBOOT_API_URL` | Override the API base URL (default: `https://openboot.dev`) |
+| `OPENBOOT_DISABLE_AUTOUPDATE` | Set to `1` to disable auto-update checks |
+
+## File Locations
+
+| Path | What's There |
+|------|-------------|
+| `~/.openboot/bin/openboot` | The OpenBoot binary (one-line installer only) |
+| `~/.openboot/auth.json` | Auth token (after `openboot login`) |
+| `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
+| `~/.openboot/config.json` | Auto-update settings |
+| `~/.openboot/install_state.json` | Tracks what was installed and when |
+| `~/.openboot/state.json` | UI reminder state |
+| `~/.openboot/update_state.json` | Auto-update check state |
+| `~/.dotfiles/` | Cloned dotfiles repo (when configured) |
+
+---
+
+# FAQ
+
+## Is OpenBoot free?
+
+Yes — free and open source (MIT license). Create configs, use snapshot, share setups, all at no cost.
+
+## Why not just use Homebrew directly?
+
+Homebrew installs packages. OpenBoot sets up your **entire** environment — packages, GUI apps, shell configuration, dotfiles, and macOS preferences — in one command.
+
+## Should I use Homebrew or the one-line installer?
+
+**Use Homebrew** if you already have it and want cleaner updates. **Use the one-line installer** on a fresh Mac or in CI/automation.
+
+## Is the one-line installer safe?
+
+The install script is open source, hosted on Cloudflare Workers over HTTPS, with zero telemetry. Binary is downloaded from GitHub Releases with SHA256 checksum verification.
+
+## What if I already have Homebrew?
+
+OpenBoot detects existing Homebrew installs and skips the setup. It also skips already-installed packages.
+
+## Can I use it without an account?
+
+Yes. No account needed for presets, TUI, or local snapshots. Account needed only for uploading configs and installing private configs.
+
+## How do I update OpenBoot?
+
+Homebrew: `brew upgrade openboot`. One-line installer: `openboot update --self`.
+
+## How do I uninstall OpenBoot?
+
+1. Remove binary: `brew uninstall openboot` or `rm -f ~/.openboot/bin/openboot`
+2. Remove data: `rm -rf ~/.openboot`
+3. Clean up shell config (optional): remove `# OpenBoot additions` block from `~/.zshrc`
+
+## Does it work on Linux?
+
+Not yet. macOS-only. Linux support is being explored.
+
+## Can I use it with my existing dotfiles?
+
+Yes. Set your dotfiles repo URL in your config and OpenBoot will clone and link it with GNU Stow. No special format required.
+
+---
+
+# API Reference
+
+OpenBoot provides a REST API for programmatic access to configs, package search, and utilities. All endpoints are hosted at `https://openboot.dev`.
+
+## Authentication
+
+Some endpoints require authentication. Include your auth token in the `Authorization` header:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+Get your token by running `openboot login` — it's saved to `~/.openboot/auth.json`.
+
+## Configs
+
+### List User Configs
+
+```
+GET /api/configs
+```
+
+Auth required: Yes. Returns array of config objects.
+
+### Get Config
+
+```
+GET /api/configs/:slug
+```
+
+Auth required: Only for private configs. Returns full config object with packages, custom_script, dotfiles_repo.
+
+### Create Config
+
+```
+POST /api/configs
+```
+
+Auth required: Yes. Body: `{ name, description, base_preset, packages, visibility }`. Returns `{ id, slug }`.
+
+### Update Config
+
+```
+PUT /api/configs/:slug
+```
+
+Auth required: Yes (must own). Body: same as create (all fields optional). Returns updated config.
+
+### Delete Config
+
+```
+DELETE /api/configs/:slug
+```
+
+Auth required: Yes (must own). Returns 204 No Content.
+
+### Create Config from Snapshot
+
+```
+POST /api/configs/from-snapshot
+```
+
+Auth required: Yes. Body: `{ name, snapshot: { packages, macos_prefs, shell, git } }`. Returns `{ slug }`.
+
+## Config Pages
+
+### Get Config JSON
+
+```
+GET /:username/:slug/config
+```
+
+Returns config object. Auth required only for private configs.
+
+### Get Install Script
+
+```
+GET /:username/:slug/install
+```
+
+Returns shell script (`Content-Type: text/x-shellscript`).
+
+## Package Search
+
+### Search Homebrew Packages
+
+```
+GET /api/homebrew/search?q=<query>
+```
+
+No auth. Returns `{ formulae: [...], casks: [...] }`.
+
+### Search NPM Packages
+
+```
+GET /api/npm/search?q=<query>
+```
+
+No auth. Returns `{ packages: [...] }`.
+
+## Utilities
+
+### Parse Brewfile
+
+```
+POST /api/brewfile/parse
+```
+
+No auth. Body: raw Brewfile content. Returns `{ formulae, casks, taps }`.
+
+## Rate Limits
+
+| Endpoint Type | Limit |
+|--------------|-------|
+| Config reads | 60 requests per minute |
+| Config writes | 20 requests per minute |
+| Package search | 30 requests per minute |
+
+## Error Responses
+
+All errors return JSON with an `error` field. HTTP status codes: 200, 201, 204, 400, 401, 403, 404, 429, 500.
