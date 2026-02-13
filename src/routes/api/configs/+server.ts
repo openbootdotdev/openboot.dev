@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+	const { name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at, forked_from } = body;
 
 	if (visibility !== undefined && !['public', 'unlisted', 'private'].includes(visibility)) {
 		return json({ error: 'Invalid visibility. Must be public, unlisted, or private' }, { status: 400 });
@@ -107,11 +107,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	try {
 		await env.DB.prepare(
 			`
-			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at, forked_from)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`
 		)
-			.bind(id, user.id, slug, name, description || '', base_preset || 'developer', JSON.stringify(packages || []), custom_script || '', visibility || 'unlisted', cleanAlias, dotfiles_repo || '', snapshot ? JSON.stringify(snapshot) : null, snapshot_at || null)
+			.bind(id, user.id, slug, name, description || '', base_preset || 'developer', JSON.stringify(packages || []), custom_script || '', visibility || 'unlisted', cleanAlias, dotfiles_repo || '', snapshot ? JSON.stringify(snapshot) : null, snapshot_at || null, forked_from || null)
 			.run();
 	} catch (e) {
 		console.error('POST /api/configs error:', e);

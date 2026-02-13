@@ -43,7 +43,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const shortAliasMatch = path.match(/^\/([a-z0-9-]+)$/);
-	if (shortAliasMatch && !['dashboard', 'api', 'install', 'docs', 'cli-auth'].includes(shortAliasMatch[1])) {
+	if (shortAliasMatch && !['dashboard', 'api', 'install', 'docs', 'cli-auth', 'explore'].includes(shortAliasMatch[1])) {
 		const alias = shortAliasMatch[1];
 		const env = event.platform?.env;
 

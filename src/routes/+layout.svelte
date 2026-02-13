@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { theme } from '$lib/stores/theme';
+	import { auth } from '$lib/stores/auth';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import '$lib/styles/variables.css';
 
 	let { children } = $props();
 
 	onMount(() => {
 		theme.init();
+		auth.check();
 	});
 </script>
 
+<SiteHeader />
 {@render children()}
 
 <style>

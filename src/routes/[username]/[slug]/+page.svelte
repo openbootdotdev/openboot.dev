@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
@@ -64,17 +63,18 @@
 			const forkResponse = await fetch('/api/configs', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				name: `${data.config.name} (fork)`,
-				description: `Forked from @${data.configUser.username}`,
-				base_preset: data.config.base_preset,
-				packages: data.config.packages,
-				visibility: 'unlisted',
-				custom_script: data.config.custom_script || '',
-				dotfiles_repo: data.config.dotfiles_repo || '',
-				snapshot: data.config.snapshot || null,
-				snapshot_at: data.config.snapshot_at || null
-			})
+		body: JSON.stringify({
+			name: `${data.config.name} (fork)`,
+			description: `Forked from @${data.configUser.username}`,
+			base_preset: data.config.base_preset,
+			packages: data.config.packages,
+			visibility: 'unlisted',
+			custom_script: data.config.custom_script || '',
+			dotfiles_repo: data.config.dotfiles_repo || '',
+			snapshot: data.config.snapshot || null,
+			snapshot_at: data.config.snapshot_at || null,
+			forked_from: data.config.id
+		})
 			});
 
 			if (!forkResponse.ok) {
@@ -138,19 +138,14 @@
 	<meta name="twitter:image" content="https://openboot.dev/{data.configUser.username}/{data.config.slug}/og" />
 </svelte:head>
 
-<header class="header">
-	<a href="/" class="logo">OpenBoot</a>
-	<div class="header-right">
-		<button class="share-btn" onclick={openShareModal}>
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-			Share
-		</button>
-		<ThemeToggle />
-	</div>
-</header>
-
 <main class="container">
 	<section class="hero">
+		<div class="hero-header">
+			<button class="share-btn" onclick={openShareModal}>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+				Share
+			</button>
+		</div>
 		<div class="config-meta">
 			{#if data.configUser.avatar_url}
 				<img src={data.configUser.avatar_url} alt={data.configUser.username} class="user-avatar" />
@@ -504,36 +499,22 @@
 <svelte:window onkeydown={(e) => { if (e.key === 'Escape' && showShareModal) closeShareModal(); }} />
 
 <style>
-	.header {
-		background: var(--bg-secondary);
-		border-bottom: 1px solid var(--border);
-		padding: 16px 24px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.logo {
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: var(--accent);
-	}
-
-	.header-right {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
 	.container {
 		max-width: 900px;
 		margin: 0 auto;
-		padding: 40px 24px;
+		padding: 80px 24px 40px;
 	}
 
 	.hero {
 		text-align: center;
 		margin-bottom: 40px;
+		position: relative;
+	}
+
+	.hero-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 16px;
 	}
 
 	.config-meta {

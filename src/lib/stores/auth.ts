@@ -19,23 +19,34 @@ function createAuthStore() {
 		loading: true
 	});
 
+	let checkPromise: Promise<void> | null = null;
+
 	return {
 		subscribe,
 		check: async () => {
 			if (!browser) return;
-			try {
-				const response = await fetch('/api/user');
-				if (response.ok) {
-					const data = await response.json();
-					set({ user: data.user, loading: false });
-				} else {
+			if (checkPromise) return checkPromise;
+			
+			checkPromise = (async () => {
+				try {
+					const response = await fetch('/api/user');
+					if (response.ok) {
+						const data = await response.json();
+						set({ user: data.user, loading: false });
+					} else {
+						set({ user: null, loading: false });
+					}
+				} catch {
 					set({ user: null, loading: false });
+				} finally {
+					checkPromise = null;
 				}
-			} catch {
-				set({ user: null, loading: false });
-			}
+			})();
+			
+			return checkPromise;
 		},
 		logout: () => {
+			checkPromise = null;
 			set({ user: null, loading: false });
 		}
 	};

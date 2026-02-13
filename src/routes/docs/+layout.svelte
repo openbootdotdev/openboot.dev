@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { afterNavigate, onNavigate, goto } from '$app/navigation';
 	import { onMount, tick } from 'svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { auth } from '$lib/stores/auth';
 
@@ -131,8 +130,6 @@
 	}
 
 	onMount(() => {
-		auth.check();
-
 		function handleScroll() {
 			const headings = document.querySelectorAll('.prose h2, .prose h3');
 			let current = '';
@@ -237,44 +234,6 @@
 
 <div class="reading-progress" style="width: {readingProgress}%"></div>
 
-<header class="site-header">
-	<div class="header-container">
-		<div class="header-left">
-			<a href="/" class="header-logo">OpenBoot</a>
-			<span class="header-divider">/</span>
-			<a href="/docs" class="header-docs-label">docs</a>
-		</div>
-		<div class="header-right">
-			<button class="search-trigger" onclick={() => (searchOpen = true)} aria-label="Search docs (Cmd+K)">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-				</svg>
-				<span class="search-trigger-text">Search</span>
-				<kbd>⌘K</kbd>
-			</button>
-			<ThemeToggle />
-			{#if $auth.loading}
-				<span class="loading-text">...</span>
-			{:else if $auth.user}
-				<Button href="/dashboard" variant="secondary">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-						<rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-					</svg>
-					Dashboard
-				</Button>
-			{:else}
-				<Button href="/login" variant="secondary">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-						<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-					</svg>
-					Login
-				</Button>
-			{/if}
-		</div>
-	</div>
-</header>
-
 <button
 	class="mobile-menu-btn"
 	onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
@@ -304,6 +263,13 @@
 
 <div class="docs-layout">
 	<aside class="sidebar" class:open={mobileMenuOpen}>
+		<button class="search-trigger-sidebar" onclick={() => (searchOpen = true)} aria-label="Search docs (Cmd+K)">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+			</svg>
+			<span class="search-trigger-text">Search</span>
+			<kbd>⌘K</kbd>
+		</button>
 		<nav>
 			{#each data.groups as group}
 				{#if group.label}
@@ -429,79 +395,14 @@
 		pointer-events: none;
 	}
 
-	/* ── Header ───────────────────────────────────────── */
-
-	.site-header {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: var(--header-bg);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border-bottom: 1px solid var(--border);
-		z-index: 100;
-		transition: background 0.3s;
-	}
-
-	.header-container {
-		max-width: 1400px;
-		margin: 0 auto;
-		padding: 12px 24px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.header-left {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-
-	.header-logo {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: var(--accent);
-		letter-spacing: -0.02em;
-	}
-
-	.header-divider {
-		color: var(--text-muted);
-		font-size: 1.1rem;
-		font-weight: 300;
-		user-select: none;
-	}
-
-	.header-docs-label {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.9rem;
-		font-weight: 500;
-		color: var(--text-secondary);
-		transition: color 0.2s;
-	}
-
-	.header-docs-label:hover { color: var(--text-primary); }
-
-	.header-right {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.loading-text {
-		color: var(--text-muted);
-		font-size: 0.9rem;
-	}
-
 	/* ── Search Trigger ───────────────────────────────── */
 
-	.search-trigger {
+	.search-trigger-sidebar {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 6px 12px;
+		padding: 8px 16px;
+		margin: 0 16px 20px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -510,15 +411,16 @@
 		font-size: 0.82rem;
 		cursor: pointer;
 		transition: all 0.15s;
+		width: calc(100% - 32px);
 	}
 
-	.search-trigger:hover {
+	.search-trigger-sidebar:hover {
 		border-color: var(--border-hover);
 		color: var(--text-secondary);
 		background: var(--bg-hover);
 	}
 
-	.search-trigger kbd {
+	.search-trigger-sidebar kbd {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.68rem;
 		padding: 1px 5px;
@@ -526,9 +428,8 @@
 		border-radius: 4px;
 		background: var(--bg-secondary);
 		color: var(--text-muted);
+		margin-left: auto;
 	}
-
-	.search-trigger-text { margin-right: 4px; }
 
 	/* ── Layout ────────────────────────────────────────── */
 

@@ -1,14 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	let copied = $state('');
 	let starCount = $state(0);
 
 	onMount(() => {
-		auth.check();
-
 		fetch('https://api.github.com/repos/openbootdotdev/openboot')
 			.then((r) => r.json())
 			.then((data) => {
@@ -22,8 +19,6 @@
 		copied = id;
 		setTimeout(() => (copied = ''), 2000);
 	}
-
-
 </script>
 
 <svelte:head>
@@ -39,387 +34,556 @@
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
-<header class="site-header">
-	<div class="header-container">
-		<a href="/" class="header-logo">OpenBoot</a>
-		<div class="header-right">
-			<ThemeToggle />
+<div class="page-wrapper">
+	<main>
+		<div class="hero-background">
+			<div class="hero-glow hero-glow-primary"></div>
+			<div class="hero-glow hero-glow-secondary"></div>
+			<div class="grid-overlay"></div>
 		</div>
-	</div>
-</header>
 
-<main>
-	<div class="container">
-		<section class="hero">
-			<div class="hero-split">
-				<div class="hero-left">
-				<h1>Set up your Mac —<br />or capture the one you have</h1>
-				<p class="subtitle">One command to install 80+ dev tools on a fresh Mac. Or snapshot your current setup and share it with your team.</p>
+		<div class="container">
+			<section class="hero">
+				<div class="hero-content">
+					<h1 class="hero-title">
+						Set up your Mac —<br />or capture the one you have
+					</h1>
+					<p class="hero-subtitle">
+						One command to install 80+ dev tools on a fresh Mac. Or snapshot your current setup and share it with your team.
+					</p>
 
-				<div class="features-grid">
-					<div class="feature-item">80+ curated dev tools</div>
-					<div class="feature-item">Smart install — skips what's already there</div>
-					<div class="feature-item">Dotfiles + Oh-My-Zsh built in</div>
-					<div class="feature-item">Share configs with your team</div>
-					<div class="feature-item">100% open source, zero telemetry</div>
+					<div class="features-list">
+						<div class="feature-item">
+							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+							<span>80+ curated dev tools</span>
+						</div>
+						<div class="feature-item">
+							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+							<span>Smart install — skips what's already there</span>
+						</div>
+						<div class="feature-item">
+							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+							<span>Dotfiles + Oh-My-Zsh built in</span>
+						</div>
+						<div class="feature-item">
+							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+							<span>Share configs with your team</span>
+						</div>
+						<div class="feature-item">
+							<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+							<span>100% open source, zero telemetry</span>
+						</div>
+					</div>
+
+					<div class="install-section">
+						<div class="install-command-wrapper">
+							<div class="install-command">
+								<div class="install-prompt">$</div>
+								<code>brew install openbootdotdev/tap/openboot</code>
+								<button class="copy-btn" onclick={() => copyCommand('brew install openbootdotdev/tap/openboot', 'main')}>
+									{#if copied === 'main'}
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+											<polyline points="20 6 9 17 4 12"/>
+										</svg>
+										Copied
+									{:else}
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+											<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+										</svg>
+										Copy
+									{/if}
+								</button>
+							</div>
+						</div>
+						<p class="install-alt">
+							Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code>
+						</p>
+					</div>
+
+					<div class="cta-buttons">
+						{#if $auth.user}
+							<a href="/dashboard" class="btn-primary">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<rect x="3" y="3" width="7" height="7" />
+									<rect x="14" y="3" width="7" height="7" />
+									<rect x="14" y="14" width="7" height="7" />
+									<rect x="3" y="14" width="7" height="7" />
+								</svg>
+								Dashboard
+							</a>
+						{:else}
+							<a href="/login" class="btn-primary">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+									<polyline points="10 17 15 12 10 7"/>
+									<line x1="15" y1="12" x2="3" y2="12"/>
+								</svg>
+								Sign in
+							</a>
+						{/if}
+						<a href="/docs" class="btn-secondary">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+								<polyline points="14 2 14 8 20 8"/>
+							</svg>
+							Documentation
+						</a>
+						<a href="https://github.com/openbootdotdev/openboot" class="btn-secondary" target="_blank" rel="noopener">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+							</svg>
+							GitHub
+							{#if starCount > 0}
+								<span class="star-badge">{starCount}</span>
+							{/if}
+						</a>
+					</div>
 				</div>
 
-		<div class="cta-buttons">
-				{#if $auth.user}
-					<a href="/dashboard" class="btn-outlined">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-							<rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-						</svg>
-						Dashboard
-					</a>
-				{:else}
-					<a href="/login" class="btn-outlined">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-						</svg>
-						Sign in
-					</a>
-				{/if}
-				<a href="/docs" class="btn-outlined">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+				<div class="hero-visual">
+					<div class="terminal-window">
+						<div class="terminal-header">
+							<div class="terminal-dots">
+								<span class="dot dot-red"></span>
+								<span class="dot dot-yellow"></span>
+								<span class="dot dot-green"></span>
+							</div>
+							<span class="terminal-title">openboot</span>
+							<div class="terminal-spacer"></div>
+						</div>
+						<div class="terminal-body">
+							<img src="/demo.gif" alt="OpenBoot demo — installing dev tools in one command" loading="eager" />
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="how-it-works">
+				<div class="section-header">
+					<h2 class="section-title">How It Works</h2>
+					<p class="section-subtitle">From zero to coding in 4 steps</p>
+				</div>
+
+				<div class="steps-container">
+					<div class="steps-line"></div>
+					<div class="steps-grid">
+						<div class="step step-1">
+							<div class="step-number">
+								<span>1</span>
+							</div>
+							<h3>Run one command</h3>
+							<p>Paste the curl command in Terminal. OpenBoot downloads and launches automatically.</p>
+						</div>
+						<div class="step step-2">
+							<div class="step-number">
+								<span>2</span>
+							</div>
+							<h3>Pick your tools</h3>
+							<p>Use the interactive TUI to pick a preset or toggle exactly what you want.</p>
+						</div>
+						<div class="step step-3">
+							<div class="step-number">
+								<span>3</span>
+							</div>
+							<h3>Grab a coffee</h3>
+							<p>OpenBoot installs Homebrew, CLI tools, apps, dotfiles, and configures macOS for you.</p>
+						</div>
+						<div class="step step-4">
+							<div class="step-number">
+								<span>4</span>
+							</div>
+							<h3>Start building</h3>
+							<p>Your dev environment is ready. Share your config with teammates so they can do the same.</p>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</main>
+
+	<footer>
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-links">
+					{#if $auth.user}
+						<a href="/dashboard">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<rect x="3" y="3" width="7" height="7" />
+								<rect x="14" y="3" width="7" height="7" />
+								<rect x="14" y="14" width="7" height="7" />
+								<rect x="3" y="14" width="7" height="7" />
+							</svg>
+							Dashboard
+						</a>
+					{:else}
+						<a href="/login">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M12 20h9"/>
+								<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+							</svg>
+							Custom Configs
+						</a>
+					{/if}
+					<a href="/docs">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+							<polyline points="14 2 14 8 20 8"/>
 						</svg>
 						Docs
 					</a>
-					<a href="https://github.com/openbootdotdev/openboot" class="btn-outlined" target="_blank" rel="noopener">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+					<a href="https://github.com/openbootdotdev/openboot" target="_blank" rel="noopener">
+						<svg viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
 						</svg>
 						GitHub
-						{#if starCount > 0}
-							<span class="star-badge">{starCount}</span>
-						{/if}
+					</a>
+					<a href="https://github.com/openbootdotdev/openboot/issues" target="_blank" rel="noopener">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<circle cx="12" cy="12" r="10"/>
+							<path d="M12 16v-4M12 8h.01"/>
+						</svg>
+						Issues
 					</a>
 				</div>
-
-					<p class="privacy-note">No analytics. No telemetry. Your data stays on your machine.</p>
-				</div>
-
-			<div class="hero-right">
-				<div class="demo-window">
-					<div class="demo-titlebar">
-						<div class="terminal-dots">
-							<span class="dot dot-red"></span>
-							<span class="dot dot-yellow"></span>
-							<span class="dot dot-green"></span>
-						</div>
-						<span class="terminal-title">openboot</span>
-						<div class="terminal-dots-spacer"></div>
-					</div>
-					<img src="/demo.gif" alt="OpenBoot demo — installing dev tools in one command" class="demo-svg" loading="eager" />
-				</div>
+				<p class="footer-tagline">Open source, zero telemetry. Set up your Mac the way it should be.</p>
+				<p class="footer-text">MIT License</p>
 			</div>
 		</div>
-
-		<div class="get-started-panel">
-			<div class="panel-install">
-				<div class="install-command" id="install">
-					<div class="install-prompt">$</div>
-				<code>brew install openbootdotdev/tap/openboot</code>
-				<button class="copy-btn" onclick={() => copyCommand('brew install openbootdotdev/tap/openboot', 'main')}>
-						{#if copied === 'main'}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-							Copied!
-						{:else}
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-							Copy
-						{/if}
-					</button>
-				</div>
-				<p class="install-alt">Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code></p>
-			<p class="install-next">Then run <code>openboot</code> to set up your Mac, or <code>openboot snapshot</code> to capture your current setup.</p>
-			</div>
-		</div>
-	</section>
-
-	<section class="how-it-works">
-			<div class="section-header">
-				<h2 class="section-title">How It Works</h2>
-				<p class="section-subtitle">From zero to coding in 4 steps</p>
-			</div>
-			<div class="steps-grid">
-				<div class="step">
-					<div class="step-number">1</div>
-					<h3>Run one command</h3>
-					<p>Paste the curl command in Terminal. OpenBoot downloads and launches automatically.</p>
-				</div>
-				<div class="step">
-					<div class="step-number">2</div>
-					<h3>Pick your tools</h3>
-					<p>Use the interactive TUI to pick a preset or toggle exactly what you want.</p>
-				</div>
-				<div class="step">
-					<div class="step-number">3</div>
-					<h3>Grab a coffee</h3>
-					<p>OpenBoot installs Homebrew, CLI tools, apps, dotfiles, and configures macOS for you.</p>
-				</div>
-				<div class="step">
-					<div class="step-number">4</div>
-					<h3>Start building</h3>
-					<p>Your dev environment is ready. Share your config with teammates so they can do the same.</p>
-				</div>
-			</div>
-		</section>
-
-
-	</div>
-</main>
-
-<footer>
-	<div class="container">
-		<div class="footer-links">
-			{#if $auth.user}
-				<a href="/dashboard">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-					Dashboard
-				</a>
-		{:else}
-			<a href="/login">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-				Custom Configs
-			</a>
-		{/if}
-			<a href="/docs">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-				Docs
-			</a>
-			<a href="https://github.com/openbootdotdev/openboot" target="_blank" rel="noopener">
-				<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-				GitHub
-			</a>
-			<a href="https://github.com/openbootdotdev/openboot/issues" target="_blank" rel="noopener">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-				Issues
-			</a>
-		</div>
-		<p class="footer-tagline">Open source, zero telemetry. Set up your Mac the way it should be.</p>
-		<p class="footer-text">MIT License</p>
-	</div>
-</footer>
+	</footer>
+</div>
 
 <style>
-	/* ── Layout ─────────────────────────────────────────── */
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		overflow-x: hidden;
+	}
+
+	.page-wrapper {
+		position: relative;
+		min-height: 100vh;
+		background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+	}
+
+	.page-wrapper::after {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+		opacity: 0.03;
+		mix-blend-mode: multiply;
+		pointer-events: none;
+		z-index: 1;
+	}
 
 	.container {
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 0 24px;
-		overflow: hidden;
+		position: relative;
+		z-index: 2;
 	}
 
-	/* ── Header ─────────────────────────────────────────── */
+	main {
+		padding-top: 80px;
+		position: relative;
+		z-index: 2;
+	}
 
-	.site-header {
-		position: fixed;
+	.hero-background {
+		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: var(--header-bg);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border-bottom: 1px solid var(--border);
-		z-index: 100;
-		transition: background 0.3s;
+		height: 900px;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 0;
 	}
 
-	.header-container {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 12px 24px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+	.hero-glow {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(120px);
+		opacity: 0.4;
 	}
 
-	.header-logo {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: var(--accent);
-		letter-spacing: -0.02em;
+	.hero-glow-primary {
+		width: 1000px;
+		height: 1000px;
+		background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+		top: -300px;
+		left: 50%;
+		transform: translateX(-50%);
+		opacity: 0.2;
 	}
 
-	.header-right {
-		display: flex;
-		align-items: center;
-		gap: 12px;
+	.hero-glow-secondary {
+		width: 700px;
+		height: 700px;
+		background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+		top: 50px;
+		right: -150px;
+		opacity: 0.1;
 	}
 
-	/* ── Main ──────────────────────────────────────────── */
-
-	main {
-		padding: 80px 0 60px;
-		background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-		min-height: 100vh;
+	.grid-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100%;
+		background-image: 
+			linear-gradient(to right, var(--border) 1px, transparent 1px),
+			linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+		background-size: 60px 60px;
+		opacity: 0.3;
+		mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
+		-webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
 	}
-
-	/* ── Hero ──────────────────────────────────────────── */
 
 	.hero {
-		padding: 48px 0 72px;
-	}
-
-	.hero-split {
+		padding: 80px 0 120px;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 40px;
+		gap: 80px;
 		align-items: center;
+		position: relative;
 	}
 
-	.hero-left {
+	.hero-content {
 		display: flex;
 		flex-direction: column;
+		gap: 32px;
 	}
 
-	.hero h1 {
-		font-size: 2.75rem;
+	.hero-title {
+		font-size: 3.5rem;
 		font-weight: 800;
 		line-height: 1.1;
-		margin-bottom: 20px;
-		letter-spacing: -0.03em;
-		color: var(--text-primary);
+		letter-spacing: -0.04em;
+		background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		margin: 0;
 	}
 
-	.subtitle {
-		font-size: 1.05rem;
+	.hero-subtitle {
+		font-size: 1.15rem;
 		color: var(--text-secondary);
 		line-height: 1.6;
-		margin-bottom: 28px;
-		max-width: 480px;
+		margin: 0;
+		max-width: 520px;
 	}
 
-	/* ── Features Grid (compact in hero left) ─────────── */
-
-	.features-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 6px 24px;
-		margin-bottom: 32px;
+	.features-list {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
 	}
 
 	.feature-item {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 12px;
 		color: var(--text-secondary);
-		font-size: 0.85rem;
-		padding: 3px 0;
+		font-size: 0.95rem;
 	}
 
-	.feature-item::before {
-		content: '✓';
+	.feature-check {
+		width: 18px;
+		height: 18px;
 		color: var(--accent);
-		font-weight: 700;
-		font-size: 0.8rem;
 		flex-shrink: 0;
 	}
 
-	/* ── Install Command (primary CTA) ────────────────── */
+	.install-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.install-command-wrapper {
+		position: relative;
+	}
+
+	.install-command-wrapper::before {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		background: linear-gradient(90deg, var(--accent), #3b82f6, var(--accent));
+		background-size: 200% 100%;
+		border-radius: 14px;
+		opacity: 0;
+		transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		animation: borderRotate 4s linear infinite paused;
+	}
+
+	.install-command-wrapper:hover::before {
+		opacity: 1;
+		animation-play-state: running;
+	}
+
+	@keyframes borderRotate {
+		0% {
+			background-position: 0% 50%;
+		}
+		100% {
+			background-position: 200% 50%;
+		}
+	}
 
 	.install-command {
+		position: relative;
 		background: var(--code-bg);
 		border: 1px solid var(--accent);
 		border-radius: 12px;
-		padding: 18px 20px;
-		margin-bottom: 20px;
+		padding: 20px 24px;
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		position: relative;
-		box-shadow: 0 0 24px rgba(34, 197, 94, 0.1), 0 0 0 1px rgba(34, 197, 94, 0.15);
-		transition: box-shadow 0.3s, border-color 0.3s;
+		gap: 16px;
+		box-shadow: 
+			0 0 15px var(--accent-glow) inset,
+			0 0 40px var(--accent-glow),
+			0 8px 32px rgba(0, 0, 0, 0.1);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.install-command:hover {
-		box-shadow: 0 0 32px rgba(34, 197, 94, 0.18), 0 0 0 1px rgba(34, 197, 94, 0.25);
+		border-color: var(--accent-hover);
+		box-shadow: 
+			0 0 20px var(--accent-glow) inset,
+			0 0 60px var(--accent-glow),
+			0 12px 48px rgba(0, 0, 0, 0.15);
 	}
 
 	.install-prompt {
 		color: var(--accent);
 		font-family: 'JetBrains Mono', monospace;
 		font-weight: 700;
-		font-size: 1rem;
+		font-size: 1.25rem;
 		flex-shrink: 0;
 		user-select: none;
 	}
 
 	.install-command code {
 		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.9rem;
+		font-size: 0.95rem;
 		color: var(--text-primary);
 		flex: 1;
 		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.copy-btn {
 		background: var(--accent);
 		border: none;
 		color: #000;
-		padding: 7px 14px;
-		border-radius: 6px;
-		font-size: 0.78rem;
+		padding: 10px 18px;
+		border-radius: 8px;
+		font-size: 0.85rem;
 		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		white-space: nowrap;
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: 6px;
 		flex-shrink: 0;
+		box-shadow: 0 0 20px var(--accent-glow);
 	}
 
 	.copy-btn:hover {
 		background: var(--accent-hover);
-		transform: translateY(-1px);
+		transform: translateY(-2px) scale(1.02);
+		box-shadow: 0 0 30px var(--accent-glow);
 	}
 
-	/* ── CTA Buttons ──────────────────────────────────── */
+	.install-alt {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		margin: 0;
+	}
+
+	.install-alt code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
 
 	.cta-buttons {
 		display: flex;
 		gap: 12px;
 		flex-wrap: wrap;
-		margin-bottom: 16px;
 	}
 
-	.btn-outlined {
+	.btn-primary {
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		padding: 10px 22px;
-		border-radius: 8px;
-		font-size: 0.9rem;
+		padding: 12px 24px;
+		border-radius: 10px;
+		font-size: 0.95rem;
+		font-weight: 600;
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		background: var(--accent);
+		color: #000;
+		border: none;
+		box-shadow: 0 0 30px var(--accent-glow);
+	}
+
+	.btn-primary:hover {
+		background: var(--accent-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 0 40px var(--accent-glow);
+	}
+
+	.btn-secondary {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 24px;
+		border-radius: 10px;
+		font-size: 0.95rem;
 		font-weight: 500;
 		cursor: pointer;
 		text-decoration: none;
-		transition: all 0.2s;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		background: transparent;
 		color: var(--text-secondary);
 		border: 1px solid var(--border);
 	}
 
-	.btn-outlined:hover {
+	.btn-secondary:hover {
 		color: var(--text-primary);
-		border-color: var(--border-hover);
-		background: var(--bg-tertiary);
+		border-color: var(--accent);
+		background: var(--accent-glow);
+		transform: translateY(-2px);
 	}
 
 	.star-badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 3px;
+		gap: 4px;
 		font-size: 0.75rem;
 		font-weight: 600;
-		padding: 2px 8px;
+		padding: 3px 8px;
 		border-radius: 12px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
@@ -433,38 +597,43 @@
 		font-size: 0.7rem;
 	}
 
-	.privacy-note {
-		color: var(--text-muted);
-		font-size: 0.75rem;
-		opacity: 0.7;
-	}
-
-	/* ── Demo Window ─────────────────────────────────── */
-
-	.hero-right {
+	.hero-visual {
 		display: flex;
 		justify-content: center;
 		align-items: center;
 	}
 
-	.demo-window {
+	.terminal-window {
 		width: 100%;
-		max-width: 520px;
-		border-radius: 12px;
+		max-width: 560px;
+		border-radius: 16px;
 		overflow: hidden;
 		background: #1e1e2e;
 		box-shadow:
-			0 0 0 1px rgba(255, 255, 255, 0.06),
-			0 8px 40px rgba(0, 0, 0, 0.5),
-			0 0 60px rgba(34, 197, 94, 0.06);
+			0 0 0 1px rgba(255, 255, 255, 0.1),
+			0 20px 40px -12px rgba(0, 0, 0, 0.8),
+			0 0 80px -20px rgba(34, 197, 94, 0.25),
+			0 40px 100px rgba(0, 0, 0, 0.5);
+		transform: perspective(1200px) rotateY(-3deg) rotateX(1deg);
+		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.demo-titlebar {
+	.terminal-window:hover {
+		transform: perspective(1200px) rotateY(0deg) rotateX(0deg) translateY(-12px);
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.15),
+			0 30px 60px -15px rgba(0, 0, 0, 0.9),
+			0 0 120px -10px rgba(34, 197, 94, 0.35),
+			0 60px 120px rgba(0, 0, 0, 0.6);
+	}
+
+	.terminal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 12px 16px;
-		background: #1e1e2e;
+		padding: 14px 18px;
+		background: linear-gradient(180deg, #1e1e2e 0%, #1a1a28 100%);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.terminal-dots {
@@ -476,6 +645,11 @@
 		width: 12px;
 		height: 12px;
 		border-radius: 50%;
+		transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.terminal-window:hover .dot {
+		transform: scale(1.1);
 	}
 
 	.dot-red { background: #ff5f57; }
@@ -489,150 +663,208 @@
 		font-weight: 500;
 	}
 
-	.terminal-dots-spacer {
+	.terminal-spacer {
 		width: 52px;
 	}
 
-	.demo-svg {
-		width: 100%;
-		display: block;
+	.terminal-body {
 		background: #1e1e2e;
 	}
 
-	/* ── Get Started Panel ───────────────────────────── */
-
-	.get-started-panel {
-		margin-top: 56px;
-		max-width: 680px;
-		margin-left: auto;
-		margin-right: auto;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		overflow: hidden;
-		text-align: center;
+	.terminal-body img {
+		width: 100%;
+		display: block;
 	}
-
-	.panel-install {
-		padding: 28px 28px 20px;
-	}
-
-	.panel-install .install-command {
-		margin-bottom: 8px;
-	}
-
-	.install-alt {
-		color: var(--text-muted);
-		font-size: 0.78rem;
-		margin: 0;
-	}
-
-	.install-alt code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.73rem;
-	}
-
-	.install-next {
-		color: var(--text-muted);
-		font-size: 0.8rem;
-		margin: 8px 0 0;
-	}
-
-	.install-next code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.75rem;
-		color: var(--text-secondary);
-	}
-
-	/* ── How It Works ────────────────────────────────── */
 
 	.how-it-works {
-		margin-bottom: 80px;
+		padding: 80px 0 120px;
+		position: relative;
+	}
+
+	.how-it-works::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 800px;
+		height: 400px;
+		background: radial-gradient(ellipse, var(--accent-glow) 0%, rgba(59, 130, 246, 0.04) 40%, transparent 70%);
+		pointer-events: none;
+		z-index: -1;
 	}
 
 	.section-header {
 		text-align: center;
-		margin-bottom: 32px;
+		margin-bottom: 64px;
+	}
+
+	.section-title {
+		font-size: 2rem;
+		font-weight: 600;
+		letter-spacing: -0.03em;
+		color: var(--text-primary);
+		margin: 0 0 12px 0;
+	}
+
+	.section-subtitle {
+		font-size: 1rem;
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	.steps-container {
+		position: relative;
+	}
+
+	.steps-line {
+		position: absolute;
+		top: 40px;
+		left: 12.5%;
+		right: 12.5%;
+		height: 2px;
+		background: linear-gradient(90deg, 
+			var(--accent) 0%, 
+			var(--accent) 25%, 
+			#3b82f6 50%, 
+			var(--accent) 75%, 
+			var(--accent) 100%
+		);
+		opacity: 0.3;
+		z-index: 0;
 	}
 
 	.steps-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 24px;
+		gap: 32px;
+		position: relative;
+		z-index: 1;
 	}
 
 	.step {
 		text-align: center;
-		padding: 28px 20px;
+		padding: 32px 24px;
 		background: var(--bg-secondary);
+		border-radius: 20px;
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 		border: 1px solid var(--border);
-		border-radius: 16px;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		opacity: 0;
+		transform: translateY(20px);
+		animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+
+	.step-1 { animation-delay: 0.1s; }
+	.step-2 { animation-delay: 0.2s; }
+	.step-3 { animation-delay: 0.3s; }
+	.step-4 { animation-delay: 0.4s; }
+
+	@keyframes fadeInUp {
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.step:hover {
-		border-color: var(--border-hover);
-		transform: translateY(-4px);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+		transform: translateY(-8px);
+		background: var(--bg-tertiary);
+		border-color: var(--accent);
+		box-shadow: 
+			0 0 40px var(--accent-glow),
+			0 20px 40px rgba(0, 0, 0, 0.1);
 	}
 
 	.step-number {
-		width: 36px;
-		height: 36px;
+		width: 48px;
+		height: 48px;
 		border-radius: 50%;
 		background: var(--accent);
 		color: #000;
 		font-family: 'JetBrains Mono', monospace;
 		font-weight: 700;
-		font-size: 0.9rem;
+		font-size: 1.1rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin: 0 auto 16px;
+		margin: 0 auto 20px;
+		box-shadow: 0 0 30px var(--accent-glow);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.step:hover .step-number {
+		transform: scale(1.1);
+		box-shadow: 0 0 50px var(--accent-glow);
 	}
 
 	.step h3 {
-		font-size: 1rem;
+		font-size: 1.1rem;
 		font-weight: 600;
-		margin-bottom: 8px;
-		letter-spacing: -0.01em;
+		margin: 0 0 12px 0;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
 	}
 
 	.step p {
 		color: var(--text-secondary);
-		font-size: 0.85rem;
-		line-height: 1.5;
+		font-size: 0.9rem;
+		line-height: 1.6;
 		margin: 0;
 	}
 
-	/* ── Footer ───────────────────────────────────────── */
-
 	footer {
-		border-top: 1px solid var(--border);
-		padding: 48px 0;
+		border-top: 1px solid transparent;
+		background: linear-gradient(to right, transparent, var(--accent), transparent) top / 100% 1px no-repeat,
+					var(--bg-primary);
+		padding: 64px 0;
 		text-align: center;
-		background: var(--bg-primary);
+		position: relative;
+		z-index: 2;
+	}
+
+	.footer-content {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+		align-items: center;
 	}
 
 	.footer-links {
 		display: flex;
 		justify-content: center;
 		gap: 32px;
-		margin-bottom: 24px;
 		flex-wrap: wrap;
 	}
 
 	.footer-links a {
 		color: var(--text-muted);
-		font-size: 0.85rem;
+		font-size: 0.9rem;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		transition: color 0.2s;
+		gap: 8px;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		text-decoration: none;
+		position: relative;
 	}
 
 	.footer-links a:hover {
 		color: var(--accent);
+	}
+
+	.footer-links a::after {
+		content: '';
+		position: absolute;
+		bottom: -4px;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: var(--accent);
+		transform: scaleX(0);
+		transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.footer-links a:hover::after {
+		transform: scaleX(1);
 	}
 
 	.footer-links svg {
@@ -642,92 +874,117 @@
 
 	.footer-tagline {
 		color: var(--text-secondary);
-		font-size: 0.9rem;
-		margin-bottom: 8px;
+		font-size: 0.95rem;
+		margin: 0;
 		font-weight: 500;
 	}
 
 	.footer-text {
 		color: var(--text-muted);
-		font-size: 0.78rem;
+		font-size: 0.8rem;
+		margin: 0;
 	}
 
-	/* ── Responsive ───────────────────────────────────── */
-
 	@media (max-width: 960px) {
-		.hero-split {
-			grid-template-columns: 1fr;
-			gap: 40px;
+		.grid-overlay {
+			display: none;
 		}
 
-		.hero-right {
+		.hero {
+			grid-template-columns: 1fr;
+			gap: 60px;
+			padding: 60px 0 100px;
+		}
+
+		.hero-visual {
 			order: -1;
 		}
 
-		.demo-window {
-			max-width: 480px;
-		}
-
-		.steps-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
-
-		.hero h1 {
-			font-size: 2.2rem;
-		}
-
-		.hero-left {
+		.hero-content {
 			align-items: center;
 			text-align: center;
 		}
 
-		.features-grid {
-			max-width: 400px;
-			text-align: left;
+		.hero-title {
+			font-size: 2.5rem;
 		}
 
-		.install-command {
+		.hero-subtitle {
 			max-width: 100%;
+		}
+
+		.features-list {
+			align-items: flex-start;
+			max-width: 400px;
+		}
+
+		.install-section {
+			width: 100%;
+			max-width: 500px;
 		}
 
 		.cta-buttons {
 			justify-content: center;
 		}
 
-		.privacy-note {
-			text-align: center;
+		.steps-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 24px;
 		}
 
-		.subtitle {
-			max-width: 100%;
+		.steps-line {
+			display: none;
 		}
 	}
 
-	@media (max-width: 768px) {
-		.hero h1 {
-			font-size: 1.75rem;
+	@media (max-width: 640px) {
+		.hero-title {
+			font-size: 2rem;
+		}
+
+		.hero-subtitle {
+			font-size: 1rem;
+		}
+
+		.install-command {
+			padding: 16px 18px;
+			gap: 12px;
 		}
 
 		.install-command code {
-			font-size: 0.7rem;
+			font-size: 0.8rem;
 		}
 
-		.demo-window {
-			max-width: 100%;
+		.install-prompt {
+			font-size: 1rem;
+		}
+
+		.copy-btn {
+			padding: 8px 14px;
+			font-size: 0.8rem;
 		}
 
 		.steps-grid {
 			grid-template-columns: 1fr;
 		}
 
-		.install-command code {
-			font-size: 0.78rem;
+		.features-list {
+			width: 100%;
 		}
 
-		.features-grid {
-			grid-template-columns: 1fr;
-			gap: 4px;
+		.feature-item {
+			font-size: 0.9rem;
 		}
 
+		.cta-buttons {
+			flex-direction: column;
+			width: 100%;
+		}
+
+		.btn-primary,
+		.btn-secondary {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 </style>
