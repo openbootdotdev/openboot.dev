@@ -20,7 +20,6 @@
 		<div class="header-right">
 			{#if children}{@render children()}{/if}
 			<GitHubStarBadge />
-			<ThemeToggle />
 			{#if $auth.loading}
 				
 			{:else if $auth.user}
@@ -30,6 +29,7 @@
 			{:else}
 				<a href="/login" class="header-login-link">Sign in</a>
 			{/if}
+			<ThemeToggle />
 		</div>
 	</div>
 </header>
