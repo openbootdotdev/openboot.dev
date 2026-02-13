@@ -619,11 +619,11 @@
 				<div class="form-group">
 				<label class="form-label" for="config-visibility">Visibility</label>
 				<select id="config-visibility" class="form-select" bind:value={formData.visibility}>
-					<option value="public">Public — listed on profile, install URL works</option>
-					<option value="unlisted">Unlisted — not listed, but install URL works</option>
+					<option value="public">Public — shown on Explore page with your name and avatar</option>
+					<option value="unlisted">Unlisted — not listed publicly, but shareable by URL</option>
 					<option value="private">Private — only you can access</option>
 				</select>
-				<p class="form-hint">Unlisted configs can still be installed by anyone with the URL.</p>
+				<p class="form-hint">Public configs appear on the Explore page for the community to discover. Unlisted configs are private but shareable via URL.</p>
 			</div>
 
 			<div class="form-group">

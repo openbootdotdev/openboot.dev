@@ -146,7 +146,10 @@
 			</section>
 		{:else}
 			<section class="configs-section">
-				<h2 class="section-title">Public Configurations</h2>
+				<div class="section-header-with-desc">
+					<h2 class="section-title">Public Configurations</h2>
+					<p class="section-desc">Setups @{data.profileUser.username} has chosen to share with the community</p>
+				</div>
 				<div class="configs-list">
 					{#each data.configs as config, index}
 						<div class="config-card" data-color={getCardColor(index)}>
@@ -538,11 +541,22 @@
 		margin-bottom: 80px;
 	}
 
+	.section-header-with-desc {
+		margin-bottom: 32px;
+	}
+
 	.section-title {
 		font-size: 1.5rem;
 		font-weight: 600;
-		margin-bottom: 28px;
+		letter-spacing: -0.02em;
 		color: var(--text-primary);
+		margin-bottom: 8px;
+	}
+
+	.section-desc {
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+		margin: 0;
 	}
 
 	.configs-list {
