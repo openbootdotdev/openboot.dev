@@ -188,10 +188,16 @@
 					{/if}
 				</button>
 			</div>
-			<button class="fork" onclick={forkConfig} disabled={forking}>
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>
-				{forking ? 'Forking...' : 'Fork'}
-			</button>
+			<div class="install-actions">
+				<button class="share-inline" onclick={openShareModal}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+					Share
+				</button>
+				<button class="fork" onclick={forkConfig} disabled={forking}>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>
+					{forking ? 'Forking...' : 'Fork to Dashboard'}
+				</button>
+			</div>
 			{#if forkError}
 				<div class="error">{forkError}</div>
 			{/if}
@@ -364,7 +370,7 @@
 			{/if}
 
 		{#if data.config.custom_script}
-			<details class="detail-card" open>
+			<details class="detail-card">
 				<summary>
 					<span class="detail-icon">⚡</span>
 					<span class="detail-title">Custom Installation Script</span>
@@ -652,21 +658,51 @@
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		width: 100%;
-		padding: 14px 20px;
-		background: var(--bg-secondary);
-		border: 2px solid var(--border);
-		border-radius: 12px;
-		color: var(--text-primary);
-		font-size: 0.95rem;
+		padding: 10px 14px;
+		background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--text-secondary);
+		font-size: 0.85rem;
 		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.install-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+	}
+
+	.share-inline {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 10px 14px;
+		background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.share-inline:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, var(--bg-secondary));
 	}
 
 	.fork:hover:not(:disabled) {
 		border-color: var(--accent);
 		color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, var(--bg-secondary));
 	}
 
 	.fork:disabled {
@@ -1370,6 +1406,22 @@
 		.copy {
 			width: 100%;
 			justify-content: center;
+		}
+
+		.install-actions {
+			justify-content: stretch;
+		}
+
+		.fork {
+			width: 100%;
+			border-radius: 12px;
+			padding: 12px 14px;
+		}
+
+		.share-inline {
+			width: 100%;
+			border-radius: 12px;
+			padding: 12px 14px;
 		}
 	}
 </style>
