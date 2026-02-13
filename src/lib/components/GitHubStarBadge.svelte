@@ -46,21 +46,16 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		padding: 6px 12px;
+		padding: 0;
 		color: var(--text-secondary);
 		font-size: 0.9rem;
 		font-weight: 500;
 		text-decoration: none;
-		border-radius: 8px;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		background: transparent;
-		border: 1px solid var(--border);
+		transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.github-star-badge:hover {
 		color: var(--text-primary);
-		border-color: var(--accent);
-		background: color-mix(in srgb, var(--accent) 5%, transparent);
 	}
 
 	.github-star-badge svg {
