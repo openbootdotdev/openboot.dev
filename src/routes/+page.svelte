@@ -308,8 +308,8 @@
 	.hero {
 		padding: 80px 0 60px;
 		display: grid;
-		grid-template-columns: 1fr 1.5fr;
-		gap: 50px;
+		grid-template-columns: 1fr 1.2fr;
+		gap: 64px;
 		align-items: center;
 		position: relative;
 	}
@@ -318,6 +318,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
+		padding-right: 20px;
 	}
 
 	.hero-title {
@@ -553,7 +554,7 @@
 
 	.terminal-window {
 		width: 100%;
-		max-width: 700px;
+		max-width: 660px;
 		border-radius: 16px;
 		overflow: hidden;
 		background: #1e1e2e;
@@ -562,7 +563,7 @@
 			0 20px 40px -12px rgba(0, 0, 0, 0.8),
 			0 0 80px -20px rgba(34, 197, 94, 0.25),
 			0 40px 100px rgba(0, 0, 0, 0.5);
-		transform: perspective(1200px) rotateY(-3deg) rotateX(1deg);
+		transform: perspective(1200px) rotateY(-2deg) rotateX(0.5deg);
 		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
