@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { auth } from '$lib/stores/auth';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import GitHubStarBadge from '$lib/components/GitHubStarBadge.svelte';
 	import type { Snippet } from 'svelte';
 
 	let { children }: { children?: Snippet } = $props();
@@ -18,6 +19,7 @@
 		</nav>
 		<div class="header-right">
 			{#if children}{@render children()}{/if}
+			<GitHubStarBadge />
 			<ThemeToggle />
 			{#if $auth.loading}
 				
