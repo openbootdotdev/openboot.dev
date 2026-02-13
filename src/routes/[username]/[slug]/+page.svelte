@@ -369,21 +369,19 @@
 					<span class="detail-icon">⚡</span>
 					<span class="detail-title">Custom Installation Script</span>
 				</summary>
-					<div class="detail-content">
-						<div class="code-block">
-							<div class="code-header">
-								<span>custom-script.sh</span>
-								<button onclick={() => {
-									navigator.clipboard.writeText(data.config.custom_script || '');
-									const btn = event?.currentTarget as HTMLButtonElement;
-									if (btn) {
-										btn.textContent = 'Copied!';
-										setTimeout(() => btn.textContent = 'Copy', 2000);
-									}
-								}}>Copy</button>
-							</div>
-							<pre><code>{@html highlightBash(data.config.custom_script)}</code></pre>
+				<div class="code-block">
+					<div class="code-header">
+						<span>custom-script.sh</span>
+						<button onclick={() => {
+							navigator.clipboard.writeText(data.config.custom_script || '');
+							const btn = event?.currentTarget as HTMLButtonElement;
+							if (btn) {
+								btn.textContent = 'Copied!';
+								setTimeout(() => btn.textContent = 'Copy', 2000);
+							}
+						}}>Copy</button>
 						</div>
+					<pre><code>{@html highlightBash(data.config.custom_script)}</code></pre>
 					</div>
 				</details>
 			{/if}
