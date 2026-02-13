@@ -81,10 +81,10 @@ Snapshot scans your Homebrew packages, macOS preferences, shell config, and git 
 🎯 Launching editor...
 ```
 
-After uploading, you get a shareable URL:
+After uploading, you get a shareable install command:
 
-```
-curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
+```bash
+openboot install yourname/my-setup
 ```
 
 See [Snapshot](/docs/snapshot) for the full walkthrough.
@@ -98,16 +98,10 @@ If you're setting up a team's standard environment:
 
 ```bash
 brew tap openbootdotdev/tap && brew install openboot
-openboot --user yourteam/frontend
+openboot install yourteam/frontend
 ```
 
-Or use the one-line installer as an alternative:
-
-```bash
-curl -fsSL https://openboot.dev/yourteam/frontend/install.sh | bash
-```
-
-3. **New team members** run the commands and get your exact setup
+3. **New team members** run the command and get your exact setup
 
 See [For Teams](/docs/teams) for the complete workflow.
 

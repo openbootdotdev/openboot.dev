@@ -20,7 +20,7 @@ OpenBoot replaces The Doc with one command.
 Your new hire opens the `CONTRIBUTING.md`. Step one:
 
 ```bash
-curl -fsSL https://openboot.dev/acme/frontend/install.sh | bash
+openboot install acme/frontend
 ```
 
 That's the entire setup section. They run it and go read the architecture docs while packages stream by:
@@ -88,7 +88,7 @@ Add the install command to your `CONTRIBUTING.md`:
 ```markdown
 ## Development Setup
 
-    curl -fsSL https://openboot.dev/acme/frontend/install.sh | bash
+    openboot install acme/frontend
 
 Or install via Homebrew:
 

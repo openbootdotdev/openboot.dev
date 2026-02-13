@@ -7,7 +7,7 @@
 ## OVERVIEW
 
 Web dashboard and install API for OpenBoot. SvelteKit 5 + Cloudflare Workers + D1 (SQLite).
-Serves config pages, install scripts (curl|bash), dashboard UI, OAuth login, and docs.
+Serves config pages, install API, dashboard UI, OAuth login, and docs.
 
 ## STRUCTURE
 

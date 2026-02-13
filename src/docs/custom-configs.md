@@ -38,17 +38,11 @@ Already have a Brewfile? Upload it in the dashboard. OpenBoot parses all `brew` 
 
 Every config gets a URL:
 
-```
-curl -fsSL https://openboot.dev/sarah/frontend-team/install.sh | bash
+```bash
+openboot install sarah/frontend-team
 ```
 
 Put it in your README, onboarding docs, or Slack. One command, same environment for everyone.
-
-You can also install via the CLI directly:
-
-```
-openboot --user sarah/frontend-team
-```
 
 ## Visibility
 
@@ -62,17 +56,11 @@ Every config has a visibility setting you can change in the dashboard:
 
 ### Installing Private Configs
 
-**Via `curl | bash`** — the install script automatically opens your browser for authorization, then proceeds with the install:
+Run `openboot login` first to authenticate, then install as usual:
 
-```
-curl -fsSL https://openboot.dev/yourname/my-setup/install.sh | bash
-```
-
-**Via the CLI** — run `openboot login` first, then use `--user` as usual. The CLI sends your auth token automatically:
-
-```
+```bash
 openboot login
-openboot --user yourname/my-setup
+openboot install yourname/my-setup
 ```
 
 ## Short URLs

@@ -22,7 +22,7 @@ If you're happy managing each of those separately, you don't need OpenBoot. If y
 **Use Homebrew** (`brew install openboot`) if you:
 - Already have Homebrew installed
 - Want cleaner updates (`brew upgrade openboot`)
-- Prefer package managers over `curl | bash`
+- Prefer package managers and the OpenBoot CLI over ad-hoc scripts
 
 **Use the one-line installer** if you:
 - Don't have Homebrew yet (it installs Homebrew for you)
@@ -42,7 +42,9 @@ Fair question. Here's how OpenBoot handles it:
 - You can inspect the script before running it:
 
 ```bash
-curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh
+curl -fsSL https://openboot.dev/install.sh > install.sh
+cat install.sh  # Review the script
+bash install.sh  # Run it after review
 ```
 
 If you prefer, install via Homebrew instead (see above).
