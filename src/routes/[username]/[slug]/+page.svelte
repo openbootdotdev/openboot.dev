@@ -363,12 +363,12 @@
 				</details>
 			{/if}
 
-			{#if data.config.custom_script}
-				<details class="detail-card">
-					<summary>
-						<span class="detail-icon">⚡</span>
-						<span class="detail-title">Custom Installation Script</span>
-					</summary>
+		{#if data.config.custom_script}
+			<details class="detail-card" open>
+				<summary>
+					<span class="detail-icon">⚡</span>
+					<span class="detail-title">Custom Installation Script</span>
+				</summary>
 					<div class="detail-content">
 						<div class="code-block">
 							<div class="code-header">
