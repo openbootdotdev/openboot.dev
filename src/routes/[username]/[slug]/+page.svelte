@@ -6,6 +6,7 @@
 
 	let activeTab = $state('overview');
 	let copied = $state(false);
+	let copiedCli = $state(false);
 	let showShareModal = $state(false);
 	let shareCopied = $state(false);
 	let forking = $state(false);
@@ -15,10 +16,20 @@
 		return `curl -fsSL https://openboot.dev/${data.configUser.username}/${data.config.slug} | bash`;
 	}
 
+	function getCliInstallCommand() {
+		return `openboot install ${data.configUser.username}/${data.config.slug}`;
+	}
+
 	function copyCommand() {
 		navigator.clipboard.writeText(getInstallCommand());
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
+	}
+
+	function copyCliCommand() {
+		navigator.clipboard.writeText(getCliInstallCommand());
+		copiedCli = true;
+		setTimeout(() => (copiedCli = false), 2000);
 	}
 
 	function getShareUrl() {
@@ -108,6 +119,8 @@
 		? data.config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
 		: []);
 
+	const hasOpenBootPackage = $derived(configPkgs.some((p: any) => p.name === 'openboot'));
+
 	const configCli = $derived(configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm'));
 	const configApps = $derived(configPkgs.filter((p: any) => p.type === 'cask'));
 	const configNpm = $derived(configPkgs.filter((p: any) => p.type === 'npm'));
@@ -163,12 +176,38 @@
 
 		<div class="install-box">
 			<div class="install-label">Install with one command</div>
-			<div class="install-command">
-				<code>{getInstallCommand()}</code>
-				<button class="copy-btn" onclick={copyCommand}>
-					{copied ? 'Copied!' : 'Copy'}
-				</button>
-			</div>
+			{#if hasOpenBootPackage}
+				<div class="install-command recommended">
+					<div class="command-label">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+						Recommended (with OpenBoot installed)
+					</div>
+					<div class="command-row">
+						<code>{getCliInstallCommand()}</code>
+						<button class="copy-btn" onclick={copyCliCommand}>
+							{copiedCli ? 'Copied!' : 'Copy'}
+						</button>
+					</div>
+				</div>
+				<div class="install-command">
+					<div class="command-label">First time installation</div>
+					<div class="command-row">
+						<code>{getInstallCommand()}</code>
+						<button class="copy-btn" onclick={copyCommand}>
+							{copied ? 'Copied!' : 'Copy'}
+						</button>
+					</div>
+				</div>
+			{:else}
+				<div class="install-command single">
+					<div class="command-row">
+						<code>{getInstallCommand()}</code>
+						<button class="copy-btn" onclick={copyCommand}>
+							{copied ? 'Copied!' : 'Copy'}
+						</button>
+					</div>
+				</div>
+			{/if}
 			<button class="fork-btn" onclick={forkConfig} disabled={forking}>
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>
 				{forking ? 'Forking...' : 'Fork Config'}
@@ -591,12 +630,49 @@
 
 	.install-command {
 		display: flex;
-		align-items: center;
-		gap: 12px;
+		flex-direction: column;
+		gap: 8px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		padding: 12px 16px;
+		margin-bottom: 12px;
+	}
+
+	.install-command.single {
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.install-command:last-of-type {
+		margin-bottom: 16px;
+	}
+
+	.install-command.recommended {
+		background: color-mix(in srgb, var(--accent) 5%, var(--bg-tertiary));
+		border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+	}
+
+	.command-label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.command-label svg {
+		color: var(--accent);
+	}
+
+	.command-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
 	}
 
 	.install-command code {
