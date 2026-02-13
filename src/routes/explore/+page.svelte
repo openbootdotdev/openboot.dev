@@ -197,6 +197,12 @@
 									class="avatar"
 								/>
 								<span class="username">@{config.username}</span>
+								{#if config.username === 'openboot'}
+									<span class="official-badge">
+										<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+										Official
+									</span>
+								{/if}
 							</div>
 							{#if config.featured === 1}
 								<span class="featured-badge">
@@ -610,6 +616,21 @@
 		font-size: 0.85rem;
 		color: var(--text-muted);
 		font-weight: 500;
+	}
+
+	.official-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 6px;
+		background: color-mix(in srgb, #3b82f6 15%, transparent);
+		color: #3b82f6;
+		border-radius: 4px;
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		margin-left: 4px;
 	}
 
 	.featured-badge {

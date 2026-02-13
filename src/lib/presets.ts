@@ -1,3 +1,11 @@
+import { getPackageDescription } from './package-metadata';
+
+export interface PresetPackage {
+	name: string;
+	type: 'formula' | 'cask' | 'npm';
+	desc: string;
+}
+
 export interface PresetPackages {
 	cli: string[];
 	cask: string[];
@@ -164,6 +172,41 @@ export const PRESET_PACKAGES: Record<string, PresetPackages> = {
 export function getPresetPackages(preset: string): string[] {
 	const p = PRESET_PACKAGES[preset];
 	return p ? [...p.cli, ...p.cask, ...(p.npm || [])] : [];
+}
+
+export function getPresetPackagesWithMetadata(preset: string): PresetPackage[] {
+	const p = PRESET_PACKAGES[preset];
+	if (!p) return [];
+
+	const packages: PresetPackage[] = [];
+
+	for (const pkg of p.cli) {
+		packages.push({
+			name: pkg,
+			type: 'formula',
+			desc: getPackageDescription(pkg)
+		});
+	}
+
+	for (const pkg of p.cask) {
+		packages.push({
+			name: pkg,
+			type: 'cask',
+			desc: getPackageDescription(pkg)
+		});
+	}
+
+	if (p.npm) {
+		for (const pkg of p.npm) {
+			packages.push({
+				name: pkg,
+				type: 'npm',
+				desc: getPackageDescription(pkg)
+			});
+		}
+	}
+
+	return packages;
 }
 
 export const PRESET_NAMES = ['minimal', 'developer', 'full'] as const;
