@@ -12,23 +12,27 @@
 
 <header class="site-header">
 	<div class="header-container">
-		<a href="/" class="header-logo">OpenBoot</a>
-		<nav class="header-nav">
-			<a href="/explore" class:active={currentPath === '/explore' || currentPath.startsWith('/explore')}>Explore</a>
-			<a href="/docs" class:active={currentPath === '/docs' || currentPath.startsWith('/docs')}>Docs</a>
-		</nav>
+		<div class="header-left">
+			<a href="/" class="header-logo">OpenBoot</a>
+			<nav class="header-nav">
+				<a href="/explore" class:active={currentPath === '/explore' || currentPath.startsWith('/explore')}>Explore</a>
+				<a href="/docs" class:active={currentPath === '/docs' || currentPath.startsWith('/docs')}>Docs</a>
+			</nav>
+			<div class="header-actions">
+				{#if children}{@render children()}{/if}
+				<GitHubStarBadge />
+				{#if $auth.loading}
+					
+				{:else if $auth.user}
+					<a href="/dashboard" class="header-dashboard-link">Dashboard</a>
+					<span class="header-separator">/</span>
+					<a href="/api/auth/logout" class="header-logout-link">Logout</a>
+				{:else}
+					<a href="/login" class="header-login-link">Sign in</a>
+				{/if}
+			</div>
+		</div>
 		<div class="header-right">
-			{#if children}{@render children()}{/if}
-			<GitHubStarBadge />
-			{#if $auth.loading}
-				
-			{:else if $auth.user}
-				<a href="/dashboard" class="header-dashboard-link">Dashboard</a>
-				<span class="header-separator">/</span>
-				<a href="/api/auth/logout" class="header-logout-link">Logout</a>
-			{:else}
-				<a href="/login" class="header-login-link">Sign in</a>
-			{/if}
 			<ThemeToggle />
 		</div>
 	</div>
@@ -52,7 +56,12 @@
 		margin: 0 auto;
 		padding: 14px 24px;
 		display: flex;
-		justify-content: flex-start;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.header-left {
+		display: flex;
 		align-items: center;
 		gap: 20px;
 	}
@@ -108,10 +117,15 @@
 		transform: scaleX(1);
 	}
 
-	.header-right {
+	.header-actions {
 		display: flex;
 		align-items: center;
 		gap: 16px;
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
 	}
 
 	.header-dashboard-link,
