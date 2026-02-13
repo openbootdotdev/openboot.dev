@@ -355,7 +355,7 @@ Configs have three visibility levels that control access:
 | **unlisted** | Anyone with link can view | Anyone can install | Anyone can read |
 | **private** | Owner only | Requires auth | Owner only |
 
-For private configs via `curl | bash`, the install script automatically opens the browser for authentication.
+For private configs, run `openboot login` first to authenticate before installing.
 
 ---
 

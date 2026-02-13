@@ -103,7 +103,7 @@ Snapshot data attached to this config (auto-populated when creating from `openbo
 
 ### `alias`
 
-Short URL alias for easy sharing. If set, the config is accessible at `openboot.dev/<alias>` — for example, `curl -fsSL https://openboot.dev/my-setup | bash`.
+Short URL alias for easy sharing. If set, the config is accessible with a shorter command — for example, `openboot install my-setup` instead of `openboot install username/slug`.
 
 - **Type:** string
 - **Required:** no
@@ -118,7 +118,7 @@ Controls who can see and install this config.
 - **Options:**
   - `"public"` — listed on your profile, install URL works for everyone
   - `"unlisted"` — not listed on your profile, but install URL still works if shared
-  - `"private"` — only you can access. Via `curl | bash`, the script opens a browser for authorization. Via the CLI, run `openboot login` first, then `openboot --user yourname/slug`
+  - `"private"` — only you can access. Run `openboot login` first, then `openboot install yourname/slug`
 
 ## Export
 

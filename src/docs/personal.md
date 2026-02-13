@@ -84,7 +84,7 @@ Everything that isn't a package — directory structure, SSH keys, repo cloning 
 When the new machine arrives, or when IT finally sends that hardware refresh email:
 
 ```bash
-curl -fsSL https://openboot.dev/alex/my-setup/install.sh | bash
+openboot install alex/my-setup
 ```
 
 Everything restored. Twenty minutes, done.

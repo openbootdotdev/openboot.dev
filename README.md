@@ -10,7 +10,7 @@
 
 - **Landing page** — product overview, presets, install commands
 - **Dashboard** — create, edit, duplicate, and share custom configs
-- **Install script API** — generates per-config install scripts for `curl | bash`
+- **Install API** — serves configs for the OpenBoot CLI
 - **Brewfile import** — parse and convert Brewfiles into OpenBoot configs
 - **Homebrew search** — live package search from the dashboard
 - **CLI auth** — device flow for authenticating the CLI via browser
