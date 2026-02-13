@@ -47,6 +47,19 @@ curl -fsSL https://openboot.dev/install.sh > install.sh && cat install.sh
 
 If you prefer, install via Homebrew instead (see above).
 
+## What about install counts on shared configs?
+
+If you share a config publicly on the Explore page, we display an install count. This is **not telemetry** in the traditional sense:
+
+- **Anonymous** — we don't track who installed it, only that someone did
+- **Opt-in** — only happens when you actively set visibility to "Public"
+- **No personal data** — no IP addresses, no user agents, no system info collected
+- **Zero tracking** — we don't follow your behavior, clicks, or usage patterns
+
+"Zero telemetry" means the OpenBoot CLI never reports back to us. It doesn't track what you install, what commands you run, or any system information. Install counts are simply a counter for configs you chose to share publicly with the community.
+
+Think of it like GitHub's star count — it shows popularity, but doesn't track individual users.
+
 ## What if I already have Homebrew?
 
 OpenBoot detects existing Homebrew installs and skips the setup. It also skips already-installed packages — only new ones get installed. Re-running is fast and safe.

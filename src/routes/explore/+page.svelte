@@ -126,7 +126,7 @@
 				<h1 class="hero-title">Explore</h1>
 				<p class="hero-subtitle">Discover developer configurations shared by the community</p>
 				{#if total > 0}
-					<p class="hero-count">{total} public configurations</p>
+					<p class="hero-count">{total} public configurations shared by developers like you</p>
 				{/if}
 			</div>
 			<div class="sort-controls">
