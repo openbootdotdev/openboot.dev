@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-02-12
-**Commit:** e66675e
+**Generated:** 2026-02-14
+**Last Updated:** Migration 0013 (config package enrichment)
 **Branch:** main
 
 ## OVERVIEW
@@ -89,6 +89,53 @@ Visibility rules:
 - **unlisted**: NOT listed, install URL works, config page viewable
 - **private**: owner-only, install URL returns 403
 
+## OFFICIAL SEED CONFIGS
+
+20 curated starter configs under `@openboot` user (migrations 0009, 0012, 0013):
+
+| Config | Slug | Packages | Focus |
+|--------|------|----------|-------|
+| Frontend — React | `react-frontend` | 42 | Next.js, pnpm, TypeScript, design tools |
+| Frontend — Vue | `vue-frontend` | 38 | Vue 3, Nuxt, Deno, modern CLI |
+| Backend — Go | `go-backend` | 45 | gRPC, protobuf, live reload, linting |
+| Backend — Python | `python-backend` | 48 | FastAPI, uv, ruff, PostgreSQL, Redis |
+| Backend — Node.js | `nodejs-backend` | 46 | Express, PostgreSQL, Redis, API stack |
+| Backend — Java/Spring | `java-spring` | 41 | Maven, Gradle, JetBrains tooling |
+| Backend — Rust | `rust-backend` | 43 | rustup, cargo, protobuf, systems tools |
+| Backend — Ruby on Rails | `rails-backend` | 40 | rbenv, PostgreSQL, Redis, Overmind |
+| Full-Stack — T3 | `t3-fullstack` | 52 | Next.js, Prisma, tRPC, PostgreSQL |
+| iOS/macOS Developer | `ios-developer` | 38 | SwiftLint, Fastlane, SF Symbols |
+| Android Developer | `android-dev` | 37 | Android Studio, Gradle, scrcpy |
+| DevOps / SRE | `devops-sre` | 55 | Terraform, kubectl, Helm, AWS CLI |
+| Platform Engineer | `platform-eng` | 58 | IaC, Ansible, SOPS, K8s, supply chain |
+| Data Science / ML | `data-science` | 46 | Jupyter, conda, Python, graphviz |
+| Security Engineer | `security-eng` | 52 | nmap, Burp Suite, Wireshark, pentesting |
+| Game Dev — Unity | `unity-gamedev` | 35 | Unity Hub, Blender, ffmpeg, media tools |
+| Blockchain / Web3 | `web3-dev` | 44 | Hardhat, Foundry, Rust, MetaMask |
+| Designer who Codes | `design-dev` | 44 | Figma, Sketch, imagemagick, frontend |
+| Student / Beginner | `starter-kit` | 30 | Git, Node, Python, essential CLI tools |
+| Content Creator / Tech Writer | `tech-writer` | 42 | Hugo, Pandoc, OBS, asciinema, media |
+
+**Package enrichment (migration 0013):**
+- Previous: 12-17 packages per config (too sparse, unrealistic)
+- Current: 30-58 packages per config (realistic developer setups)
+- All configs now include: modern CLI tools (ripgrep, fd, bat, eza, delta), collaboration tools (Slack, Discord, Notion), productivity apps (Rectangle, Raycast), security (1Password)
+
+**Tool categories in each config:**
+1. **Core dev tools**: language runtimes, package managers, build tools
+2. **Version control**: git, gh, lazygit, delta
+3. **Search & navigation**: ripgrep, fd, fzf, tree
+4. **File utilities**: bat, eza, ncdu
+5. **Terminal**: tmux, tldr, glow, htop/btop
+6. **Network**: curl, wget, httpie
+7. **IDEs/Editors**: VS Code, Cursor, JetBrains suite
+8. **Browsers**: Chrome, Firefox, Arc
+9. **Terminals**: iTerm2, Warp
+10. **Productivity**: Rectangle, Raycast, CleanShot
+11. **Collaboration**: Slack, Discord, Zoom, Notion
+12. **Security**: 1Password
+13. **Domain-specific**: databases, containers, design tools, etc.
+
 ## REQUEST FLOW
 
 ```
@@ -100,6 +147,7 @@ browser openboot.dev/user/slug → [username]/[slug]/+page.server.ts → config 
 
 ## CONVENTIONS
 
+- **Language**: All code, comments, documentation, commit messages, and AGENTS.md content MUST be written in English. No exceptions.
 - **Auth**: JWT in httpOnly cookie (`openboot_token`). `getCurrentUser()` from `$lib/server/auth`
 - **API responses**: Always `json({...})` with appropriate status codes
 - **Rate limiting**: In-memory, per user ID. CONFIG_READ and CONFIG_WRITE limits
