@@ -32,10 +32,12 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 
 	// Parse JSON fields
 	try {
-		config.snapshot = JSON.parse(config.snapshot);
-		config.packages = JSON.parse(config.packages);
+		config.snapshot = config.snapshot ? JSON.parse(config.snapshot) : null;
+		config.packages = config.packages ? JSON.parse(config.packages) : [];
 	} catch (e) {
 		console.error('Failed to parse config JSON', e);
+		config.snapshot = null;
+		config.packages = [];
 	}
 
 	const pkgs: {name: string; type: string; desc?: string}[] = Array.isArray(config.packages)
