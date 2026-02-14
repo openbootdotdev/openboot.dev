@@ -123,7 +123,8 @@
 	const macosPrefs = $derived(snapshot.macos_prefs || []);
 	const shell = $derived(snapshot.shell || {});
 	const git = $derived(snapshot.git || {});
-	const devTools = $derived(snapshot.dev_tools || []);
+	const devToolsRaw = $derived(snapshot.dev_tools || []);
+	const devTools = $derived(devToolsRaw.map((t: any) => typeof t === 'string' ? t : (t?.name || String(t))));
 
 	const configPkgs: { name: string; type: string }[] = $derived(Array.isArray(data.config.packages)
 		? data.config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
@@ -133,8 +134,11 @@
 	const configApps = $derived(configPkgs.filter((p: any) => p.type === 'cask'));
 	const configNpm = $derived(configPkgs.filter((p: any) => p.type === 'npm'));
 
-	const formulae = $derived(snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name));
-	const casks = $derived(snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name));
+	const formulaeRaw = $derived(snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name));
+	const casksRaw = $derived(snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name));
+	
+	const formulae = $derived(formulaeRaw.map((f: any) => typeof f === 'string' ? f : (f?.name || String(f))));
+	const casks = $derived(casksRaw.map((c: any) => typeof c === 'string' ? c : (c?.name || String(c))));
 	const taps = $derived(snapshotPkgs.taps || []);
 
 	const displayedApps = $derived(showAllApps ? casks : casks.slice(0, 12));
