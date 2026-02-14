@@ -13,6 +13,10 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	let orderClause: string;
 	let whereClause = `c.visibility = 'public'`;
 
+	if (!username) {
+		whereClause += ` AND NOT (u.username = 'openboot' AND c.slug = 'default')`;
+	}
+
 	if (sort === 'featured') {
 		orderClause = 'c.featured DESC, c.install_count DESC, c.updated_at DESC';
 	} else if (sort === 'installs') {

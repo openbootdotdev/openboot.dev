@@ -521,6 +521,31 @@
 		return packageCount >= 5 && hasValidName && hasValidDescription;
 	}
 
+	function getPushToCommunityTooltip(config: Config): string {
+		const packages = Array.isArray(config.packages) ? config.packages : [];
+		const packageCount = packages.length;
+		const hasValidName = config.name !== 'Default';
+		const hasValidDescription = !!config.description && config.description !== '' && config.description !== 'My default configuration';
+		
+		const missing: string[] = [];
+		
+		if (packageCount < 5) {
+			missing.push(`At least 5 packages required (current: ${packageCount})`);
+		}
+		if (!hasValidName) {
+			missing.push('Custom name required (cannot be "Default")');
+		}
+		if (!hasValidDescription) {
+			missing.push('Description required');
+		}
+		
+		if (missing.length === 0) {
+			return 'Push to Community';
+		}
+		
+		return 'Cannot push to community:\n' + missing.map(m => '• ' + m).join('\n');
+	}
+
 	async function pushToCommunity(config: Config) {
 		if (!canPushToCommunity(config)) {
 			alert('Your configuration needs at least 5 packages, a custom name, and a description to be shared with the community.');
@@ -623,12 +648,13 @@
 								{:else}
 									<button 
 										class="push-to-community-disabled" 
-										title="Add at least 5 packages, a custom name, and a description to share with the community"
 										disabled
 									>
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-											<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-										</svg>
+										<span class="icon-wrapper" title={getPushToCommunityTooltip(config)}>
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+											</svg>
+										</span>
 										Push to Community
 									</button>
 								{/if}
@@ -1124,6 +1150,11 @@
 
 	.push-to-community-disabled svg {
 		flex-shrink: 0;
+	}
+
+	.push-to-community-disabled .icon-wrapper {
+		display: inline-flex;
+		cursor: help;
 	}
 
 	.modal-overlay {
