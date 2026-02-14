@@ -22,15 +22,15 @@
 </script>
 
 <svelte:head>
-	<title>OpenBoot - Set up your Mac or capture your setup in one command</title>
-	<meta name="description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
-	<meta property="og:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta property="og:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
+	<title>OpenBoot - Set up your Mac in one command</title>
+	<meta name="description" content="One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd spend hours installing manually. Snapshot your setup and share it with your team." />
+	<meta property="og:title" content="OpenBoot - Set up your Mac in one command" />
+	<meta property="og:description" content="One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd spend hours installing manually. Snapshot your setup and share it with your team." />
 	<meta property="og:image" content="https://openboot.dev/og-image.png" />
 	<meta property="og:url" content="https://openboot.dev" />
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="OpenBoot - Set up your Mac or capture your setup in one command" />
-	<meta name="twitter:description" content="Stop wasting your first day setting up a new Mac. One command installs Git, Node, Docker, VS Code, and 75+ other dev tools." />
+	<meta name="twitter:title" content="OpenBoot - Automate macOS dev environment setup" />
+	<meta name="twitter:description" content="CLI that installs Homebrew packages, apps, shell config, dotfiles, and macOS preferences in one run. Open source, zero telemetry." />
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
 </svelte:head>
 
@@ -46,10 +46,10 @@
 			<section class="hero">
 				<div class="hero-content">
 				<h1 class="hero-title">
-					Stop wasting your first day<br />setting up a new Mac
+					Fresh Mac? Don't spend<br />3 hours setting it up
 				</h1>
 				<p class="hero-subtitle">
-					One command installs Git, Node, Docker, VS Code, and 75+ other tools. Fresh Mac to fully productive in minutes. Then share your exact setup with your team so they can do the same.
+					One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd normally spend your first day installing. Then snapshot your setup and share it with your team so they get the same thing.
 				</p>
 
 				<div class="features-list">
@@ -57,19 +57,19 @@
 					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
 						<polyline points="20 6 9 17 4 12"/>
 					</svg>
-					<span>No more Googling "Mac setup for developers" — it's all here</span>
+					<span>Installs Homebrew packages, apps, configures shell + macOS preferences</span>
 				</div>
 				<div class="feature-item">
 					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
 						<polyline points="20 6 9 17 4 12"/>
 					</svg>
-					<span>Resume exactly where you left off after wiping your Mac</span>
+					<span>Snapshot your current Mac and recreate it on another machine</span>
 				</div>
 				<div class="feature-item">
 					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
 						<polyline points="20 6 9 17 4 12"/>
 					</svg>
-					<span>New teammate onboards in 10 minutes, not 2 days</span>
+					<span>Share your exact setup with teammates via a one-line install URL</span>
 				</div>
 				</div>
 
@@ -121,7 +121,7 @@
 			<section class="how-it-works">
 				<div class="section-header">
 					<h2 class="section-title">How It Works</h2>
-					<p class="section-subtitle">From zero to coding in 4 steps</p>
+					<p class="section-subtitle">Run one command. Pick what you need. Wait for Homebrew.</p>
 				</div>
 
 				<div class="steps-container">
@@ -131,29 +131,29 @@
 							<div class="step-number">
 								<span>1</span>
 							</div>
-							<h3>Run one command</h3>
-							<p>Paste the curl command in Terminal. OpenBoot downloads and launches automatically.</p>
+							<h3>Run the installer</h3>
+							<p>Paste the curl command or install via Homebrew. If Homebrew isn't on your system yet, the installer sets it up first.</p>
 						</div>
 						<div class="step step-2">
 							<div class="step-number">
 								<span>2</span>
 							</div>
-							<h3>Pick your tools</h3>
-							<p>Use the interactive TUI to pick a preset or toggle exactly what you want.</p>
+							<h3>Pick your packages</h3>
+							<p>Interactive TUI opens. Start from a preset or toggle individual packages. Arrow keys to navigate, Space to select, Enter to confirm.</p>
 						</div>
 						<div class="step step-3">
 							<div class="step-number">
 								<span>3</span>
 							</div>
-							<h3>Grab a coffee</h3>
-							<p>OpenBoot installs Homebrew, CLI tools, apps, dotfiles, and configures macOS for you.</p>
+							<h3>Wait for it to finish</h3>
+							<p>Homebrew installs everything you picked. Shell gets configured, dotfiles get linked, macOS preferences get applied. Takes 10-30 minutes depending on your selections.</p>
 						</div>
 						<div class="step step-4">
 							<div class="step-number">
 								<span>4</span>
 							</div>
-							<h3>Start building</h3>
-							<p>Your dev environment is ready. Share your config with teammates so they can do the same.</p>
+							<h3>Done. Restart terminal</h3>
+							<p>Shell config loads. Run <code>openboot snapshot</code> to capture this setup if you want to share it or recreate it later.</p>
 						</div>
 					</div>
 				</div>
@@ -205,7 +205,7 @@
 						Issues
 					</a>
 				</div>
-				<p class="footer-tagline">Open source, zero telemetry. Set up your Mac the way it should be.</p>
+				<p class="footer-tagline">Open source, zero telemetry. Automate what you'd otherwise do manually.</p>
 				<p class="footer-text">MIT License</p>
 			</div>
 		</div>

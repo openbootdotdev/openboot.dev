@@ -7,79 +7,66 @@ order: 2
 
 # Quick Start
 
-Pick the path that fits your situation.
-
 ## Installation
 
 ### Homebrew (Recommended)
 
-If you already have Homebrew installed:
+If you have Homebrew:
 
 ```bash
 brew tap openbootdotdev/tap
 brew install openboot
+openboot
 ```
 
-Then run `openboot` to start the interactive setup.
+That's it. The interactive TUI opens and you pick what to install.
 
 ### One-Line Installer
 
-If you don't have Homebrew yet, or prefer the all-in-one installer:
+Don't have Homebrew yet? Use this:
 
 ```bash
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-This installer will:
-- Install Xcode Command Line Tools (if needed)
-- Install Homebrew (if needed)
-- Download and run OpenBoot
+It installs Xcode Command Line Tools and Homebrew if you don't have them, downloads OpenBoot, and launches the TUI. Everything in one go.
 
-## New Mac? Bootstrap It
+## First Run
 
-After installing OpenBoot using either method above, run:
+After installing, just run:
 
 ```bash
 openboot
 ```
 
-What happens next:
+The TUI opens with the `developer` preset selected. **Arrow keys** navigate, **Space** toggles packages, **Enter** confirms your selection. 
 
-```
-🚀 Launching interactive installer...
-```
-
-The TUI opens with the `developer` preset pre-selected. Use **arrow keys** to navigate, **Space** to toggle packages, **Enter** to confirm. After installation, restart your terminal or run `source ~/.zshrc`.
-
-Want a different starting point? Use `--preset`:
+Homebrew starts installing everything. This takes 10-30 minutes depending on what you picked. After it finishes, restart your terminal or run:
 
 ```bash
-openboot --preset minimal
-openboot --preset full
+source ~/.zshrc
 ```
 
-See [Presets](/docs/presets) for what's included in each.
+Want a different preset? Pass it with `--preset`:
 
-## Already Set Up? Snapshot It
+```bash
+openboot --preset minimal  # Bare essentials
+openboot --preset full     # Everything
+```
 
-Capture your current Mac's dev environment and save it:
+See [Presets](/docs/presets) for what's in each one.
+
+## Snapshot Your Current Setup
+
+Already have a Mac configured the way you like? Capture it:
 
 ```bash
 openboot snapshot
 ```
 
-(Or if you haven't installed OpenBoot yet, use the one-line installer: `curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot`)
+(Don't have OpenBoot installed yet? Run: `curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot`)
 
-Snapshot scans your Homebrew packages, macOS preferences, shell config, and git settings. You'll review everything in a TUI editor before uploading or saving locally.
-
-```
-✓ Homebrew Formulae    28 found
-✓ Homebrew Casks       12 found
-✓ macOS Preferences     9 found
-✓ Shell Environment     scanned
-✓ Git Config            scanned
-🎯 Launching editor...
-```
+This scans your Homebrew packages, macOS preferences, shell config, and git settings. A TUI editor opens showing everything it found. Review it, remove anything you don't want to share, then upload or save locally.
 
 After uploading, you get a shareable install command:
 
@@ -87,26 +74,26 @@ After uploading, you get a shareable install command:
 openboot install yourname/my-setup
 ```
 
-See [Snapshot](/docs/snapshot) for the full walkthrough.
+Anyone can run that and get your exact setup. See [Snapshot](/docs/snapshot) for details.
 
-## Team Setup? Share a Config
+## Share a Config with Your Team
 
-If you're setting up a team's standard environment:
+Setting up a standard environment for your team:
 
-1. **Create a config** on the [dashboard](/dashboard) — pick a base preset, add/remove packages, set up custom scripts
-2. **Share installation instructions** in your README or onboarding docs:
+1. Create a config on the [dashboard](/dashboard) — pick a preset, add/remove packages, add custom scripts if needed
+2. Share the install command in your onboarding docs:
 
 ```bash
 brew tap openbootdotdev/tap && brew install openboot
 openboot install yourteam/frontend
 ```
 
-3. **New team members** run the command and get your exact setup
+3. New hires run that and get your exact setup
 
-See [For Teams](/docs/teams) for the complete workflow.
+See [For Teams](/docs/teams) for more.
 
-## What's Next
+## Next Steps
 
-- [Presets](/docs/presets) — See what's in `minimal`, `developer`, and `full`
-- [Custom Configs](/docs/custom-configs) — Build and share your own setup
-- [CLI Commands](/docs/cli-reference) — Full command reference
+- [Presets](/docs/presets) — What's in `minimal`, `developer`, and `full`
+- [Custom Configs](/docs/custom-configs) — Build and share your own
+- [CLI Reference](/docs/cli-reference) — Full command list

@@ -7,21 +7,25 @@ order: 1
 
 # What is OpenBoot
 
-One command. Your Mac is ready to code.
+Fresh Mac? Run one command and get everything installed—Git, Node, Docker, your shell config, dotfiles, macOS preferences. Then snapshot that setup and share it with your team.
 
-OpenBoot is an open-source CLI that sets up your entire macOS development environment — Homebrew packages, GUI apps, shell config, dotfiles, and macOS preferences — in minutes instead of hours.
+OpenBoot is an open-source CLI that automates the boring part of setting up a new Mac. It installs Homebrew packages, GUI apps, configures your shell, links dotfiles, and applies developer-friendly macOS settings. All in one run.
 
-## What You Get
+## What It Does
 
-- **Packages & Apps** — Install CLI tools (`node`, `go`, `docker`, `ripgrep`...) and GUI apps (`VS Code`, `Chrome`, `Warp`...) from Homebrew, all at once
-- **Shell Configuration** — Oh-My-Zsh with plugins, a clean theme, and useful aliases, configured automatically
-- **Dotfiles** — Clone and link your dotfiles repo so your personal config follows you to any machine
-- **macOS Preferences** — Developer-friendly system settings (fast key repeat, Finder path bar, Dock icon size...) applied in one pass
-- **Snapshot** — Capture your current Mac's setup and turn it into a shareable config URL
+**Packages & Apps** — Installs CLI tools (`node`, `go`, `docker`, `ripgrep`) and GUI apps (`VS Code`, `Chrome`, `Warp`) from Homebrew. Pick from presets or toggle individual packages in the TUI.
 
-## How It Works
+**Shell Configuration** — Sets up Oh-My-Zsh with plugins, a clean theme, and developer aliases. If you already have Oh-My-Zsh, it merges settings without overwriting your config.
 
-**Install via Homebrew (recommended):**
+**Dotfiles** — Clones your dotfiles repo and links it with GNU Stow. Your `.zshrc`, `.gitconfig`, and other configs follow you to any machine.
+
+**macOS Preferences** — Applies developer-friendly settings: fast key repeat, Finder path bar visible, Dock auto-hide, screenshots saved as PNG, etc.
+
+**Snapshot** — Run `openboot snapshot` to capture your current setup. Upload it to openboot.dev and share as a one-line install URL, or save locally as JSON.
+
+## Installation
+
+**Via Homebrew (recommended):**
 
 ```bash
 brew tap openbootdotdev/tap
@@ -29,28 +33,28 @@ brew install openboot
 openboot
 ```
 
-**Or use the one-line installer:**
+**Or use the one-liner:**
 
 ```bash
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-The installer:
+The one-liner installs Xcode Command Line Tools and Homebrew if you don't have them yet, downloads the `openboot` binary, and launches the TUI. From there:
 
-1. Installs Xcode Command Line Tools and Homebrew (if needed)
-2. Downloads the `openboot` binary
-3. Launches an interactive TUI where you pick your packages
-4. Installs everything, configures your shell, and applies macOS preferences
+1. Pick a preset (`minimal`, `developer`, `full`) or customize package by package
+2. Confirm and wait for Homebrew to install everything
+3. Shell gets configured, dotfiles get linked (if you provided a repo URL), macOS preferences get applied
+4. Restart your terminal and you're done
 
-Already have your Mac set up? Run `openboot snapshot` to capture what you have and share it.
+Already have a Mac set up the way you like? Run `openboot snapshot` to capture it and share the config.
 
 ## Three Ways to Use It
 
-**Start from a preset** — Choose `minimal`, `developer`, or `full`. Each is a curated package set you can customize in the TUI before installing. [Learn more](/docs/presets)
+**Start from a preset** — Pick `minimal`, `developer`, or `full` in the TUI. Each one's a curated package list you can tweak before installing. See [Presets](/docs/presets) for what's in each.
 
-**Create a custom config** — Build your own setup on the dashboard, then share it as a one-line install URL. Great for teams. [Learn more](/docs/custom-configs)
+**Create a custom config** — Build your own setup on the [dashboard](/dashboard). Share it as a one-line install URL with your team. See [Custom Configs](/docs/custom-configs).
 
-**Snapshot your existing Mac** — Scan your installed packages, shell config, and preferences. Upload to openboot.dev or save locally. [Learn more](/docs/snapshot)
+**Snapshot your current Mac** — Run `openboot snapshot` to scan what's installed. Upload to openboot.dev or save locally as JSON. See [Snapshot](/docs/snapshot) for details.
 
 ## System Requirements
 

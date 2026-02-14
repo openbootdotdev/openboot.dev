@@ -7,7 +7,7 @@ order: 3
 
 # Presets
 
-Three curated starting points. Pick one, then customize it in the TUI before installing — add what you want, remove what you don't.
+Three curated package sets. Pick one and customize it in the TUI before installing—add what you need, remove what you don't.
 
 ## At a Glance
 
@@ -41,7 +41,7 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
 
 ## developer
 
-The recommended starting point. Everything you need to start building, nothing you don't.
+Default preset. What most developers need without extra stuff you won't use.
 
 **Adds over minimal:**
 - **CLI:** node, go, pnpm, docker, docker-compose, lazydocker, tmux, neovim, httpie, pre-commit
@@ -81,16 +81,16 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
 ```
 </details>
 
-## Customizing During Install
+## Customizing Before Install
 
-Presets are just the starting selection. When the TUI launches:
+Presets are starting selections, not locked-in choices. When the TUI opens:
 
-1. The preset's packages come **pre-selected**
-2. Use **arrow keys** to navigate, **Tab** to switch between formulae and casks
-3. Press **Space** to toggle any package on or off
-4. Press **Enter** to confirm and install
+1. Preset packages are pre-selected
+2. **Arrow keys** to navigate, **Tab** to switch between formulae and casks
+3. **Space** to toggle any package on or off
+4. **Enter** to confirm and start installing
 
-Want `developer` but with `kubectl`? Select `developer`, then toggle `kubectl` on. Don't use Notion? Toggle it off. The preset is the starting point, not the final answer.
+Want `developer` with `kubectl` added? Pick `developer`, then toggle `kubectl` on. Don't use Notion? Toggle it off. Customize before you commit.
 
 ## Skipping the TUI
 

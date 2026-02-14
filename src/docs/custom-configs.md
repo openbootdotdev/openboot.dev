@@ -11,11 +11,11 @@ Build your own setup, save it on openboot.dev, and share it as a one-line instal
 
 ## Creating a Config
 
-1. **Sign in** with GitHub or Google — click **Login** in the header (no email/password needed)
-2. Go to your **[Dashboard](/dashboard)**
+1. Sign in with GitHub or Google—click **Login** in the header
+2. Go to your [Dashboard](/dashboard)
 3. Click **Create Config**
-4. Pick a **base preset** (`minimal`, `developer`, or `full`) as your starting point
-5. **Add or remove packages** using the search
+4. Pick a base preset (`minimal`, `developer`, or `full`) to start from
+5. Add or remove packages using search
 6. Save
 
 ## What a Config Can Include
@@ -36,13 +36,13 @@ Already have a Brewfile? Upload it in the dashboard. OpenBoot parses all `brew` 
 
 ## Sharing
 
-Every config gets a URL:
+Every config gets an install command:
 
 ```bash
 openboot install sarah/frontend-team
 ```
 
-Put it in your README, onboarding docs, or Slack. One command, same environment for everyone.
+Put it in your README, onboarding docs, or Slack. One command, everyone gets the same setup.
 
 ## Visibility
 

@@ -9,13 +9,13 @@ order: 12
 
 ## Is OpenBoot free?
 
-Yes — free and open source (MIT license). Create configs, use snapshot, share setups, all at no cost. Team management features (org accounts, access controls) are on the roadmap and may have paid tiers.
+Yes. Free and open source (MIT license). Create configs, snapshot your setup, share with your team—no cost. Team management features (org accounts, access controls) might have paid tiers later.
 
 ## Why not just use Homebrew directly?
 
-Homebrew installs packages. OpenBoot sets up your **entire** environment — packages, GUI apps, shell configuration, dotfiles, and macOS preferences — in one command. Think of it as Homebrew + shell setup + dotfiles + system preferences, orchestrated together with an interactive TUI for picking what you want.
+Homebrew installs packages. OpenBoot installs packages **and** configures your shell, links dotfiles, and applies macOS preferences. All in one run with a TUI to pick what you want.
 
-If you're happy managing each of those separately, you don't need OpenBoot. If you'd rather do it in 5 minutes instead of an hour, give it a try.
+If you're fine managing those separately, you don't need this. If you'd rather automate it, try OpenBoot.
 
 ## Should I use Homebrew or the one-line installer?
 
@@ -33,12 +33,12 @@ Both methods install the exact same binary.
 
 ## Is the one-line installer safe?
 
-Fair question. Here's how OpenBoot handles it:
+Fair question. Here's how it works:
 
-- The install script is **open source** — review it at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
+- Install script is open source—review it at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
 - Hosted on openboot.dev (Cloudflare Workers), served over HTTPS
-- **Zero telemetry** — no analytics, no tracking, no phoning home
-- The binary is downloaded from GitHub Releases with **SHA256 checksum verification**
+- Zero telemetry—no analytics, no tracking, nothing phones home
+- Binary downloaded from GitHub Releases with SHA256 checksum verification
 - You can inspect the script before running it:
 
 ```bash
