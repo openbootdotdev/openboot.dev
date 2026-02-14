@@ -181,13 +181,29 @@ npx wrangler dev                                      # Dev with D1 binding
 
 ## CI/CD
 
-Push-to-main auto-deploy via `.github/workflows/deploy.yml`:
+**Tag-based releases** — production deploys only when version tags are pushed.
 
-1. `npm install` → `npm run build`
+### CI Workflow (`.github/workflows/ci.yml`)
+Triggers on: push to `main`, pull requests
+
+1. `npm install` → `npm test:coverage` → `npm run build`
+2. Upload coverage to Codecov
+3. **No deployment**
+
+### Deploy Workflow (`.github/workflows/deploy.yml`)
+Triggers on: push tags matching `v*` (e.g., `v1.0.0`)
+
+1. `npm install` → `npm test:coverage` → `npm run build`
 2. `wrangler d1 migrations apply openboot --remote` (runs pending migrations)
 3. `wrangler deploy` (via cloudflare/wrangler-action)
 
-Migrations run **before** deploy — safe for schema changes that new code depends on.
+**Release process:**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+See `RELEASE.md` for full release workflow. Migrations run **before** deploy — safe for schema changes that new code depends on.
 
 ## NOTES
 

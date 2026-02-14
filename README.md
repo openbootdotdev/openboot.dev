@@ -41,7 +41,21 @@ GOOGLE_CLIENT_SECRET=...
 
 ## Deployment
 
-Push to `main` and GitHub Actions deploys to Cloudflare. Runs migrations before deploying code.
+**Tag-based releases** — production deploys only happen when you create a version tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers:
+1. Tests + build
+2. Database migrations
+3. Deployment to openboot.dev
+
+Push to `main` only runs CI (tests + build), no deployment.
+
+See [RELEASE.md](./RELEASE.md) for full release process.
 
 Secrets needed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
