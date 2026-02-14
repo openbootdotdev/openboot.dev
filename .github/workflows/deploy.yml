@@ -52,3 +52,24 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      
+      - name: Health Check
+        run: |
+          echo "Waiting 10 seconds for deployment to propagate..."
+          sleep 10
+          
+          echo "Running health check..."
+          HEALTH_RESPONSE=$(curl -s https://openboot.dev/api/health)
+          echo "Health check response: $HEALTH_RESPONSE"
+          
+          STATUS=$(echo $HEALTH_RESPONSE | jq -r '.status')
+          if [ "$STATUS" != "healthy" ]; then
+            echo "❌ Health check failed! Status: $STATUS"
+            echo "Full response: $HEALTH_RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ Health check passed!"
+          echo "API: $(echo $HEALTH_RESPONSE | jq -r '.checks.api')"
+          echo "Database: $(echo $HEALTH_RESPONSE | jq -r '.checks.database')"
+          echo "Version: $(echo $HEALTH_RESPONSE | jq -r '.version')"
