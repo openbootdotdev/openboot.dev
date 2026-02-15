@@ -83,6 +83,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		const countQuery = `
 			SELECT COUNT(*) as count 
 			FROM configs c 
+			JOIN users u ON c.user_id = u.id
 			WHERE ${whereClause}
 			  AND (
 			    c.install_count > 0
@@ -95,7 +96,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			    )
 			  )
 		`;
-		const countResult = await env.DB.prepare(countQuery).first<{ count: number }>();
+		const countResult = await env.DB.prepare(countQuery).first<{ count: number}>();
 		total = countResult?.count || 0;
 	}
 
