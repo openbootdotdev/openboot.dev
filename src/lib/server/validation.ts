@@ -88,3 +88,74 @@ export function validateReturnTo(path: string | null | undefined): boolean {
 	// Allow path + optional query string with safe characters
 	return /^\/[a-zA-Z0-9\-_/]*(\?[a-zA-Z0-9\-_=&%]*)?$/.test(path);
 }
+
+interface Package {
+	name: string;
+	type: string;
+	desc?: string;
+}
+
+/** Validates packages array: prevents shell injection in package names.
+ *  Package names must match standard package manager formats (alphanumeric, hyphens, underscores, dots, slashes for scoped packages).
+ *  Types must be: formula, cask, tap, mas, npm, pip, gem, cargo, go.
+ *  Maximum 500 packages per config. */
+export function validatePackages(packages: unknown): ValidationResult {
+	if (!packages) {
+		return { valid: true };
+	}
+
+	if (!Array.isArray(packages)) {
+		return { valid: false, error: 'Packages must be an array' };
+	}
+
+	if (packages.length > 500) {
+		return { valid: false, error: 'Maximum 500 packages allowed' };
+	}
+
+	const validTypes = ['formula', 'cask', 'tap', 'mas', 'npm', 'pip', 'gem', 'cargo', 'go'];
+
+	for (let i = 0; i < packages.length; i++) {
+		const pkg = packages[i];
+
+		if (typeof pkg !== 'object' || pkg === null) {
+			return { valid: false, error: `Package at index ${i} must be an object` };
+		}
+
+		const { name, type, desc } = pkg as Package;
+
+		if (!name || typeof name !== 'string') {
+			return { valid: false, error: `Package at index ${i} must have a string name` };
+		}
+
+		if (name.length > 200) {
+			return { valid: false, error: `Package name too long at index ${i}` };
+		}
+
+		if (!/^[@a-zA-Z0-9._\/-]+$/.test(name)) {
+			return {
+				valid: false,
+				error: `Invalid package name at index ${i}: "${name}". Only alphanumeric, hyphens, underscores, dots, @ and / allowed.`
+			};
+		}
+
+		if (!type || typeof type !== 'string') {
+			return { valid: false, error: `Package at index ${i} must have a string type` };
+		}
+
+		if (!validTypes.includes(type)) {
+			return {
+				valid: false,
+				error: `Invalid package type at index ${i}: "${type}". Must be one of: ${validTypes.join(', ')}`
+			};
+		}
+
+		if (desc !== undefined && (typeof desc !== 'string' || desc.length > 500)) {
+			return {
+				valid: false,
+				error: `Package description at index ${i} must be a string (max 500 chars)`
+			};
+		}
+	}
+
+	return { valid: true };
+}

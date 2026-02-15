@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
-import { validateCustomScript, validateDotfilesRepo } from '$lib/server/validation';
+import { validateCustomScript, validateDotfilesRepo, validatePackages } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
@@ -89,6 +89,11 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
 	if (!rlW.allowed) {
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } });
+	}
+
+	if (packages !== undefined) {
+		const pv = validatePackages(packages);
+		if (!pv.valid) return json({ error: pv.error }, { status: 400 });
 	}
 
 	if (custom_script !== undefined && custom_script !== null && custom_script !== '') {

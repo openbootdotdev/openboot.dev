@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
+import { validatePackages } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
@@ -34,6 +35,9 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const packages = snapshot.catalog_match?.matched || [];
 	const base_preset = snapshot.matched_preset || 'developer';
+
+	const pv = validatePackages(packages);
+	if (!pv.valid) return json({ error: pv.error }, { status: 400 });
 
 	if (config_slug) {
 		const existing = await env.DB.prepare(
