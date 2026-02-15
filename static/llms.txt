@@ -12,7 +12,7 @@ OpenBoot automates your entire Mac dev environment — Homebrew packages, GUI ap
 
 ## Blog
 
-- [Mac Setup Automation Guide 2026](/blog/mac-setup-automation-guide-2026): Every way to automate a new Mac dev environment — Brewfile, shell scripts, chezmoi, nix-darwin, and OpenBoot compared. Includes 2026 tool recommendations, team onboarding, and quick-start recipes.
+- [Mac Setup Automation Guide 2026](https://blog.fullstackjam.com/2026/mac-setup-automation-guide-2026/): Every way to automate a new Mac dev environment — Brewfile, shell scripts, chezmoi, nix-darwin, and OpenBoot compared. Includes 2026 tool recommendations, team onboarding, and quick-start recipes.
 
 ## Docs
 
