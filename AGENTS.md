@@ -203,6 +203,14 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+**When to create a release:**
+- Significant features (new API endpoints, major UI changes)
+- Bug fixes affecting users
+- Security updates
+- Database migrations
+- Breaking changes
+- **NOT** for minor UX improvements, copy changes, or internal refactoring
+
 See `RELEASE.md` for full release workflow. Migrations run **before** deploy — safe for schema changes that new code depends on.
 
 ## NOTES
