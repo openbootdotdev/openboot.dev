@@ -10,6 +10,10 @@ OpenBoot automates your entire Mac dev environment — Homebrew packages, GUI ap
 - Website: https://openboot.dev
 - GitHub: https://github.com/openbootdotdev
 
+## Blog
+
+- [Mac Setup Automation Guide 2026](/blog/mac-setup-automation-guide-2026): Every way to automate a new Mac dev environment — Brewfile, shell scripts, chezmoi, nix-darwin, and OpenBoot compared. Includes 2026 tool recommendations, team onboarding, and quick-start recipes.
+
 ## Docs
 
 - [What is OpenBoot](/docs/what-is-openboot): Open-source CLI that sets up your entire macOS dev environment — packages, apps, shell, dotfiles, and preferences — in one command.
