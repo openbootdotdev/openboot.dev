@@ -121,7 +121,7 @@
 			<section class="how-it-works">
 				<div class="section-header">
 					<h2 class="section-title">How It Works</h2>
-					<p class="section-subtitle">Run one command. Pick what you need. Wait for Homebrew.</p>
+					<p class="section-subtitle">One command, a few picks, done in under 30 minutes.</p>
 				</div>
 
 				<div class="steps-container">
@@ -131,29 +131,29 @@
 							<div class="step-number">
 								<span>1</span>
 							</div>
-							<h3>Run the installer</h3>
-							<p>Paste the curl command into your terminal. No Homebrew yet? It installs Xcode tools and Homebrew automatically before launching OpenBoot.</p>
+							<h3>Run one command</h3>
+							<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too — Xcode tools and all. Then the package picker opens.</p>
 						</div>
 						<div class="step step-2">
 							<div class="step-number">
 								<span>2</span>
 							</div>
-							<h3>Pick your packages</h3>
-							<p>Interactive TUI opens. Start from a preset or toggle individual packages. Arrow keys to navigate, Space to select, Enter to confirm.</p>
+							<h3>Pick your tools</h3>
+							<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want, confirm, and you're done choosing.</p>
 						</div>
 						<div class="step step-3">
 							<div class="step-number">
 								<span>3</span>
 							</div>
-							<h3>Wait for it to finish</h3>
-							<p>Homebrew installs everything you picked. Shell gets configured, dotfiles get linked, macOS preferences get applied. Takes 10-30 minutes depending on your selections.</p>
+							<h3>Everything installs itself</h3>
+							<p>Packages download, shell gets configured, dotfiles get linked, macOS preferences get applied. It runs unattended — no babysitting needed.</p>
 						</div>
 						<div class="step step-4">
 							<div class="step-number">
 								<span>4</span>
 							</div>
-							<h3>Done. Restart terminal</h3>
-							<p>Shell config loads, aliases activate. Your dev environment is ready to go.</p>
+							<h3>Open a new terminal</h3>
+							<p>Your tools are there, aliases work, shell config is live. Everything that used to take a full day is already done.</p>
 						</div>
 					</div>
 				</div>
