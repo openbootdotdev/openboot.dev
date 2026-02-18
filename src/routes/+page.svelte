@@ -132,7 +132,7 @@
 								<span>1</span>
 							</div>
 							<h3>Run the installer</h3>
-							<p>Paste the curl command or install via Homebrew. If Homebrew isn't on your system yet, the installer sets it up first.</p>
+							<p>Paste the curl command into your terminal. No Homebrew yet? It installs Xcode tools and Homebrew automatically before launching OpenBoot.</p>
 						</div>
 						<div class="step step-2">
 							<div class="step-number">
@@ -153,7 +153,7 @@
 								<span>4</span>
 							</div>
 							<h3>Done. Restart terminal</h3>
-							<p>Shell config loads. Run <code>openboot snapshot</code> to capture this setup if you want to share it or recreate it later.</p>
+							<p>Shell config loads, aliases activate. Your dev environment is ready to go.</p>
 						</div>
 					</div>
 				</div>
@@ -668,7 +668,7 @@
 
 	.steps-line {
 		position: absolute;
-		top: 40px;
+		top: 56px;
 		left: 12.5%;
 		right: 12.5%;
 		height: 2px;
