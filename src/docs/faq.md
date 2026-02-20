@@ -2,7 +2,7 @@
 title: FAQ
 description: Common questions about OpenBoot — pricing, safety, Homebrew vs installer, Linux support, uninstalling, and more.
 group: ''
-order: 12
+order: 13
 ---
 
 # FAQ
