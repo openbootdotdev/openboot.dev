@@ -38,7 +38,7 @@ Fair question. Here's how it works:
 - Install script is open source—review it at [github.com/openbootdotdev/openboot](https://github.com/openbootdotdev/openboot)
 - Hosted on openboot.dev (Cloudflare Workers), served over HTTPS
 - Zero telemetry—no analytics, no tracking, nothing phones home
-- Binary downloaded from GitHub Releases with SHA256 checksum verification
+- Installs OpenBoot via Homebrew (`brew install openbootdotdev/tap/openboot`), which handles integrity verification
 - You can inspect the script before running it:
 
 ```bash
@@ -81,19 +81,15 @@ An account (GitHub or Google OAuth) is needed to:
 
 ## How do I update OpenBoot?
 
-**If installed via Homebrew:**
-
 ```bash
 brew upgrade openboot
 ```
 
-**If installed via the one-line installer:**
+Or use the built-in self-update:
 
 ```bash
 openboot update --self
 ```
-
-Or re-run the install script — it downloads the latest binary and replaces the old one.
 
 Your configs, snapshots, and auth tokens are unaffected by updates.
 
@@ -101,17 +97,11 @@ Your configs, snapshots, and auth tokens are unaffected by updates.
 
 ### 1. Remove the binary
 
-**If installed via Homebrew:**
+Both installation methods use Homebrew, so the uninstall is the same:
 
 ```bash
 brew uninstall openboot
 brew untap openbootdotdev/tap
-```
-
-**If installed via the one-line installer:**
-
-```bash
-rm -f ~/.openboot/bin/openboot
 ```
 
 ### 2. Remove OpenBoot data
@@ -144,7 +134,7 @@ OpenBoot doesn't remove Homebrew packages or casks when you uninstall it — the
 | Configs & user data | Cloudflare D1 on openboot.dev |
 | Auth token | `~/.openboot/auth.json` (local) |
 | Local snapshots | `~/.openboot/snapshot.json` (local) |
-| OpenBoot binary | `~/.openboot/bin/openboot` (local) |
+| OpenBoot binary | Managed by Homebrew (run `which openboot` to find it) |
 
 Configs are **unlisted** by default — not listed on your profile, but the install URL works if shared. You can set them to **public** (listed on profile) or **private** (requires authentication to install). See [Custom Configs — Visibility](/docs/custom-configs#visibility) for details.
 

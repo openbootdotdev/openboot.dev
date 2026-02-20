@@ -49,13 +49,12 @@ For private configs, run `openboot login` first — the CLI sends your auth toke
 | `-u, --user <username/slug>` | Install from a config hosted on openboot.dev |
 | `-s, --silent` | Non-interactive mode — no TUI, no prompts |
 | `--dry-run` | Preview what would be installed without installing |
-| `--resume` | Resume an interrupted installation |
 | `--packages-only` | Install packages only, skip shell/macOS/dotfiles config |
 | `--shell <mode>` | `install` or `skip` |
 | `--macos <mode>` | `configure` or `skip` |
 | `--dotfiles <mode>` | `clone`, `link`, or `skip` |
+| `--post-install <mode>` | `skip` to skip post-install scripts |
 | `--update` | Update Homebrew before installing |
-| `--rollback` | Restore backed-up config files |
 
 ## Capture Your Environment
 

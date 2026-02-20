@@ -14,8 +14,7 @@ order: 2
 If you have Homebrew:
 
 ```bash
-brew tap openbootdotdev/tap
-brew install openboot
+brew install openbootdotdev/tap/openboot
 openboot
 ```
 

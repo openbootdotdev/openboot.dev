@@ -19,7 +19,7 @@ OpenBoot is an open-source CLI that automates the boring part of setting up a ne
 
 **Dotfiles** — Clones your dotfiles repo and links it with GNU Stow. Your `.zshrc`, `.gitconfig`, and other configs follow you to any machine.
 
-**macOS Preferences** — Applies developer-friendly settings: fast key repeat, Finder path bar visible, Dock auto-hide, screenshots saved as PNG, etc.
+**macOS Preferences** — Applies developer-friendly settings: fast key repeat, Finder path bar visible, Dock stays visible, screenshots saved as PNG, etc.
 
 **Snapshot** — Run `openboot snapshot` to capture your current setup. Upload it to openboot.dev and share as a one-line install URL, or save locally as JSON.
 

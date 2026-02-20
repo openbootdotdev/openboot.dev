@@ -11,28 +11,14 @@ All environment variables that control the install script and the `openboot` CLI
 
 ## Install Script Variables
 
-These are used when running the `curl | bash` install command.
+These are used when running the `curl | bash` install command. The install script installs OpenBoot via Homebrew (`brew install openbootdotdev/tap/openboot`).
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENBOOT_VERSION` | Install a specific version instead of latest | Latest release |
-| `OPENBOOT_INSTALL_DIR` | Where to put the binary | `~/.openboot/bin` |
 | `OPENBOOT_DRY_RUN` | Set to `true` to preview without changes | — |
-| `OPENBOOT_SKIP_CHECKSUM` | Set to `true` to skip SHA256 verification | — |
 
 ### Examples
-
-Install a specific version:
-
-```
-OPENBOOT_VERSION=0.3.1 curl -fsSL https://openboot.dev/install.sh | bash
-```
-
-Install to a custom directory:
-
-```
-OPENBOOT_INSTALL_DIR=~/.local/bin curl -fsSL https://openboot.dev/install.sh | bash
-```
 
 Preview the install script without making changes:
 
@@ -76,7 +62,6 @@ These aren't environment variables, but useful to know:
 
 | Path | What's There |
 |------|-------------|
-| `~/.openboot/bin/openboot` | The OpenBoot binary (one-line installer only) |
 | `~/.openboot/auth.json` | Auth token (after `openboot login` or snapshot upload) |
 | `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
 | `~/.openboot/config.json` | Auto-update settings |
