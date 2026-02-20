@@ -56,6 +56,36 @@ For private configs, run `openboot login` first — the CLI sends your auth toke
 | `--post-install <mode>` | `skip` to skip post-install scripts |
 | `--update` | Update Homebrew before installing |
 
+## Set Up a Project Environment
+
+### `openboot init`
+
+Read `.openboot.yml` from the current directory and install the declared dependencies, run initialization scripts, and verify the environment is ready.
+
+```
+openboot init
+```
+
+### `openboot init <directory>`
+
+Run init against a specific project directory instead of the current one.
+
+```
+openboot init /path/to/project
+```
+
+### Init Flags
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview what would be installed and run, without making any changes |
+| `-s, --silent` | Non-interactive mode — skip confirmation prompts (for CI/CD) |
+| `--update` | Update Homebrew before installing packages |
+
+See [`.openboot.yml` Reference](/docs/openboot-yml) for the full config schema.
+
+---
+
 ## Capture Your Environment
 
 ### `openboot snapshot`
