@@ -1,6 +1,6 @@
 ---
 title: Custom Configs
-description: Build your own setup on the dashboard with packages, scripts, and dotfiles, then share it as a one-line install command.
+description: Build your own setup on the dashboard, share it as a one-line install command, and explore what the public config page shows — packages, fork, share, and more.
 group: Features
 order: 5
 ---
@@ -43,6 +43,58 @@ openboot install sarah/frontend-team
 ```
 
 Put it in your README, onboarding docs, or Slack. One command, everyone gets the same setup.
+
+## The Config Page
+
+Every config has a public page at `openboot.dev/username/slug`. Here's what it shows and what visitors can do.
+
+### Stats
+
+At the top of the page, four numbers give a quick summary of what the config contains:
+
+| Stat | What it counts |
+|------|----------------|
+| **Apps** | Homebrew casks (GUI apps) |
+| **CLI** | Homebrew formulae (command-line tools) |
+| **Dev** | Dev tool versions captured by `openboot snapshot` |
+| **Installs** | Total times this config has been installed |
+
+### Package Sections
+
+Packages are displayed in four sections:
+
+- **Applications** — Casks shown as a grid of cards, each linking to its Homebrew page
+- **CLI Tools** — Formulae shown as clickable tags, each linking to its Homebrew page
+- **NPM Packages** — npm globals shown as clickable tags, each linking to npmjs.com
+- **Development Tools** — Tool versions captured by a snapshot (e.g. node 20.11, go 1.22)
+
+Long lists are collapsed by default — a "Show all N →" button expands them.
+
+### Configuration Details
+
+Collapsible cards below the packages show what else will be applied during install:
+
+| Card | Contents |
+|------|----------|
+| **Dotfiles Repository** | Git URL, linked to the repo. Deployed automatically via GNU Stow. |
+| **Shell Setup** | Default shell, Oh My Zsh status, theme, and plugin list |
+| **Git Configuration** | Name, email, and other settings from the captured snapshot |
+| **Custom Installation Script** | Shell commands with syntax highlighting and a copy button |
+| **Homebrew Taps** | Custom taps that will be added before packages install |
+| **macOS Preferences** | System settings that will be applied, with domain and value |
+
+Cards that don't apply to the config are hidden automatically.
+
+### Fork
+
+Click **Fork to Dashboard** to copy the config into your own account. The fork starts as unlisted and opens your dashboard so you can customize it. Requires a login — if you're not signed in, you'll be redirected to the login page first.
+
+### Share
+
+Click **Share** to open the share modal:
+
+- **Copy Link** — copies `https://openboot.dev/username/slug` to the clipboard
+- **Share on X** — opens a pre-filled tweet with the config name and URL
 
 ## Visibility
 
