@@ -85,12 +85,15 @@ openboot snapshot --json | jq '.packages.formulae'
 
 ### `openboot snapshot --import <path>`
 
-Restore an environment from a snapshot file or URL.
+Restore a full environment from a snapshot file or URL. Installs packages, applies git identity, shell config (Oh-My-Zsh theme and plugins), and macOS preferences.
 
 ```
 openboot snapshot --import my-setup.json
 openboot snapshot --import https://example.com/snapshot.json
+openboot snapshot --import my-setup.json --dry-run
 ```
+
+A review editor appears before any changes are made, letting you deselect items you don't want.
 
 ### Snapshot Flags
 
@@ -98,7 +101,7 @@ openboot snapshot --import https://example.com/snapshot.json
 |------|-------------|
 | `--local` | Save to `~/.openboot/snapshot.json` |
 | `--json` | Output as JSON to stdout |
-| `--dry-run` | Preview without saving or uploading |
+| `--dry-run` | Preview without saving, uploading, or installing |
 | `--import <path>` | Restore from a local file or URL |
 
 ## Authentication
@@ -120,6 +123,38 @@ Remove the stored authentication token from this machine.
 ```
 openboot logout
 ```
+
+## Clean Your Environment
+
+### `openboot clean`
+
+Compare your current system against a config or snapshot and remove packages not in it.
+
+```
+openboot clean
+```
+
+By default, compares against `~/.openboot/snapshot.json`. Use `--from` or `--user` to compare against a different source.
+
+```
+openboot clean --dry-run
+openboot clean --user sarah/frontend-team
+openboot clean --from my-setup.json
+```
+
+**What it removes**: Homebrew formulae, casks, and npm global packages that aren't in your target config or snapshot. Taps are only diffed when the target includes at least one tap; npm is only checked if npm is available on the system.
+
+### Clean Flags
+
+| Flag | Description |
+|------|-------------|
+| `--from <file>` | Compare against a local snapshot file |
+| `--user <username/slug>` | Compare against a config hosted on openboot.dev |
+| `--dry-run` | Preview what would be removed without removing anything |
+
+**Sources checked in order**: `--from` → `--user` → local snapshot (`~/.openboot/snapshot.json`).
+
+---
 
 ## Maintain Your Environment
 
