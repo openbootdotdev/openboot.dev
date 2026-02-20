@@ -64,11 +64,40 @@ If you upload, you'll authenticate via browser (like `gh auth login`), name your
 openboot install yourname/my-setup
 ```
 
+## Restoring from a Snapshot
+
+Use `--import` to restore your environment from a previously captured snapshot:
+
+```bash
+openboot snapshot --import ~/.openboot/snapshot.json
+openboot snapshot --import https://example.com/snapshot.json
+```
+
+**What gets restored:**
+
+| Category | What's Applied |
+|----------|---------------|
+| **Homebrew Formulae** | Installed via `brew install` |
+| **Homebrew Casks** | Installed via `brew install --cask` |
+| **Homebrew Taps** | Added via `brew tap` |
+| **NPM Global Packages** | Installed via `npm install -g` |
+| **Git Config** | `user.name` and `user.email` set via `git config --global` — skipped if both are already configured |
+| **Shell Config** | Oh-My-Zsh theme and plugins written to `.zshrc` — only applied if Oh-My-Zsh was captured in the snapshot |
+| **macOS Preferences** | Applied via `defaults write` for each captured preference |
+
+Before installing, a full-screen editor lets you review and deselect anything you don't want. If the snapshot is partial (some steps failed during capture), you'll be warned and asked whether to proceed.
+
+Run `--dry-run` to preview the installation without making any changes:
+
+```bash
+openboot snapshot --import my-setup.json --dry-run
+```
+
 ## Flags
 
 | Flag | What it does |
 |------|-------------|
-| `--dry-run` | Preview what would be captured, without saving or uploading |
+| `--dry-run` | Preview what would be captured or restored, without making changes |
 | `--json` | Output snapshot as JSON to stdout — great for piping to `jq` |
 | `--local` | Save to `~/.openboot/snapshot.json` instead of uploading |
 | `--import <path>` | Restore from a local file or URL |
