@@ -16,10 +16,10 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 	}
 
 	const config = await env.DB.prepare(
-		'SELECT slug, name, base_preset, packages, snapshot, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?'
+		'SELECT slug, name, base_preset, packages, snapshot, visibility, dotfiles_repo, custom_script FROM configs WHERE user_id = ? AND slug = ?'
 	)
 		.bind(user.id, params.slug)
-		.first<{ slug: string; name: string; base_preset: string; packages: string; snapshot: string; visibility: string; dotfiles_repo: string }>();
+		.first<{ slug: string; name: string; base_preset: string; packages: string; snapshot: string; visibility: string; dotfiles_repo: string; custom_script: string }>();
 
 	if (!config) {
 		return json({ error: 'Config not found' }, { status: 404 });
@@ -96,6 +96,9 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		casks: caskNames,
 		taps: taps,
 		npm: npmNames,
-		dotfiles_repo: config.dotfiles_repo || ''
+		dotfiles_repo: config.dotfiles_repo || '',
+		post_install: config.custom_script
+			? config.custom_script.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+			: []
 	});
 };
