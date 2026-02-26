@@ -103,7 +103,9 @@ Snapshot data attached to this config (auto-populated when creating from `openbo
 
 ### `alias`
 
-Short URL alias for easy sharing. If set, the config is accessible with a shorter command — for example, `openboot install my-setup` instead of `openboot install username/slug`.
+Short URL alias for easy sharing. If set, this alias becomes the primary way to install the config — for example, `openboot install my-setup` instead of `openboot install username/slug`. The alias also works as a short URL: `openboot.dev/my-setup`.
+
+When a user runs `openboot install <word>`, the CLI checks aliases first before falling back to `username/default`.
 
 - **Type:** string
 - **Required:** no

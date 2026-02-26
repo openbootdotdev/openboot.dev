@@ -115,12 +115,18 @@ openboot login
 openboot install yourname/my-setup
 ```
 
-## Short URLs
+## Aliases & Short URLs
 
-Config slugs are auto-generated, but you can edit them in the dashboard. Keep them short:
+Set an alias in the dashboard to get a short install command and URL:
+
+- `openboot install myalias` instead of `openboot install yourname/my-long-slug`
+- `openboot.dev/myalias` instead of `openboot.dev/yourname/my-long-slug`
+
+Aliases must be unique across all configs. When a user runs `openboot install <word>`, the CLI resolves aliases first.
+
+You can also shorten your config slugs in the dashboard:
 
 - `openboot.dev/yourname/ios` instead of `openboot.dev/yourname/ios-development-team-2024`
-- `openboot.dev/yourname/ml` instead of `openboot.dev/yourname/machine-learning-setup`
 
 ## Install Tracking
 

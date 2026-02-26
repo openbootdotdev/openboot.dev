@@ -29,15 +29,27 @@ openboot --preset developer
 
 You can still customize in the TUI. To skip the TUI entirely, add `--silent`.
 
-### `openboot install <username>/<slug>`
+### `openboot install <alias>` or `openboot install <username>/<slug>`
 
-Install from a custom config hosted on openboot.dev.
+Install from a config hosted on openboot.dev.
+
+If you set an alias for your config in the dashboard, use it directly:
+
+```
+openboot install myalias
+```
+
+Or use the full username/slug format:
 
 ```
 openboot install sarah/frontend-team
 ```
 
-Alternatively, use the `--user` flag: `openboot --user sarah/frontend-team` (same effect).
+**Resolution order** for a single word (no `/`):
+1. Try as a config alias (set in the dashboard)
+2. Fall back to `username/default` config
+
+Alternatively, use the `--user` flag: `openboot --user myalias` (same effect).
 
 For private configs, run `openboot login` first — the CLI sends your auth token automatically.
 
@@ -46,7 +58,7 @@ For private configs, run `openboot login` first — the CLI sends your auth toke
 | Flag | Description |
 |------|-------------|
 | `-p, --preset <name>` | Use a preset: `minimal`, `developer`, `full` |
-| `-u, --user <username/slug>` | Install from a config hosted on openboot.dev |
+| `-u, --user <alias or username/slug>` | Install from a config hosted on openboot.dev |
 | `-s, --silent` | Non-interactive mode — no TUI, no prompts |
 | `--dry-run` | Preview what would be installed without installing |
 | `--packages-only` | Install packages only, skip shell/macOS/dotfiles config |
