@@ -7,7 +7,6 @@ export const GET: RequestHandler = async ({ platform }) => {
 	const staticPages = [
 		{ path: '/', priority: '1.0', changefreq: 'weekly' },
 		{ path: '/explore', priority: '0.9', changefreq: 'daily' },
-		{ path: '/login', priority: '0.3', changefreq: 'monthly' },
 		{ path: '/docs/what-is-openboot', priority: '0.9', changefreq: 'weekly' }
 	];
 
@@ -23,10 +22,12 @@ export const GET: RequestHandler = async ({ platform }) => {
 
 	const env = platform?.env;
 	if (env) {
+		// Only include configs with meaningful slugs (exclude auto-generated 'default')
 		const { results: publicConfigs } = await env.DB.prepare(
-			`SELECT c.slug, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.visibility = 'public' ORDER BY c.install_count DESC LIMIT 500`
+			`SELECT c.slug, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.visibility = 'public' AND c.slug != 'default' ORDER BY c.install_count DESC LIMIT 500`
 		).all<{ slug: string; username: string }>();
 
+		// Only include user profile pages for users who have at least one non-default public config
 		const seenUsers = new Set<string>();
 		for (const config of publicConfigs) {
 			if (!seenUsers.has(config.username)) {
