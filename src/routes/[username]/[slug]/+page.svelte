@@ -13,6 +13,9 @@
 	let showAllCli = $state(false);
 
 	function getInstallCommand() {
+		if (data.config.alias) {
+			return `openboot install ${data.config.alias}`;
+		}
 		return `openboot install ${data.configUser.username}/${data.config.slug}`;
 	}
 
@@ -23,6 +26,9 @@
 	}
 
 	function getShareUrl() {
+		if (data.config.alias) {
+			return `https://openboot.dev/${data.config.alias}`;
+		}
 		return `https://openboot.dev/${data.configUser.username}/${data.config.slug}`;
 	}
 
