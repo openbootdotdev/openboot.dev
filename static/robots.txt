@@ -1,6 +1,11 @@
-# allow crawling everything by default
+# allow crawling important pages
 User-agent: *
-Disallow:
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /cli-auth/
+Disallow: */install$
+Disallow: */config$
+Disallow: */og$
 
 # explicitly allow AI search crawlers
 User-agent: GPTBot

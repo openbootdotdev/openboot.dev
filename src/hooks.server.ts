@@ -160,5 +160,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
-	return withSecurityHeaders(response);
+	const securedResponse = withSecurityHeaders(response);
+
+	// Prevent indexing of non-content routes
+	const noindexPrefixes = ['/api/', '/dashboard/', '/cli-auth/', '/install'];
+	const noindexSuffixes = ['/install', '/config', '/og'];
+	const shouldNoindex =
+		noindexPrefixes.some((p) => path.startsWith(p)) ||
+		noindexSuffixes.some((s) => path.endsWith(s));
+
+	if (shouldNoindex) {
+		const headers = new Headers(securedResponse.headers);
+		headers.set('X-Robots-Tag', 'noindex');
+		return new Response(securedResponse.body, {
+			status: securedResponse.status,
+			statusText: securedResponse.statusText,
+			headers
+		});
+	}
+
+	return securedResponse;
 };
