@@ -9,10 +9,12 @@
 	let copiedUrl = $state(false);
 
 	const totalPackages = $derived(
-		data.configs.reduce((sum: number, config: any) => {
-			const count = getPackageCount(config.packages);
-			return sum + count;
-		}, 0)
+		data.viewType === 'profile' && data.configs
+			? data.configs.reduce((sum: number, config: any) => {
+				const count = getPackageCount(config.packages);
+				return sum + count;
+			}, 0)
+			: 0
 	);
 
 	function formatDate(dateStr: string): string {
