@@ -489,7 +489,9 @@
 	}
 
 	function shareConfig(config: Config) {
-		shareUrl = `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
+		shareUrl = config.alias
+			? `https://openboot.dev/${config.alias}`
+			: `https://openboot.dev/${$auth.user?.username}/${config.slug}`;
 		shareConfigName = config.name;
 		shareCopied = false;
 		showShareModal = true;
