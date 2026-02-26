@@ -33,7 +33,7 @@
 
 		loading = true;
 		try {
-			const response = await fetch(`/api/configs/public?sort=${sortBy}&limit=${limit}&offset=${offset}`);
+			const response = await fetch(`/api/configs/public?sort=${sortBy}&limit=${limit}&offset=${offset}&visibility=public`);
 			if (response.ok) {
 				const data = await response.json();
 				if (reset) {

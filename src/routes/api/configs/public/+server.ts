@@ -7,11 +7,14 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 
 	const username = url.searchParams.get('username');
 	const sort = url.searchParams.get('sort') || 'recent';
+	const visibility = url.searchParams.get('visibility');
 	const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
 	const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
 
 	let orderClause: string;
-	let whereClause = `c.visibility = 'public'`;
+	let whereClause = visibility === 'public'
+		? `c.visibility = 'public'`
+		: `c.visibility IN ('public', 'unlisted')`;
 
 	if (!username) {
 		whereClause += ` AND NOT (u.username = 'openboot' AND c.slug = 'default')`;
