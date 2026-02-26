@@ -77,8 +77,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 						}
 					}));
 				} else if (isBrowser) {
-					const baseUrl = env.APP_URL || event.url.origin;
-					return withSecurityHeaders(Response.redirect(`${baseUrl}/${config.username}/${config.slug}`, 302));
+					event.locals.aliasConfig = { username: config.username, slug: config.slug };
 				}
 			}
 		}

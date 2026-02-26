@@ -1,5 +1,11 @@
 declare global {
 	namespace App {
+		interface Locals {
+			aliasConfig?: {
+				username: string;
+				slug: string;
+			};
+		}
 		interface Platform {
 			env: {
 				DB: D1Database;

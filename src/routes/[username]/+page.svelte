@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import ConfigDetail from '$lib/components/ConfigDetail.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -75,12 +76,23 @@
 </script>
 
 <svelte:head>
-	<title>@{data.profileUser.username} - OpenBoot</title>
-	<meta name="description" content="Public configurations by @{data.profileUser.username} on OpenBoot" />
-	<meta property="og:title" content="@{data.profileUser.username} - OpenBoot" />
-	<meta property="og:description" content="Public configurations by @{data.profileUser.username} on OpenBoot" />
-	<meta property="og:url" content="https://openboot.dev/{data.profileUser.username}" />
+	{#if data.viewType === 'config'}
+		<title>{data.config.name} - OpenBoot</title>
+		<meta name="description" content={data.config.description || `Install ${data.config.name} with OpenBoot`} />
+		<meta property="og:title" content="{data.config.name} - OpenBoot" />
+		<meta property="og:description" content={data.config.description || `Install ${data.config.name} with OpenBoot — one command to set up your Mac.`} />
+	{:else}
+		<title>@{data.profileUser.username} - OpenBoot</title>
+		<meta name="description" content="Public configurations by @{data.profileUser.username} on OpenBoot" />
+		<meta property="og:title" content="@{data.profileUser.username} - OpenBoot" />
+		<meta property="og:description" content="Public configurations by @{data.profileUser.username} on OpenBoot" />
+		<meta property="og:url" content="https://openboot.dev/{data.profileUser.username}" />
+	{/if}
 </svelte:head>
+
+{#if data.viewType === 'config'}
+<ConfigDetail configUser={data.configUser} config={data.config} packageDescriptions={data.packageDescriptions} />
+{:else}
 
 <div class="page">
 	<main class="container">
@@ -213,6 +225,7 @@
 		</section>
 	</main>
 </div>
+{/if}
 
 <style>
 	.page {
