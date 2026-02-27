@@ -3,6 +3,9 @@ interface ValidationResult {
 	error?: string;
 }
 
+/** Reserved aliases that conflict with top-level routes. Used by both hooks.server.ts and config creation. */
+export const RESERVED_ALIASES = ['api', 'install', 'dashboard', 'login', 'docs', 'cli-auth', 'explore'] as const;
+
 /** Validates custom script: max 10k chars, no null bytes. Base64-encoded at generation time to prevent shell injection. */
 export function validateCustomScript(script: string | null | undefined): ValidationResult {
 	if (!script) {
@@ -77,16 +80,24 @@ export function validateReturnTo(path: string | null | undefined): boolean {
 		return false;
 	}
 
-	if (!path.startsWith('/')) {
+	// Decode first to catch %2F%2F → // bypass attempts
+	let decoded: string;
+	try {
+		decoded = decodeURIComponent(path);
+	} catch {
 		return false;
 	}
 
-	if (path.startsWith('//')) {
+	if (!decoded.startsWith('/')) {
 		return false;
 	}
 
-	// Allow path + optional query string with safe characters
-	return /^\/[a-zA-Z0-9\-_/]*(\?[a-zA-Z0-9\-_=&%]*)?$/.test(path);
+	if (decoded.startsWith('//')) {
+		return false;
+	}
+
+	// Allow path + optional query string with safe characters (no % to prevent double-encoding attacks)
+	return /^\/[a-zA-Z0-9\-_/]*(\?[a-zA-Z0-9\-_=&]*)?$/.test(decoded);
 }
 
 interface Package {

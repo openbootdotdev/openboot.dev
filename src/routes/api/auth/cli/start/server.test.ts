@@ -8,7 +8,7 @@ describe('POST /api/auth/cli/start', () => {
 	const baseUrl = 'http://localhost:5173/api/auth/cli/start';
 	let testCounter = 0;
 
-	it('should generate code and code_id when no code provided', async () => {
+	it('should generate code and code_id', async () => {
 		const db = createMockDB({ cli_auth_codes: [] });
 		const request = createMockRequest({
 			url: baseUrl,
@@ -39,7 +39,7 @@ describe('POST /api/auth/cli/start', () => {
 		expect(/^[A-Z0-9]{8}$/.test(json.code)).toBe(true);
 	});
 
-	it('should accept client-provided code', async () => {
+	it('should always server-generate codes regardless of body', async () => {
 		const db = createMockDB({ cli_auth_codes: [] });
 		const request = createMockRequest({
 			url: baseUrl,
@@ -64,149 +64,10 @@ describe('POST /api/auth/cli/start', () => {
 
 		expect(response.status).toBe(200);
 		const json = await getJSON(response);
-		expect(json.code).toBe('MYCUSTOM');
+		// Code should be server-generated, not the client-supplied value
+		expect(json.code).not.toBe('MYCUSTOM');
+		expect(json.code).toHaveLength(8);
 		expect(json.code_id).toBeDefined();
-	});
-
-	it('should normalize client code to uppercase', async () => {
-		const db = createMockDB({ cli_auth_codes: [] });
-		const request = createMockRequest({
-			url: baseUrl,
-			method: 'POST',
-			body: { code: 'lowercase' },
-			clientIp: `127.0.0.${++testCounter}`
-		});
-		const platform = createMockPlatform(db);
-
-		const response = await POST({
-			request,
-			platform,
-			url: new URL(baseUrl),
-			route: { id: '' },
-			locals: {},
-			isDataRequest: false,
-			isSubRequest: false,
-			cookies: createMockCookies(),
-			getClientAddress: () => '',
-			fetch: globalThis.fetch
-		});
-
-		expect(response.status).toBe(200);
-		const json = await getJSON(response);
-		expect(json.code).toBe('LOWERCASE');
-	});
-
-	it('should reject code with invalid format', async () => {
-		const db = createMockDB({ cli_auth_codes: [] });
-		const request = createMockRequest({
-			url: baseUrl,
-			method: 'POST',
-			body: { code: 'invalid!@#' },
-			clientIp: `127.0.0.${++testCounter}`
-		});
-		const platform = createMockPlatform(db);
-
-		const response = await POST({
-			request,
-			platform,
-			url: new URL(baseUrl),
-			route: { id: '' },
-			locals: {},
-			isDataRequest: false,
-			isSubRequest: false,
-			cookies: createMockCookies(),
-			getClientAddress: () => '',
-			fetch: globalThis.fetch
-		});
-
-		expect(response.status).toBe(400);
-		const json = await getJSON(response);
-		expect(json.error).toContain('Invalid code format');
-	});
-
-	it('should reject code that is too short', async () => {
-		const db = createMockDB({ cli_auth_codes: [] });
-		const request = createMockRequest({
-			url: baseUrl,
-			method: 'POST',
-			body: { code: 'SHORT' },
-			clientIp: `127.0.0.${++testCounter}`
-		});
-		const platform = createMockPlatform(db);
-
-		const response = await POST({
-			request,
-			platform,
-			url: new URL(baseUrl),
-			route: { id: '' },
-			locals: {},
-			isDataRequest: false,
-			isSubRequest: false,
-			cookies: createMockCookies(),
-			getClientAddress: () => '',
-			fetch: globalThis.fetch
-		});
-
-		expect(response.status).toBe(400);
-		const json = await getJSON(response);
-		expect(json.error).toContain('Invalid code format');
-	});
-
-	it('should reject code that is too long', async () => {
-		const db = createMockDB({ cli_auth_codes: [] });
-		const request = createMockRequest({
-			url: baseUrl,
-			method: 'POST',
-			body: { code: 'TOOLONGCODE13' },
-			clientIp: `127.0.0.${++testCounter}`
-		});
-		const platform = createMockPlatform(db);
-
-		const response = await POST({
-			request,
-			platform,
-			url: new URL(baseUrl),
-			route: { id: '' },
-			locals: {},
-			isDataRequest: false,
-			isSubRequest: false,
-			cookies: createMockCookies(),
-			getClientAddress: () => '',
-			fetch: globalThis.fetch
-		});
-
-		expect(response.status).toBe(400);
-		const json = await getJSON(response);
-		expect(json.error).toContain('Invalid code format');
-	});
-
-	it('should reject invalid JSON body', async () => {
-		const db = createMockDB({ cli_auth_codes: [] });
-		const request = createMockRequest({
-			url: baseUrl,
-			method: 'POST',
-			body: 'invalid-json',
-			invalidJSON: true,
-			clientIp: `127.0.0.${++testCounter}`
-		});
-		const platform = createMockPlatform(db);
-
-		const response = await POST({
-			request,
-			platform,
-			url: new URL(baseUrl),
-			route: { id: '' },
-			locals: {},
-			isDataRequest: false,
-			isSubRequest: false,
-			cookies: createMockCookies(),
-			getClientAddress: () => '',
-			fetch: globalThis.fetch
-		});
-
-		expect(response.status).toBe(400);
-		const json = await getJSON(response);
-		expect(json.error).toContain('Invalid request body');
 	});
 
 	it('should store code with pending status and 10 minute expiration', async () => {
@@ -214,7 +75,7 @@ describe('POST /api/auth/cli/start', () => {
 		const request = createMockRequest({
 			url: baseUrl,
 			method: 'POST',
-			body: { code: 'TESTCODE' },
+			body: {},
 			clientIp: `127.0.0.${++testCounter}`
 		});
 		const platform = createMockPlatform(db);
@@ -237,7 +98,7 @@ describe('POST /api/auth/cli/start', () => {
 
 		const stored = db.data.cli_auth_codes?.find((c: any) => c.id === json.code_id);
 		expect(stored).toBeDefined();
-		expect(stored.code).toBe('TESTCODE');
+		expect(stored.code).toBe(json.code);
 		expect(stored.status).toBe('pending');
 	});
 

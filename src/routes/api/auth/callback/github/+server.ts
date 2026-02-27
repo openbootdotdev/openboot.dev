@@ -26,93 +26,107 @@ export const GET: RequestHandler = async ({ url, platform, cookies, request }) =
 	}
 
 	if (state !== savedState) {
+		cookies.delete('auth_state', { path: '/' });
+		cookies.delete('auth_return_to', { path: '/' });
 		redirect(302, '/login?error=invalid_state');
 	}
 
-	const tokenResponse = await fetch(GITHUB_TOKEN_URL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-		body: JSON.stringify({
-			client_id: env.GITHUB_CLIENT_ID,
-			client_secret: env.GITHUB_CLIENT_SECRET,
-			code
-		})
-	});
+	try {
+		const tokenResponse = await fetch(GITHUB_TOKEN_URL, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify({
+				client_id: env.GITHUB_CLIENT_ID,
+				client_secret: env.GITHUB_CLIENT_SECRET,
+				code
+			})
+		});
 
-	const tokenData = await tokenResponse.json();
-	if (tokenData.error || !tokenData.access_token) {
-		redirect(302, `${env.APP_URL}?error=token_failed`);
-	}
+		const tokenData = await tokenResponse.json();
+		if (tokenData.error || !tokenData.access_token) {
+			redirect(302, '/login?error=token_failed');
+		}
 
-	const headers = {
-		Authorization: `Bearer ${tokenData.access_token}`,
-		Accept: 'application/json',
-		'User-Agent': 'OpenBoot'
-	};
+		const headers = {
+			Authorization: `Bearer ${tokenData.access_token}`,
+			Accept: 'application/json',
+			'User-Agent': 'OpenBoot'
+		};
 
-	const userResponse = await fetch(GITHUB_USER_URL, { headers });
-	const githubUser = await userResponse.json();
-	if (!githubUser.id || !githubUser.login) {
-		redirect(302, `${env.APP_URL}?error=user_failed`);
-	}
+		const userResponse = await fetch(GITHUB_USER_URL, { headers });
+		const githubUser = await userResponse.json();
+		if (!githubUser.id || !githubUser.login) {
+			redirect(302, '/login?error=user_failed');
+		}
 
-	let email = githubUser.email || '';
-	if (!email) {
-		const emailsResponse = await fetch('https://api.github.com/user/emails', { headers });
-		const emails = await emailsResponse.json();
-		const primary = emails.find((e: { primary: boolean; email: string }) => e.primary);
-		email = primary?.email || emails[0]?.email || '';
-	}
+		let email = githubUser.email || '';
+		if (!email) {
+			const emailsResponse = await fetch('https://api.github.com/user/emails', { headers });
+			const emails = await emailsResponse.json();
+			const primary = emails.find((e: { primary: boolean; email: string }) => e.primary);
+			email = primary?.email || emails[0]?.email || '';
+		}
 
-	const userId = String(githubUser.id);
-	const reservedUsernames = ['openboot', 'admin', 'api', 'dashboard', 'install', 'login', 'logout', 'settings', 'help', 'support', 'docs', 'blog'];
-	let username = githubUser.login;
-	if (reservedUsernames.includes(username.toLowerCase())) {
-		username = `${username}-${userId.slice(-4)}`;
-	}
+		const userId = String(githubUser.id);
+		const reservedUsernames = ['openboot', 'admin', 'api', 'dashboard', 'install', 'login', 'logout', 'settings', 'help', 'support', 'docs', 'blog'];
+		let username = githubUser.login;
+		if (reservedUsernames.includes(username.toLowerCase())) {
+			username = `${username}-${userId.slice(-4)}`;
+		}
 
-	await env.DB.prepare(
-		`
-		INSERT INTO users (id, username, email, avatar_url, updated_at)
-		VALUES (?, ?, ?, ?, datetime('now'))
-		ON CONFLICT(id) DO UPDATE SET
-			username = excluded.username,
-			email = excluded.email,
-			avatar_url = excluded.avatar_url,
-			updated_at = datetime('now')
-	`
-	)
-		.bind(userId, username, email, githubUser.avatar_url || '')
-		.run();
+		const existingUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
+		if (existingUser) {
+			username = (existingUser as { username: string }).username;
+		}
 
-	const configCount = await env.DB.prepare('SELECT COUNT(*) as count FROM configs WHERE user_id = ?').bind(userId).first<{ count: number }>();
-
-	if (!configCount || configCount.count === 0) {
 		await env.DB.prepare(
 			`
-			INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
-			VALUES (?, ?, 'default', 'Default', 'My default configuration', 'developer', '[]')
+			INSERT INTO users (id, username, email, avatar_url, updated_at)
+			VALUES (?, ?, ?, ?, datetime('now'))
+			ON CONFLICT(id) DO UPDATE SET
+				email = excluded.email,
+				avatar_url = excluded.avatar_url,
+				updated_at = datetime('now')
 		`
 		)
-			.bind(generateId(), userId)
+			.bind(userId, username, email, githubUser.avatar_url || '')
 			.run();
+
+		const configCount = await env.DB.prepare('SELECT COUNT(*) as count FROM configs WHERE user_id = ?').bind(userId).first<{ count: number }>();
+
+		if (!configCount || configCount.count === 0) {
+			await env.DB.prepare(
+				`
+				INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
+				VALUES (?, ?, 'default', 'Default', 'My default configuration', 'developer', '[]')
+			`
+			)
+				.bind(generateId(), userId)
+				.run();
+		}
+
+		const thirtyDays = 30 * 24 * 60 * 60;
+		const token = await signToken({ userId, username, exp: Date.now() + thirtyDays * 1000 }, env.JWT_SECRET);
+
+		cookies.set('session', token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'lax',
+			maxAge: thirtyDays
+		});
+
+		const returnToRaw = cookies.get('auth_return_to') || '/dashboard';
+		const returnTo = validateReturnTo(returnToRaw) ? returnToRaw : '/dashboard';
+		cookies.delete('auth_state', { path: '/' });
+		cookies.delete('auth_return_to', { path: '/' });
+
+		redirect(302, returnTo);
+	} catch (err) {
+		if (err && typeof err === 'object' && 'status' in err && 'location' in err) {
+			throw err;
+		}
+		console.error('GitHub auth callback error:', err);
+		redirect(302, '/login?error=server_error');
 	}
-
-	const thirtyDays = 30 * 24 * 60 * 60;
-	const token = await signToken({ userId, username: githubUser.login, exp: Date.now() + thirtyDays * 1000 }, env.JWT_SECRET);
-
-	cookies.set('session', token, {
-		path: '/',
-		httpOnly: true,
-		secure: true,
-		sameSite: 'lax',
-		maxAge: thirtyDays
-	});
-
-	const returnToRaw = cookies.get('auth_return_to') || '/dashboard';
-	const returnTo = validateReturnTo(returnToRaw) ? returnToRaw : '/dashboard';
-	cookies.delete('auth_state', { path: '/' });
-	cookies.delete('auth_return_to', { path: '/' });
-
-	redirect(302, returnTo);
 };

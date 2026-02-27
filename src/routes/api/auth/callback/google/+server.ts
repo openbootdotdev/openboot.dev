@@ -26,6 +26,8 @@ export const GET: RequestHandler = async ({ url, platform, cookies, request }) =
 	}
 
 	if (state !== savedState) {
+		cookies.delete('auth_state', { path: '/' });
+		cookies.delete('auth_return_to', { path: '/' });
 		redirect(302, '/login?error=invalid_state');
 	}
 

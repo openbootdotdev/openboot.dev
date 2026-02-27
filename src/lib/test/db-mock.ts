@@ -33,8 +33,12 @@ export function createMockDB(data: MockData = {}): D1Database & { data: Record<s
 		dump() {
 			throw new Error('dump() not implemented in mock');
 		},
-		batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
-			throw new Error('batch() not implemented in mock');
+		async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+			const results: D1Result<T>[] = [];
+			for (const stmt of statements) {
+				results.push(await stmt.run() as D1Result<T>);
+			}
+			return results;
 		},
 		exec(query: string): Promise<D1Result> {
 			throw new Error('exec() not implemented in mock');
@@ -74,17 +78,18 @@ function createMockStatement(sql: string, tables: Record<string, any[]>): D1Prep
 		},
 
 		async run<T = unknown>(): Promise<D1Result<T>> {
-			// For INSERT/UPDATE/DELETE
+			// For INSERT/UPDATE/DELETE - modified array length indicates change count
 			const modified = executeQuery<T>(sql, bindings, tables);
+			const changes = Array.isArray(modified) ? modified.length : 0;
 			return {
 				results: [],
 				success: true,
 				meta: {
 					duration: 0.1,
-					changes: modified ? 1 : 0,
-					last_row_id: modified ? 1 : 0,
+					changes,
+					last_row_id: changes ? 1 : 0,
 					rows_read: 0,
-					rows_written: modified ? 1 : 0
+					rows_written: changes ? 1 : 0
 				}
 			};
 		},
@@ -252,21 +257,54 @@ function executeQuery<T>(sql: string, bindings: any[], tables: Record<string, an
 
 		const tableName = tableMatch[1];
 		const setMatch = sql.match(/set\s+(.*?)\s+where/i);
-		const whereMatch = sql.match(/where\s+(\w+)\s*=\s*\?/i);
+		const whereClause = sql.match(/where\s+(.*?)$/i);
 
-		if (setMatch && whereMatch) {
-			const whereField = whereMatch[1];
-			const whereValue = bindings[bindings.length - 1];
-
+		if (setMatch && whereClause) {
+			// Count SET bindings to determine where WHERE bindings start
 			const setFields = setMatch[1].split(',').map((s) => s.trim());
-			let bindingIndex = 0;
+			let setBindingCount = 0;
+			setFields.forEach((field) => {
+				if (field.match(/=\s*\?/)) setBindingCount++;
+			});
 
+			// Parse WHERE conditions
+			const conditions = whereClause[1].split(/\s+and\s+/i);
+			let whereBindingIndex = setBindingCount;
+
+			const matchesRow = (row: any): boolean => {
+				for (const condition of conditions) {
+					const eqMatch = condition.match(/(\w+)\s*=\s*\?/);
+					if (eqMatch) {
+						if (row[eqMatch[1]] !== bindings[whereBindingIndex++]) return false;
+						continue;
+					}
+
+					const literalEqMatch = condition.match(/(\w+)\s*=\s*'([^']*)'/);
+					if (literalEqMatch) {
+						if (row[literalEqMatch[1]] !== literalEqMatch[2]) return false;
+						continue;
+					}
+
+					const datetimeGtMatch = condition.match(/(\w+)\s*>\s*datetime\(['"]now['"]\)/i);
+					if (datetimeGtMatch) {
+						const fieldValue = row[datetimeGtMatch[1]];
+						if (!fieldValue || fieldValue <= new Date().toISOString()) return false;
+						continue;
+					}
+				}
+				return true;
+			};
+
+			let changeCount = 0;
 			tables[tableName].forEach((row) => {
-				if (row[whereField] === whereValue) {
+				// Reset whereBindingIndex for each row
+				whereBindingIndex = setBindingCount;
+				if (matchesRow(row)) {
+					let bindingIndex = 0;
 					setFields.forEach((field) => {
-						const bindingMatch = field.match(/(\w+)\s*=\s*\?/);
-						if (bindingMatch && bindingIndex < bindings.length - 1) {
-							row[bindingMatch[1]] = bindings[bindingIndex++];
+						const bindingMatchField = field.match(/(\w+)\s*=\s*\?/);
+						if (bindingMatchField && bindingIndex < setBindingCount) {
+							row[bindingMatchField[1]] = bindings[bindingIndex++];
 							return;
 						}
 
@@ -274,9 +312,17 @@ function executeQuery<T>(sql: string, bindings: any[], tables: Record<string, an
 						if (literalMatch) {
 							row[literalMatch[1]] = literalMatch[2];
 						}
+
+						const datetimeMatch = field.match(/(\w+)\s*=\s*datetime\(['"]now['"]\)/i);
+						if (datetimeMatch) {
+							row[datetimeMatch[1]] = new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, '');
+						}
 					});
+					changeCount++;
 				}
 			});
+			// Return array with one element per changed row to signal change count
+			return new Array(changeCount).fill({}) as T[];
 		}
 		return [] as T[];
 	}
@@ -295,6 +341,7 @@ function executeQuery<T>(sql: string, bindings: any[], tables: Record<string, an
 			const index = tables[tableName].findIndex((row) => row[fieldName] === value);
 			if (index !== -1) {
 				tables[tableName].splice(index, 1);
+				return [{}] as T[];
 			}
 		}
 		return [] as T[];

@@ -65,9 +65,9 @@ export const load: PageServerLoad = async ({ params, platform, locals, request, 
 	if (!profileUser) throw error(404, 'User not found');
 
 	const configsResult = await env.DB.prepare(
-		'SELECT id, slug, name, description, base_preset, packages, install_count, updated_at FROM configs WHERE user_id = ? AND visibility IN (?, ?) ORDER BY install_count DESC'
+		'SELECT id, slug, name, description, base_preset, packages, install_count, updated_at FROM configs WHERE user_id = ? AND visibility = ? ORDER BY install_count DESC'
 	)
-		.bind(profileUser.id, 'public', 'unlisted')
+		.bind(profileUser.id, 'public')
 		.all<any>();
 
 	const configs = configsResult.results || [];

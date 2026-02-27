@@ -26,7 +26,7 @@
 				{:else if $auth.user}
 					<a href="/dashboard" class="header-dashboard-link">Dashboard</a>
 					<span class="header-separator">/</span>
-					<a href="/api/auth/logout" class="header-logout-link">Logout</a>
+					<form method="POST" action="/api/auth/logout" style="display:inline"><button type="submit" class="header-logout-link">Logout</button></form>
 				{:else}
 					<a href="/login" class="header-login-link">Sign in</a>
 				{/if}
@@ -136,6 +136,14 @@
 		font-weight: 500;
 		text-decoration: none;
 		transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	button.header-logout-link {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		font-family: inherit;
 	}
 
 	.header-dashboard-link:hover,

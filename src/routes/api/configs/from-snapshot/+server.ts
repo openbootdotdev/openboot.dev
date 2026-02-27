@@ -26,6 +26,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const { name, description, snapshot, config_slug, visibility } = body;
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
+	if (typeof name !== 'string' || name.length > 100) return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
+	if (description !== undefined && description !== '' && (typeof description !== 'string' || description.length > 500)) return json({ error: 'Description must be a string of 500 characters or less' }, { status: 400 });
 	if (!snapshot) return json({ error: 'Snapshot is required' }, { status: 400 });
 
 	const validVisibilities = ['public', 'unlisted', 'private'];
@@ -62,7 +64,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 		await env.DB.prepare(
 			`UPDATE configs
-			SET snapshot = ?, snapshot_at = datetime('now'), packages = ?, visibility = ?
+			SET snapshot = ?, snapshot_at = datetime('now'), packages = ?, visibility = ?, updated_at = datetime('now')
 			WHERE user_id = ? AND slug = ?`
 		)
 			.bind(
@@ -111,7 +113,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	let finalSlug = slug;
 	let suffix = 2;
-	while (true) {
+	const MAX_SLUG_ATTEMPTS = 100;
+	while (suffix <= MAX_SLUG_ATTEMPTS + 1) {
 		const existing = await env.DB.prepare(
 			'SELECT id FROM configs WHERE user_id = ? AND slug = ?'
 		).bind(user.id, finalSlug).first();
@@ -120,6 +123,9 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 		finalSlug = `${slug}-${suffix}`;
 		suffix++;
+	}
+	if (suffix > MAX_SLUG_ATTEMPTS + 1) {
+		return json({ error: 'Unable to generate unique slug' }, { status: 409 });
 	}
 
 	const id = generateId();

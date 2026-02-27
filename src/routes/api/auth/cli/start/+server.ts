@@ -25,23 +25,10 @@ export const POST: RequestHandler = async ({ platform, request }) => {
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
 	}
 
-	let body;
-	try {
-		body = await request.json();
-	} catch {
-		return json({ error: 'Invalid request body' }, { status: 400 });
-	}
+	// Clean up expired codes opportunistically (fire-and-forget)
+	env.DB.prepare("DELETE FROM cli_auth_codes WHERE expires_at < datetime('now')").run().catch(() => {});
 
-	let code = body?.code;
-
-	if (!code || typeof code !== 'string') {
-		code = generateDeviceCode();
-	} else {
-		if (!/^[A-Z0-9]{6,12}$/i.test(code)) {
-			return json({ error: 'Invalid code format' }, { status: 400 });
-		}
-		code = code.toUpperCase();
-	}
+	const code = generateDeviceCode();
 
 	const code_id = generateId();
 

@@ -616,7 +616,7 @@ describe('/api/configs GET/POST', () => {
 		});
 
 		it('should reject reserved alias names', async () => {
-			const reservedAliases = ['api', 'install', 'dashboard', 'login', 'logout'];
+			const reservedAliases = ['api', 'install', 'dashboard', 'login', 'docs', 'cli-auth', 'explore'];
 
 			for (const alias of reservedAliases) {
 				const db = createMockDB({

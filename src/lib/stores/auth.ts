@@ -38,7 +38,7 @@ function createAuthStore() {
 					}
 				} catch {
 					set({ user: null, loading: false });
-				} finally {
+					// Reset on failure so next check() retries instead of returning stale error
 					checkPromise = null;
 				}
 			})();

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
-import { validateCustomScript, validateDotfilesRepo, validatePackages } from '$lib/server/validation';
+import { validateCustomScript, validateDotfilesRepo, validatePackages, RESERVED_ALIASES } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
@@ -127,7 +127,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 				.replace(/[^a-z0-9-]/g, '')
 				.substring(0, 20);
 			if (newAlias.length < 2) return json({ error: 'Alias must be at least 2 characters' }, { status: 400 });
-			if (['api', 'install', 'dashboard', 'login', 'logout'].includes(newAlias)) {
+			if ((RESERVED_ALIASES as readonly string[]).includes(newAlias)) {
 				return json({ error: 'This alias is reserved' }, { status: 400 });
 			}
 			const aliasExists = await env.DB.prepare('SELECT id FROM configs WHERE alias = ? AND id != ?').bind(newAlias, existing.id).first();

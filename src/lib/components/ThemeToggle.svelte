@@ -2,7 +2,7 @@
 	import { theme } from '$lib/stores/theme';
 </script>
 
-<button class="theme-toggle" on:click={() => theme.toggle()} title="Toggle theme">
+<button class="theme-toggle" onclick={() => theme.toggle()} title="Toggle theme">
 	{#if $theme === 'dark'}
 		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 			<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />

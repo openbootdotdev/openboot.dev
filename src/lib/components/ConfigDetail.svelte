@@ -123,11 +123,20 @@
 		return gradients[index % gradients.length];
 	}
 
+	function escapeHtml(str: string): string {
+		return str
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
 	function highlightBash(code: string): string {
-		return code
+		return escapeHtml(code)
 			.replace(/^(#.*)$/gm, '<span class="comment">$1</span>')
 			.replace(/\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|return|exit|echo|export|source|cd|mkdir|chmod|chown|sudo|brew|npm|git|curl|wget)\b/g, '<span class="keyword">$1</span>')
-			.replace(/(["'])(.*?)\1/g, '<span class="string">$1$2$1</span>')
+			.replace(/(&#039;|&quot;)(.*?)\1/g, '<span class="string">$1$2$1</span>')
 			.replace(/(\$\w+|\$\{[^}]+\})/g, '<span class="variable">$1</span>');
 	}
 
@@ -384,9 +393,9 @@
 				<div class="code-block">
 					<div class="code-header">
 						<span>custom-script.sh</span>
-						<button onclick={() => {
+						<button onclick={(e: MouseEvent) => {
 							navigator.clipboard.writeText(config.custom_script || '');
-							const btn = event?.currentTarget as HTMLButtonElement;
+							const btn = e.currentTarget as HTMLButtonElement;
 							if (btn) {
 								btn.textContent = 'Copied!';
 								setTimeout(() => btn.textContent = 'Copy', 2000);

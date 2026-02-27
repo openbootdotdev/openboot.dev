@@ -1,5 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { generateInstallScript, generatePrivateInstallScript } from '$lib/server/install-script';
+import { RESERVED_ALIASES } from '$lib/server/validation';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
@@ -43,7 +44,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const shortAliasMatch = path.match(/^\/([a-z0-9-]+)$/);
-	if (shortAliasMatch && !['dashboard', 'api', 'install', 'docs', 'cli-auth', 'explore'].includes(shortAliasMatch[1])) {
+	if (shortAliasMatch && !(RESERVED_ALIASES as readonly string[]).includes(shortAliasMatch[1])) {
 		const alias = shortAliasMatch[1];
 		const env = event.platform?.env;
 
@@ -90,31 +91,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const username = installShMatch[1];
 			const slug = installShMatch[2];
 
-			const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first<{ id: string }>();
-			if (user) {
-				const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
-					.bind(user.id, slug)
-					.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
+			const config = await env.DB.prepare(
+				'SELECT c.custom_script, c.visibility, c.dotfiles_repo, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
+			).bind(username, slug).first<{ custom_script: string; visibility: string; dotfiles_repo: string; user_id: string }>();
 
-				if (config) {
-					if (config.visibility === 'private') {
-						const script = generatePrivateInstallScript(env.APP_URL, username, slug);
-						return withSecurityHeaders(new Response(script, {
-							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
-						}));
-					}
-
-					const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
-
-					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
-
+			if (config) {
+				if (config.visibility === 'private') {
+					const script = generatePrivateInstallScript(env.APP_URL, username, slug);
 					return withSecurityHeaders(new Response(script, {
-						headers: {
-							'Content-Type': 'text/plain; charset=utf-8',
-							'Cache-Control': 'no-cache'
-						}
+						headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
 					}));
 				}
+
+				const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+
+				env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
+
+				return withSecurityHeaders(new Response(script, {
+					headers: {
+						'Content-Type': 'text/plain; charset=utf-8',
+						'Cache-Control': 'no-cache'
+					}
+				}));
 			}
 		}
 	}
@@ -129,31 +127,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 				const username = twoSegMatch[1];
 				const slug = twoSegMatch[2];
 
-				const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first<{ id: string }>();
-				if (user) {
-				const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
-					.bind(user.id, slug)
-					.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
+				const config = await env.DB.prepare(
+					'SELECT c.custom_script, c.visibility, c.dotfiles_repo, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
+				).bind(username, slug).first<{ custom_script: string; visibility: string; dotfiles_repo: string; user_id: string }>();
 
 				if (config) {
-						if (config.visibility === 'private') {
-							const script = generatePrivateInstallScript(env.APP_URL, username, slug);
-							return withSecurityHeaders(new Response(script, {
-								headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
-							}));
-						}
-
-						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
-
-						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
-
+					if (config.visibility === 'private') {
+						const script = generatePrivateInstallScript(env.APP_URL, username, slug);
 						return withSecurityHeaders(new Response(script, {
-							headers: {
-								'Content-Type': 'text/plain; charset=utf-8',
-								'Cache-Control': 'no-cache'
-							}
+							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
 						}));
 					}
+
+					const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+
+					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
+
+					return withSecurityHeaders(new Response(script, {
+						headers: {
+							'Content-Type': 'text/plain; charset=utf-8',
+							'Cache-Control': 'no-cache'
+						}
+					}));
 				}
 			}
 		}

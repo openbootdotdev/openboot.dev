@@ -1,18 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
 
 	let copied = $state('');
-	let starCount = $state(0);
-
-	onMount(() => {
-		fetch('https://api.github.com/repos/openbootdotdev/openboot')
-			.then((r) => r.json())
-			.then((data) => {
-				if (data.stargazers_count) starCount = data.stargazers_count;
-			})
-			.catch(() => {});
-	});
 
 	function copyCommand(command: string, id: string) {
 		navigator.clipboard.writeText(command);

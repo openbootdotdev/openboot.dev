@@ -284,14 +284,16 @@
 
 	function togglePackage(pkg: string, type: string = 'formula', desc: string = '') {
 		const newMap = new Map(selectedPackages);
+		const newDescs = new Map(packageDescs);
 		if (newMap.has(pkg)) {
 			newMap.delete(pkg);
-			packageDescs.delete(pkg);
+			newDescs.delete(pkg);
 		} else {
 			newMap.set(pkg, type);
-			if (desc) packageDescs.set(pkg, desc);
+			if (desc) newDescs.set(pkg, desc);
 		}
 		selectedPackages = newMap;
+		packageDescs = newDescs;
 		formData.packages = Array.from(newMap.keys());
 	}
 
@@ -345,7 +347,12 @@
 		if (!confirm('Are you sure you want to delete this configuration?')) return;
 
 		try {
-			await fetch(`/api/configs/${slug}`, { method: 'DELETE' });
+			const response = await fetch(`/api/configs/${slug}`, { method: 'DELETE' });
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				alert(data.error || 'Failed to delete configuration');
+				return;
+			}
 			await loadConfigs();
 		} catch (e) {
 			alert('Failed to delete configuration');
@@ -416,7 +423,9 @@
 
 	function formatDate(dateStr?: string): string {
 		if (!dateStr) return '';
-		const date = new Date(dateStr + 'Z');
+		// D1 returns "YYYY-MM-DD HH:MM:SS" (no timezone) — treat as UTC
+		const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
+		const date = new Date(hasTimezone ? dateStr : dateStr + 'Z');
 		const now = new Date();
 		const diff = now.getTime() - date.getTime();
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));

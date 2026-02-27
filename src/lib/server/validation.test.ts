@@ -209,8 +209,12 @@ describe('validateReturnTo', () => {
 		expect(validateReturnTo('/page?foo=bar&baz=qux')).toBe(true);
 	});
 
-	it('should accept paths with URL-encoded query params', () => {
-		expect(validateReturnTo('/page?param=%20space')).toBe(true);
+	it('should reject paths with URL-encoded unsafe characters', () => {
+		expect(validateReturnTo('/page?param=%20space')).toBe(false);
+	});
+
+	it('should reject percent-encoded double slash (open redirect)', () => {
+		expect(validateReturnTo('/%2F%2Fevil.com')).toBe(false);
 	});
 
 	it('should reject paths not starting with /', () => {

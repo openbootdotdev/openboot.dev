@@ -30,7 +30,7 @@ export async function verifyToken(token: string, secret: string): Promise<TokenP
 		if (!valid) return null;
 
 		const payload = JSON.parse(data) as TokenPayload;
-		if (payload.exp && Date.now() > payload.exp) return null;
+		if (!payload.exp || Date.now() > payload.exp) return null;
 
 		return payload;
 	} catch {
