@@ -467,6 +467,138 @@ export const PACKAGE_METADATA: Record<string, PackageMetadata> = {
 		type: 'gui'
 	},
 
+	// Additional Languages
+	zig: {
+		name: 'zig',
+		description: 'Systems programming language with manual memory management',
+		category: 'optional',
+		type: 'language'
+	},
+	elixir: {
+		name: 'elixir',
+		description: 'Functional programming language for scalable applications',
+		category: 'optional',
+		type: 'language'
+	},
+
+	// Additional DevOps
+	argocd: {
+		name: 'argocd',
+		description: 'GitOps continuous delivery tool for Kubernetes',
+		category: 'optional',
+		type: 'devops'
+	},
+
+	// Additional Database Tools
+	mysql: {
+		name: 'mysql',
+		description: 'Popular open-source relational database client',
+		category: 'development',
+		type: 'database'
+	},
+	datagrip: {
+		name: 'datagrip',
+		description: 'JetBrains database IDE for multiple engines',
+		category: 'optional',
+		type: 'gui'
+	},
+	pgadmin4: {
+		name: 'pgadmin4',
+		description: 'PostgreSQL administration and management GUI',
+		category: 'optional',
+		type: 'gui'
+	},
+
+	// Additional Editors & Terminals
+	zed: {
+		name: 'zed',
+		description: 'High-performance code editor built in Rust',
+		category: 'optional',
+		type: 'gui'
+	},
+	'sublime-text': {
+		name: 'sublime-text',
+		description: 'Lightweight and fast text editor',
+		category: 'optional',
+		type: 'gui'
+	},
+	webstorm: {
+		name: 'webstorm',
+		description: 'JetBrains IDE for JavaScript and TypeScript',
+		category: 'optional',
+		type: 'gui'
+	},
+	iterm2: {
+		name: 'iterm2',
+		description: 'Feature-rich terminal emulator for macOS',
+		category: 'optional',
+		type: 'gui'
+	},
+	alacritty: {
+		name: 'alacritty',
+		description: 'GPU-accelerated cross-platform terminal emulator',
+		category: 'optional',
+		type: 'gui'
+	},
+	kitty: {
+		name: 'kitty',
+		description: 'GPU-based terminal emulator with advanced features',
+		category: 'optional',
+		type: 'gui'
+	},
+	ghostty: {
+		name: 'ghostty',
+		description: 'Fast native terminal emulator',
+		category: 'optional',
+		type: 'gui'
+	},
+
+	// Additional Browsers
+	'microsoft-edge': {
+		name: 'microsoft-edge',
+		description: 'Chromium-based web browser by Microsoft',
+		category: 'optional',
+		type: 'gui'
+	},
+	'brave-browser': {
+		name: 'brave-browser',
+		description: 'Privacy-focused web browser with ad blocking',
+		category: 'optional',
+		type: 'gui'
+	},
+
+	// Additional Productivity & Communication
+	slack: {
+		name: 'slack',
+		description: 'Team communication and collaboration platform',
+		category: 'productivity',
+		type: 'gui'
+	},
+	discord: {
+		name: 'discord',
+		description: 'Community chat platform for voice and text',
+		category: 'optional',
+		type: 'gui'
+	},
+	telegram: {
+		name: 'telegram',
+		description: 'Fast and secure messaging app',
+		category: 'optional',
+		type: 'gui'
+	},
+	sketch: {
+		name: 'sketch',
+		description: 'Vector design tool for macOS',
+		category: 'optional',
+		type: 'gui'
+	},
+	imageoptim: {
+		name: 'imageoptim',
+		description: 'Image compression and optimization tool',
+		category: 'productivity',
+		type: 'gui'
+	},
+
 	// NPM Packages
 	typescript: {
 		name: 'typescript',
@@ -519,6 +651,42 @@ export const PACKAGE_METADATA: Record<string, PackageMetadata> = {
 	wrangler: {
 		name: 'wrangler',
 		description: 'CLI for Cloudflare Workers development',
+		category: 'development',
+		type: 'cli'
+	},
+	'firebase-tools': {
+		name: 'firebase-tools',
+		description: 'Firebase CLI for managing and deploying projects',
+		category: 'development',
+		type: 'cli'
+	},
+	'@angular/cli': {
+		name: '@angular/cli',
+		description: 'Angular framework command-line interface',
+		category: 'development',
+		type: 'cli'
+	},
+	'create-react-app': {
+		name: 'create-react-app',
+		description: 'Create React applications with zero configuration',
+		category: 'development',
+		type: 'cli'
+	},
+	degit: {
+		name: 'degit',
+		description: 'Scaffold projects from git repositories',
+		category: 'development',
+		type: 'cli'
+	},
+	np: {
+		name: 'np',
+		description: 'Better npm publish with version management',
+		category: 'development',
+		type: 'cli'
+	},
+	'npm-check-updates': {
+		name: 'npm-check-updates',
+		description: 'Update package.json dependency versions',
 		category: 'development',
 		type: 'cli'
 	}

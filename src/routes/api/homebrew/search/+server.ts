@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 interface Formula {
 	name: string;
@@ -63,8 +64,14 @@ async function fetchCasks(): Promise<Cask[]> {
 	return data;
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, request }) => {
 	const query = url.searchParams.get('q')?.toLowerCase().trim();
+
+	const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
+	const rl = checkRateLimit(getRateLimitKey('homebrew-search', clientIp), RATE_LIMITS.SEARCH);
+	if (!rl.allowed) {
+		return json({ results: [], error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+	}
 
 	if (!query || query.length < 2) {
 		return json({ results: [], error: 'Query must be at least 2 characters' });

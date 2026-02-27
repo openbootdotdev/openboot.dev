@@ -23,18 +23,30 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, snapshot, config_slug } = body;
+	const { name, description, snapshot, config_slug, visibility } = body;
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
 	if (!snapshot) return json({ error: 'Snapshot is required' }, { status: 400 });
+
+	const validVisibilities = ['public', 'unlisted', 'private'];
+	const validVisibility = validVisibilities.includes(visibility) ? visibility : 'unlisted';
 
 	const snapshotSize = JSON.stringify(snapshot).length;
 	if (snapshotSize > 100000) {
 		return json({ error: 'Snapshot payload too large (max 100KB)' }, { status: 400 });
 	}
 
-	const packages = snapshot.catalog_match?.matched || [];
+	const matchedNames: string[] = snapshot.catalog_match?.matched || [];
 	const base_preset = snapshot.matched_preset || 'developer';
+
+	// Convert plain string names from CLI snapshot into typed package objects
+	const snapshotCasks = new Set<string>(snapshot.packages?.casks || []);
+	const snapshotNpm = new Set<string>(snapshot.packages?.npm || []);
+	const packages = matchedNames.map((name: string) => {
+		if (snapshotCasks.has(name)) return { name, type: 'cask' };
+		if (snapshotNpm.has(name)) return { name, type: 'npm' };
+		return { name, type: 'formula' };
+	});
 
 	const pv = validatePackages(packages);
 	if (!pv.valid) return json({ error: pv.error }, { status: 400 });
@@ -49,13 +61,14 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		}
 
 		await env.DB.prepare(
-			`UPDATE configs 
-			SET snapshot = ?, snapshot_at = datetime('now'), packages = ?
+			`UPDATE configs
+			SET snapshot = ?, snapshot_at = datetime('now'), packages = ?, visibility = ?
 			WHERE user_id = ? AND slug = ?`
 		)
 			.bind(
 				JSON.stringify(snapshot),
 				JSON.stringify(packages),
+				validVisibility,
 				user.id,
 				config_slug
 			)
@@ -114,7 +127,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	try {
 		await env.DB.prepare(
 			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'unlisted')`
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)`
 		)
 			.bind(
 				id,
@@ -124,7 +137,8 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 				description || '',
 				base_preset,
 				JSON.stringify(packages),
-				JSON.stringify(snapshot)
+				JSON.stringify(snapshot),
+				validVisibility
 			)
 			.run();
 	} catch (e) {

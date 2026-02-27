@@ -42,11 +42,16 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			.bind(row.user_id)
 			.first<{ username: string }>();
 
-		// Mark as used after first successful fetch (idempotent)
+		// Atomically mark as used to prevent double-redemption
 		if (row.status === 'approved') {
-			await env.DB.prepare("UPDATE cli_auth_codes SET status = 'used' WHERE id = ?")
-				.bind(code_id)
-				.run();
+			const updateResult = await env.DB.prepare(
+				"UPDATE cli_auth_codes SET status = 'used' WHERE id = ? AND status = 'approved'"
+			).bind(code_id).run();
+
+			// If no rows were updated, another request already redeemed this code
+			if (!updateResult.meta.changes) {
+				return json({ status: 'used' });
+			}
 		}
 
 		return json({
@@ -54,7 +59,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 			token: token?.token,
 			username: user?.username,
 			// Ensure strict RFC3339 format for Go client
-			expires_at: token?.expires_at ? token.expires_at.replace(' ', 'T') + 'Z' : undefined
+			expires_at: token?.expires_at ? token.expires_at.replace(' ', 'T') + 'Z' : null
 		});
 	}
 

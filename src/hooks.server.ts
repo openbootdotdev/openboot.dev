@@ -68,7 +68,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 					const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
 
-					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch(() => {});
+					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch((e: unknown) => console.error('install count update failed:', e));
 
 					return withSecurityHeaders(new Response(script, {
 						headers: {
@@ -106,7 +106,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 					const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
 
-					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});
+					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
 
 					return withSecurityHeaders(new Response(script, {
 						headers: {
@@ -145,7 +145,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 						const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
 
-						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch(() => {});
+						env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(user.id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
 
 						return withSecurityHeaders(new Response(script, {
 							headers: {

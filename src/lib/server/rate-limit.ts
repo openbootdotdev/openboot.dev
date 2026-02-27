@@ -75,7 +75,8 @@ export const RATE_LIMITS = {
 	CLI_APPROVE: { maxRequests: 10, windowMs: 60000 },
 	CLI_POLL: { maxRequests: 20, windowMs: 60000 },
 	CONFIG_READ: { maxRequests: 30, windowMs: 60000 },
-	CONFIG_WRITE: { maxRequests: 30, windowMs: 60000 }
+	CONFIG_WRITE: { maxRequests: 30, windowMs: 60000 },
+	SEARCH: { maxRequests: 30, windowMs: 60000 }
 } as const;
 
 export function checkRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
