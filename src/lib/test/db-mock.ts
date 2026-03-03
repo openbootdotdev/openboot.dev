@@ -42,8 +42,11 @@ export function createMockDB(data: MockData = {}): D1Database & { data: Record<s
 		},
 		exec(query: string): Promise<D1Result> {
 			throw new Error('exec() not implemented in mock');
+		},
+		withSession() {
+			throw new Error('withSession() not implemented in mock');
 		}
-	} as D1Database & { data: Record<string, any[]> };
+	} as unknown as D1Database & { data: Record<string, any[]> };
 }
 
 function createMockStatement(sql: string, tables: Record<string, any[]>): D1PreparedStatement {
@@ -71,8 +74,12 @@ function createMockStatement(sql: string, tables: Record<string, any[]>): D1Prep
 				success: true,
 				meta: {
 					duration: 0.1,
+					size_after: 0,
 					rows_read: results.length,
-					rows_written: 0
+					rows_written: 0,
+					changed_db: false,
+					changes: 0,
+					last_row_id: 0
 				}
 			};
 		},
@@ -86,10 +93,12 @@ function createMockStatement(sql: string, tables: Record<string, any[]>): D1Prep
 				success: true,
 				meta: {
 					duration: 0.1,
-					changes,
-					last_row_id: changes ? 1 : 0,
+					size_after: 0,
 					rows_read: 0,
-					rows_written: changes ? 1 : 0
+					rows_written: changes ? 1 : 0,
+					changed_db: changes > 0,
+					changes,
+					last_row_id: changes ? 1 : 0
 				}
 			};
 		},

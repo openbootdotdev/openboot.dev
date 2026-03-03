@@ -2,18 +2,18 @@
  * Test helper functions
  */
 
-import { sign } from '$lib/server/auth';
+import { signToken } from '$lib/server/auth';
 import type { D1Database } from '@cloudflare/workers-types';
 
 /**
  * Creates a valid JWT token for testing
  */
 export async function createTestJWT(userId: string, username: string): Promise<string> {
-	return await sign(
+	return await signToken(
 		{
-			sub: userId,
+			userId,
 			username,
-			iat: Math.floor(Date.now() / 1000)
+			exp: Date.now() + 3600 * 1000
 		},
 		'test-jwt-secret-key-32-chars-long'
 	);

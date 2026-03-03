@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { POST } from './+server';
+import { POST as _POST } from './+server';
+const POST = _POST as (event: any) => Promise<Response>;
 import { createMockDB } from '$lib/test/db-mock';
 import { createMockRequest, createMockPlatform, createMockCookies } from '$lib/test/fixtures';
 import { getJSON } from '$lib/test/helpers';
@@ -22,7 +23,7 @@ describe('POST /api/auth/cli/start', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/start' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -53,7 +54,7 @@ describe('POST /api/auth/cli/start', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/start' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -84,7 +85,7 @@ describe('POST /api/auth/cli/start', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/start' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -108,13 +109,13 @@ describe('POST /api/auth/cli/start', () => {
 			method: 'POST',
 			body: {}
 		});
-		const platform = { env: undefined };
+		const platform = { env: undefined } as any;
 
 		const response = await POST({
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/start' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,

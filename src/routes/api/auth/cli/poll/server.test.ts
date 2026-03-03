@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { GET } from './+server';
+import { GET as _GET } from './+server';
+const GET = _GET as (event: any) => Promise<Response>;
 import { createMockDB } from '$lib/test/db-mock';
 import { mockUser, createMockRequest, createMockPlatform, createMockCookies } from '$lib/test/fixtures';
 import { getJSON } from '$lib/test/helpers';
@@ -16,7 +17,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -40,7 +41,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -72,7 +73,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -104,7 +105,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -148,7 +149,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -195,7 +196,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -240,7 +241,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -273,7 +274,7 @@ describe('GET /api/auth/cli/poll', () => {
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -290,13 +291,13 @@ describe('GET /api/auth/cli/poll', () => {
 	it('should return 500 if platform env not available', async () => {
 		const url = `${baseUrl}?code_id=code123`;
 		const request = createMockRequest({ url, method: 'GET' });
-		const platform = { env: undefined };
+		const platform = { env: undefined } as any;
 
 		const response = await GET({
 			request,
 			platform,
 			url: new URL(url),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/poll' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,

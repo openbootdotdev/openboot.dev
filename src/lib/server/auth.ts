@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import type { D1Database } from '@cloudflare/workers-types';
 
 interface TokenPayload {
 	userId: string;
@@ -55,7 +56,7 @@ export async function getCurrentUser(request: Request, cookies: Cookies, db: D1D
 				.bind(tokenRow.id).run();
 			
 			const user = await db.prepare('SELECT id, username, email, avatar_url FROM users WHERE id = ?')
-				.bind(tokenRow.user_id).first();
+				.bind(tokenRow.user_id).first<{ id: string; username: string; email: string; avatar_url: string | null }>();
 			if (user) return user;
 		}
 	}
@@ -66,7 +67,7 @@ export async function getCurrentUser(request: Request, cookies: Cookies, db: D1D
 	const payload = await verifyToken(token, secret);
 	if (!payload) return null;
 
-	const user = await db.prepare('SELECT id, username, email, avatar_url FROM users WHERE id = ?').bind(payload.userId).first();
+	const user = await db.prepare('SELECT id, username, email, avatar_url FROM users WHERE id = ?').bind(payload.userId).first<{ id: string; username: string; email: string; avatar_url: string | null }>();
 	return user;
 }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { POST } from './+server';
+import { POST as _POST } from './+server';
+const POST = _POST as (event: any) => Promise<Response>;
 import { createMockDB } from '$lib/test/db-mock';
 import {
 	mockUser,
@@ -26,7 +27,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -57,7 +58,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -88,7 +89,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -120,7 +121,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -160,7 +161,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -202,7 +203,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -242,7 +243,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -283,7 +284,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -316,7 +317,7 @@ describe('POST /api/auth/cli/approve', () => {
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,
@@ -336,13 +337,13 @@ describe('POST /api/auth/cli/approve', () => {
 			method: 'POST',
 			body: { code: 'TESTCODE' }
 		});
-		const platform = { env: undefined };
+		const platform = { env: undefined } as any;
 
 		const response = await POST({
 			request,
 			platform,
 			url: new URL(baseUrl),
-			route: { id: '' },
+			route: { id: '/api/auth/cli/approve' },
 			locals: {},
 			isDataRequest: false,
 			isSubRequest: false,

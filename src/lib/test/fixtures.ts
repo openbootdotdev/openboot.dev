@@ -174,12 +174,25 @@ export function createMockPlatform(db?: any): App.Platform {
 			GOOGLE_CLIENT_ID: 'test-google-client-id',
 			GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
 			APP_URL: 'http://localhost:5173'
-		},
-		context: {
-			waitUntil: () => {},
-			passThroughOnException: () => {}
-		},
-		caches: undefined as any,
-		cf: undefined as any
+		}
+	} as App.Platform;
+}
+
+/**
+ * Helper to create a mock SvelteKit RequestEvent for testing route handlers.
+ * Returns `any` to avoid strict route-id type constraints in tests.
+ */
+export function createMockRequestEvent(db: any, overrides: Record<string, any> = {}): any {
+	return {
+		platform: createMockPlatform(db),
+		url: new URL('http://localhost:5173'),
+		route: { id: '' },
+		locals: {},
+		isDataRequest: false,
+		isSubRequest: false,
+		cookies: createMockCookies(),
+		getClientAddress: () => '127.0.0.1',
+		fetch: globalThis.fetch,
+		...overrides
 	};
 }

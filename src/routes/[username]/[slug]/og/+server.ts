@@ -199,7 +199,7 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 		const pngData = resvg.render();
 		const pngBuffer = pngData.asPng();
 
-		return new Response(pngBuffer, {
+		return new Response(pngBuffer as unknown as BodyInit, {
 			headers: {
 				'Content-Type': 'image/png',
 				'Cache-Control': 'public, max-age=3600, s-maxage=3600'

@@ -6,7 +6,7 @@
 
 	type PageState = 'loading' | 'no-code' | 'ready' | 'approving' | 'success' | 'error';
 
-	let state = $state<PageState>('loading');
+	let pageState: PageState = $state('loading');
 	let code = $state('');
 	let errorMessage = $state('');
 
@@ -14,7 +14,7 @@
 		const urlCode = $page.url.searchParams.get('code');
 
 		if (!urlCode) {
-			state = 'no-code';
+			pageState = 'no-code';
 			return;
 		}
 
@@ -28,11 +28,11 @@
 			return;
 		}
 
-		state = 'ready';
+		pageState = 'ready';
 	});
 
 	async function handleApprove() {
-		state = 'approving';
+		pageState = 'approving';
 
 		try {
 			const response = await fetch('/api/auth/cli/approve', {
@@ -43,15 +43,15 @@
 			});
 
 			if (response.ok) {
-				state = 'success';
+				pageState = 'success';
 			} else {
 				const data = await response.json().catch(() => ({ error: 'Unknown error' }));
 				errorMessage = data.error || 'Code expired or invalid. Please try again from the CLI.';
-				state = 'error';
+				pageState = 'error';
 			}
 		} catch {
 			errorMessage = 'Network error. Please check your connection and try again.';
-			state = 'error';
+			pageState = 'error';
 		}
 	}
 
@@ -70,13 +70,13 @@
 	<div class="card">
 		<div class="wordmark">OpenBoot</div>
 
-		{#if state === 'loading'}
+		{#if pageState === 'loading'}
 			<div class="loading-state">
 				<div class="spinner"></div>
 				<p class="loading-text">Verifying session...</p>
 			</div>
 
-		{:else if state === 'no-code'}
+		{:else if pageState === 'no-code'}
 			<div class="icon-block error-icon">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 					<circle cx="12" cy="12" r="10" />
@@ -90,7 +90,7 @@
 				<code>openboot login</code>
 			</div>
 
-		{:else if state === 'ready'}
+		{:else if pageState === 'ready'}
 			<div class="icon-block shield-icon">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -113,7 +113,7 @@
 			</button>
 			<button class="cancel-link" onclick={handleCancel}>Cancel</button>
 
-		{:else if state === 'approving'}
+		{:else if pageState === 'approving'}
 			<div class="icon-block shield-icon">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -131,7 +131,7 @@
 				Approving...
 			</button>
 
-		{:else if state === 'success'}
+		{:else if pageState === 'success'}
 			<div class="icon-block success-icon">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -141,7 +141,7 @@
 			<h1 class="heading">CLI Authorized!</h1>
 			<p class="subtext success-text">You can close this tab and return to your terminal.</p>
 
-		{:else if state === 'error'}
+		{:else if pageState === 'error'}
 			<div class="icon-block error-icon">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 					<circle cx="12" cy="12" r="10" />
