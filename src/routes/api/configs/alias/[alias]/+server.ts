@@ -27,6 +27,8 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	const tapsSet = new Set<string>();
 	const snapshotCasks = new Set<string>();
+	let shell: { oh_my_zsh: boolean; theme: string; plugins: string[] } | null = null;
+	let macosPrefs: { domain: string; key: string; value: string; desc: string }[] | null = null;
 
 	if (config.snapshot) {
 		try {
@@ -37,7 +39,27 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 			for (const cask of snapshot.packages?.casks || []) {
 				snapshotCasks.add(cask);
 			}
-		} catch {
+			if (snapshot.shell) {
+				shell = {
+					oh_my_zsh: snapshot.shell.oh_my_zsh ?? false,
+					theme: snapshot.shell.theme ?? '',
+					plugins: snapshot.shell.plugins ?? []
+				};
+			}
+			if (Array.isArray(snapshot.macos_prefs) && snapshot.macos_prefs.length > 0) {
+				const filtered = snapshot.macos_prefs.filter(
+					(p: unknown): p is { domain: string; key: string; value: string; desc: string } =>
+						typeof p === 'object' &&
+						p !== null &&
+						typeof (p as Record<string, unknown>).domain === 'string' &&
+						typeof (p as Record<string, unknown>).key === 'string' &&
+						typeof (p as Record<string, unknown>).value === 'string' &&
+						typeof (p as Record<string, unknown>).desc === 'string'
+				);
+				if (filtered.length > 0) macosPrefs = filtered;
+			}
+		} catch (err) {
+			console.error(`[config] failed to parse snapshot for alias ${params.alias}:`, err);
 		}
 	}
 
@@ -85,6 +107,8 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		dotfiles_repo: config.dotfiles_repo || '',
 		post_install: config.custom_script
 			? config.custom_script.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-			: []
+			: [],
+		shell,
+		macos_prefs: macosPrefs
 	});
 };
