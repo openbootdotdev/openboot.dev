@@ -22,16 +22,16 @@ DELETE FROM configs WHERE id IN (
   'ob-seed-tech-writer'
 );
 
--- Add OpenClaw AI assistant workstation config
+-- Add OpenClaw one-click install config
 INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, install_count, featured)
 VALUES (
   'ob-seed-openclaw',
   'google_102596069106824335469',
   'openclaw',
   'OpenClaw — AI Assistant',
-  'Complete AI assistant workstation — OpenClaw gateway with local model serving via Ollama, secure remote access via Tailscale, and 20+ messaging channel support (Telegram, Discord, WhatsApp, Slack, WeChat, iMessage).',
+  'One-click setup for OpenClaw (ClawdBot) — a personal AI assistant gateway that connects Claude, GPT, Gemini and more to Telegram, Discord, WhatsApp, Slack, WeChat, and iMessage.',
   'minimal',
-  '[{"name":"openclaw","type":"cask","desc":"AI assistant gateway desktop app"},{"name":"openclaw-cli","type":"formula","desc":"OpenClaw CLI and daemon"},{"name":"ollama","type":"formula","desc":"Local AI model server (llama3, mistral, codellama)"},{"name":"node","type":"formula","desc":"JavaScript runtime (v22+)"},{"name":"git","type":"formula","desc":"Version control"},{"name":"curl","type":"formula","desc":"HTTP transfer tool"},{"name":"wget","type":"formula","desc":"File downloader"},{"name":"jq","type":"formula","desc":"JSON processor"},{"name":"tailscale","type":"cask","desc":"Secure remote access to gateway"},{"name":"warp","type":"cask","desc":"Modern terminal for log monitoring"}]',
+  '[{"name":"node","type":"formula","desc":"JavaScript runtime (v22 recommended)"},{"name":"git","type":"formula","desc":"Version control"},{"name":"curl","type":"formula","desc":"HTTP transfer tool"},{"name":"wget","type":"formula","desc":"File downloader"},{"name":"jq","type":"formula","desc":"JSON processor"},{"name":"openclaw","type":"npm","desc":"Personal AI assistant gateway"}]',
   '',
   'public',
   'openclaw',

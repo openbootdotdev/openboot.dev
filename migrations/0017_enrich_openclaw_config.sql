@@ -1,0 +1,5 @@
+-- Enrich OpenClaw config: add desktop app, local AI, remote access
+UPDATE configs SET
+  description = 'Complete AI assistant workstation — OpenClaw gateway with local model serving via Ollama, secure remote access via Tailscale, and 20+ messaging channel support (Telegram, Discord, WhatsApp, Slack, WeChat, iMessage).',
+  packages = '[{"name":"openclaw","type":"cask","desc":"AI assistant gateway desktop app"},{"name":"openclaw-cli","type":"formula","desc":"OpenClaw CLI and daemon"},{"name":"ollama","type":"formula","desc":"Local AI model server (llama3, mistral, codellama)"},{"name":"node","type":"formula","desc":"JavaScript runtime (v22+)"},{"name":"git","type":"formula","desc":"Version control"},{"name":"curl","type":"formula","desc":"HTTP transfer tool"},{"name":"wget","type":"formula","desc":"File downloader"},{"name":"jq","type":"formula","desc":"JSON processor"},{"name":"tailscale","type":"cask","desc":"Secure remote access to gateway"},{"name":"warp","type":"cask","desc":"Modern terminal for log monitoring"}]'
+WHERE id = 'ob-seed-openclaw';
