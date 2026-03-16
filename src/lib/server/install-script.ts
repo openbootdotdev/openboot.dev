@@ -13,6 +13,7 @@ export function generatePrivateInstallScript(
 	return `#!/bin/bash
 set -e
 
+main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
 # Reopen stdin from /dev/tty so interactive prompts (sudo, Homebrew) work.
 if [ ! -t 0 ] && [ -e /dev/tty ]; then
@@ -83,6 +84,9 @@ echo "Authorized! Fetching install script..."
 echo ""
 
 exec bash <(curl -fsSL -H "Authorization: Bearer \$TOKEN" "\$APP_URL/${safeUsername}/${safeSlug}/install")
+}
+
+main "\$@"
 `;
 }
 
@@ -98,6 +102,7 @@ export function generateInstallScript(
 	return `#!/bin/bash
 set -e
 
+main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
 # Reopen stdin from /dev/tty so interactive prompts (sudo, Homebrew) work.
 if [ ! -t 0 ] && [ -e /dev/tty ]; then
@@ -218,5 +223,8 @@ done
 
 echo ""
 echo "Installation complete!"
+}
+
+main "\$@"
 `;
 }

@@ -2,13 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { generatePrivateInstallScript, generateInstallScript } from './install-script';
 
 describe('generatePrivateInstallScript', () => {
-	it('should reopen stdin from /dev/tty for curl|bash', () => {
+	it('should wrap everything in main() for safe curl|bash piping', () => {
 		const script = generatePrivateInstallScript(
 			'https://openboot.dev',
 			'testuser',
 			'my-config'
 		);
 
+		expect(script).toContain('main()');
+		expect(script).toMatch(/main "\$@"\s*$/);
 		expect(script).toContain('exec < /dev/tty');
 	});
 
@@ -110,9 +112,11 @@ describe('generatePrivateInstallScript', () => {
 });
 
 describe('generateInstallScript', () => {
-	it('should reopen stdin from /dev/tty for curl|bash', () => {
+	it('should wrap everything in main() for safe curl|bash piping', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
+		expect(script).toContain('main()');
+		expect(script).toMatch(/main "\$@"\s*$/);
 		expect(script).toContain('exec < /dev/tty');
 	});
 
