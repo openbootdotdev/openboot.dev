@@ -19,6 +19,8 @@
 	let saving = $state(false);
 	let error = $state('');
 	let editingConfig = $state<any>(null);
+	let showScriptModal = $state(false);
+	let scriptDraft = $state('');
 
 	let formData = $state({
 		name: '',
@@ -607,15 +609,59 @@
 				<div class="script-card">
 					<div class="script-bar">
 						<span class="script-filename">post-install.sh</span>
+						<button
+							class="script-edit-btn"
+							type="button"
+							onclick={() => { scriptDraft = formData.custom_script; showScriptModal = true; }}
+						>
+							{formData.custom_script ? 'Edit' : 'Add Script'}
+						</button>
 					</div>
-					<textarea
-						class="script-textarea"
-						bind:value={formData.custom_script}
-						placeholder="#!/bin/bash&#10;# Commands to run after package installation"
-						spellcheck="false"
-					></textarea>
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					{#if formData.custom_script}
+						<pre class="script-preview" onclick={() => { scriptDraft = formData.custom_script; showScriptModal = true; }}>{formData.custom_script}</pre>
+					{:else}
+						<div class="script-empty" onclick={() => { scriptDraft = ''; showScriptModal = true; }}>No post-install script — click to add</div>
+					{/if}
 				</div>
 			</section>
+		</div>
+	</div>
+{/if}
+
+{#if showScriptModal}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="script-modal-overlay" onkeydown={(e) => { if (e.key === 'Escape') showScriptModal = false; }}>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="script-modal-backdrop" onclick={() => showScriptModal = false}></div>
+		<div class="script-modal">
+			<div class="script-modal-bar">
+				<span class="script-modal-filename">post-install.sh</span>
+				<div class="script-modal-actions">
+					<button
+						type="button"
+						class="script-modal-cancel"
+						onclick={() => showScriptModal = false}
+					>Cancel</button>
+					<button
+						type="button"
+						class="script-modal-save"
+						onclick={() => { formData.custom_script = scriptDraft; showScriptModal = false; }}
+					>Save</button>
+				</div>
+			</div>
+			<div class="script-modal-body">
+				<textarea
+					class="script-modal-textarea"
+					bind:value={scriptDraft}
+					placeholder="#!/bin/bash&#10;# Commands to run after package installation&#10;&#10;# Example:&#10;# mkdir -p ~/Projects&#10;# npm install -g vercel&#10;# defaults write com.apple.dock autohide -bool true"
+					spellcheck="false"
+				></textarea>
+			</div>
+			<div class="script-modal-hint">
+				Commands run sequentially in your home directory after packages, shell, dotfiles, and macOS preferences are applied.
+			</div>
 		</div>
 	</div>
 {/if}
@@ -1289,6 +1335,9 @@
 		padding: 12px 18px;
 		background: var(--bg-tertiary);
 		border-bottom: 1px solid var(--border);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 
 	.script-filename {
@@ -1298,23 +1347,169 @@
 		color: var(--text-secondary);
 	}
 
-	.script-textarea {
+	.script-edit-btn {
+		padding: 5px 14px;
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		color: var(--accent);
+		font-size: 0.8rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.script-edit-btn:hover {
+		border-color: var(--accent);
+		background: rgba(34, 197, 94, 0.08);
+	}
+
+	.script-preview {
+		padding: 16px 20px;
+		margin: 0;
+		color: var(--text-secondary);
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.82rem;
+		line-height: 1.7;
+		white-space: pre-wrap;
+		word-break: break-all;
+		max-height: 160px;
+		overflow: hidden;
+		cursor: pointer;
+	}
+
+	.script-empty {
+		padding: 24px 20px;
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		text-align: center;
+		cursor: pointer;
+	}
+
+	.script-empty:hover {
+		color: var(--text-secondary);
+	}
+
+	/* Script modal */
+	.script-modal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 32px;
+	}
+
+	.script-modal-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(4px);
+	}
+
+	.script-modal {
+		position: relative;
 		width: 100%;
-		min-height: 200px;
+		max-width: 760px;
+		height: 80vh;
+		max-height: 700px;
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+	}
+
+	.script-modal-bar {
+		padding: 14px 20px;
+		background: var(--bg-tertiary);
+		border-bottom: 1px solid var(--border);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
+	}
+
+	.script-modal-filename {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	.script-modal-actions {
+		display: flex;
+		gap: 8px;
+	}
+
+	.script-modal-cancel {
+		padding: 6px 16px;
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-secondary);
+		font-size: 0.82rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.script-modal-cancel:hover {
+		border-color: var(--text-muted);
+	}
+
+	.script-modal-save {
+		padding: 6px 16px;
+		background: var(--accent);
+		border: none;
+		border-radius: 8px;
+		color: #000;
+		font-size: 0.82rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.script-modal-save:hover {
+		opacity: 0.9;
+	}
+
+	.script-modal-body {
+		flex: 1;
+		overflow: hidden;
+	}
+
+	.script-modal-textarea {
+		width: 100%;
+		height: 100%;
 		padding: 20px;
 		background: var(--bg-primary);
 		border: none;
 		color: var(--text-primary);
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.85rem;
-		line-height: 1.6;
-		resize: vertical;
+		line-height: 1.7;
+		resize: none;
 		outline: none;
+		tab-size: 4;
 	}
 
-	.script-textarea::placeholder {
+	.script-modal-textarea::placeholder {
 		color: var(--text-muted);
-		opacity: 0.5;
+		opacity: 0.4;
+	}
+
+	.script-modal-hint {
+		padding: 10px 20px;
+		background: var(--bg-tertiary);
+		border-top: 1px solid var(--border);
+		color: var(--text-muted);
+		font-size: 0.75rem;
+		flex-shrink: 0;
 	}
 
 	@media (max-width: 768px) {
