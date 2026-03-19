@@ -42,7 +42,7 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 	const tapsSet = new Set<string>();
 	const snapshotCasks = new Set<string>();
 	let shell: { oh_my_zsh: boolean; theme: string; plugins: string[] } | null = null;
-	let macosPrefs: { domain: string; key: string; value: string; desc: string }[] | null = null;
+	let macosPrefs: { domain: string; key: string; type: string; value: string; desc: string }[] | null = null;
 
 	if (config.snapshot) {
 		try {
@@ -62,14 +62,19 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 			}
 			if (Array.isArray(snapshot.macos_prefs) && snapshot.macos_prefs.length > 0) {
 				const filtered = snapshot.macos_prefs.filter(
-					(p: unknown): p is { domain: string; key: string; value: string; desc: string } =>
+					(p: unknown): p is { domain: string; key: string; type: string; value: string; desc: string } =>
 						typeof p === 'object' &&
 						p !== null &&
 						typeof (p as Record<string, unknown>).domain === 'string' &&
 						typeof (p as Record<string, unknown>).key === 'string' &&
-						typeof (p as Record<string, unknown>).value === 'string' &&
-						typeof (p as Record<string, unknown>).desc === 'string'
-				);
+						typeof (p as Record<string, unknown>).value === 'string'
+				).map((p: Record<string, unknown>) => ({
+					domain: p.domain as string,
+					key: p.key as string,
+					type: typeof p.type === 'string' ? p.type : '',
+					value: p.value as string,
+					desc: typeof p.desc === 'string' ? p.desc : ''
+				}));
 				if (filtered.length > 0) macosPrefs = filtered;
 			}
 		} catch (err) {
