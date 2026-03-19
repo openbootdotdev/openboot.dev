@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
-import { validateCustomScript, validateDotfilesRepo, validatePackages, RESERVED_ALIASES } from '$lib/server/validation';
+import { validateCustomScript, validateDotfilesRepo, validatePackages, validateMacOSPrefs, RESERVED_ALIASES } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 
 export const GET: RequestHandler = async ({ platform, cookies, request }) => {
@@ -76,6 +76,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	if (dotfiles_repo) {
 		const rv = validateDotfilesRepo(dotfiles_repo);
 		if (!rv.valid) return json({ error: rv.error }, { status: 400 });
+	}
+	if (snapshot?.macos_prefs !== undefined) {
+		const pv = validateMacOSPrefs(snapshot.macos_prefs);
+		if (!pv.valid) return json({ error: pv.error }, { status: 400 });
 	}
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });

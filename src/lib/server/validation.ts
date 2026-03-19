@@ -100,6 +100,38 @@ export function validateReturnTo(path: string | null | undefined): boolean {
 	return /^\/[a-zA-Z0-9\-_/]*(\?[a-zA-Z0-9\-_=&]*)?$/.test(decoded);
 }
 
+/** Validates snapshot.macos_prefs array: required fields, type allowlist, max count.
+ *  Mirrors the Go config.RemoteConfig.Validate() check in the CLI. */
+export function validateMacOSPrefs(prefs: unknown): ValidationResult {
+	if (prefs === undefined || prefs === null) return { valid: true };
+	if (!Array.isArray(prefs)) return { valid: false, error: 'macos_prefs must be an array' };
+	if (prefs.length > 100) return { valid: false, error: 'Maximum 100 macOS preferences allowed' };
+
+	const validTypes = new Set(['', 'string', 'int', 'bool', 'float']);
+
+	for (let i = 0; i < prefs.length; i++) {
+		const p = prefs[i];
+		if (typeof p !== 'object' || p === null) {
+			return { valid: false, error: `macos_prefs[${i}] must be an object` };
+		}
+		const { domain, key, value, type } = p as Record<string, unknown>;
+		if (!domain || typeof domain !== 'string') {
+			return { valid: false, error: `macos_prefs[${i}] missing required field: domain` };
+		}
+		if (!key || typeof key !== 'string') {
+			return { valid: false, error: `macos_prefs[${i}] missing required field: key` };
+		}
+		if (value === undefined || value === null || typeof value !== 'string') {
+			return { valid: false, error: `macos_prefs[${i}] missing required field: value` };
+		}
+		if (type !== undefined && (typeof type !== 'string' || !validTypes.has(type as string))) {
+			return { valid: false, error: `macos_prefs[${i}] invalid type "${type}" (allowed: string, int, bool, float)` };
+		}
+	}
+
+	return { valid: true };
+}
+
 interface Package {
 	name: string;
 	type: string;

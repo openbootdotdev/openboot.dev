@@ -233,6 +233,12 @@
 					<div class="stat-lbl">Dev</div>
 				</div>
 			{/if}
+			{#if macosPrefs.length > 0}
+				<div class="stat">
+					<div class="stat-val">{macosPrefs.length}</div>
+					<div class="stat-lbl">Prefs</div>
+				</div>
+			{/if}
 			<div class="stat">
 				<div class="stat-val">{config.install_count || 0}</div>
 				<div class="stat-lbl">Installs</div>
@@ -408,50 +414,42 @@
 			{/if}
 		</section>
 
-		{#if taps.length > 0 || macosPrefs.length > 0}
+		{#if macosPrefs.length > 0}
+			<section class="section">
+				<h2 class="section-title">🍎 macOS Preferences</h2>
+				<div class="prefs">
+					{#each macosPrefs as pref}
+						<div class="pref">
+							<div class="pref-header">
+								<span class="pref-key">{pref.key}</span>
+								<span class="pref-domain">{pref.domain}</span>
+							</div>
+							{#if pref.desc}
+								<p class="pref-desc">{pref.desc}</p>
+							{/if}
+							<div class="pref-val">{pref.value}</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
+		{#if taps.length > 0}
 			<section class="section">
 				<h2 class="section-title">📋 Additional</h2>
-
-				{#if taps.length > 0}
-					<details class="detail-card">
-						<summary>
-							<span class="detail-icon">🚰</span>
-							<span class="detail-title">Homebrew Taps ({taps.length})</span>
-						</summary>
-						<div class="detail-content">
-							<div class="tap-list">
-								{#each taps as tap}
-									<div class="tap-item">{tap}</div>
-								{/each}
-							</div>
+				<details class="detail-card">
+					<summary>
+						<span class="detail-icon">🚰</span>
+						<span class="detail-title">Homebrew Taps ({taps.length})</span>
+					</summary>
+					<div class="detail-content">
+						<div class="tap-list">
+							{#each taps as tap}
+								<div class="tap-item">{tap}</div>
+							{/each}
 						</div>
-					</details>
-				{/if}
-
-				{#if macosPrefs.length > 0}
-					<details class="detail-card">
-						<summary>
-							<span class="detail-icon">🍎</span>
-							<span class="detail-title">macOS Preferences ({macosPrefs.length})</span>
-						</summary>
-						<div class="detail-content">
-							<div class="prefs">
-								{#each macosPrefs as pref}
-									<div class="pref">
-										<div class="pref-header">
-											<span class="pref-key">{pref.key}</span>
-											<span class="pref-domain">{pref.domain}</span>
-										</div>
-										{#if pref.desc}
-											<p class="pref-desc">{pref.desc}</p>
-										{/if}
-										<div class="pref-val">{pref.value}</div>
-									</div>
-								{/each}
-							</div>
-						</div>
-					</details>
-				{/if}
+					</div>
+				</details>
 			</section>
 		{/if}
 

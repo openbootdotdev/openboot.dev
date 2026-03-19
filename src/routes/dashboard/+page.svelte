@@ -29,6 +29,13 @@
 	let error = $state('');
 	let toast = $state('');
 
+	interface MacOSPref { domain: string; key: string; type: string; value: string; desc: string; }
+	let macosPrefs = $state<MacOSPref[]>([]);
+	let prefInput = $state('');
+	let prefTypeInput = $state('');
+	let prefInputError = $state('');
+	let editingConfig = $state<any>(null);
+
 	let formData = $state({
 		name: '',
 		description: '',
@@ -231,8 +238,12 @@
 
 	function openModal(config?: Config) {
 		presetExpanded = false;
+		prefInput = '';
+		prefTypeInput = '';
+		prefInputError = '';
 		if (config) {
 			editingSlug = config.slug;
+			editingConfig = config;
 			formData = {
 				name: config.name,
 				description: config.description || '',
@@ -243,6 +254,12 @@
 				custom_script: config.custom_script || '',
 				dotfiles_repo: config.dotfiles_repo || ''
 			};
+			macosPrefs = Array.isArray((config as any).snapshot?.macos_prefs)
+				? (config as any).snapshot.macos_prefs.map((p: any) => ({
+						domain: p.domain || '', key: p.key || '', type: p.type || '',
+						value: p.value || '', desc: p.desc || ''
+					}))
+				: [];
 		const savedPkgs = config.packages || [];
 		if (savedPkgs.length > 0) {
 			const newMap = new Map<string, string>();
@@ -262,6 +279,8 @@
 		}
 		} else {
 			editingSlug = '';
+			editingConfig = null;
+			macosPrefs = [];
 			formData = {
 				name: '',
 				description: '',
@@ -276,6 +295,40 @@
 		}
 		error = '';
 		showModal = true;
+	}
+
+	function addPref() {
+		const raw = prefInput.trim();
+		const eqIdx = raw.indexOf('=');
+		if (eqIdx <= 0) {
+			prefInputError = 'Format: domain.key=value';
+			return;
+		}
+		const domainKey = raw.slice(0, eqIdx);
+		const value = raw.slice(eqIdx + 1);
+		if (!domainKey.includes('.') || !value) {
+			prefInputError = 'Format: domain.key=value (e.g. com.apple.dock.tilesize=48)';
+			return;
+		}
+		if (macosPrefs.some(p => `${p.domain}.${p.key}` === domainKey)) {
+			prefInputError = 'Preference already added';
+			return;
+		}
+		const dotIdx = domainKey.lastIndexOf('.');
+		macosPrefs = [...macosPrefs, {
+			domain: domainKey.slice(0, dotIdx),
+			key: domainKey.slice(dotIdx + 1),
+			type: prefTypeInput,
+			value,
+			desc: ''
+		}];
+		prefInput = '';
+		prefTypeInput = '';
+		prefInputError = '';
+	}
+
+	function removePref(index: number) {
+		macosPrefs = macosPrefs.filter((_, i) => i !== index);
 	}
 
 	function closeModal() {
@@ -310,13 +363,19 @@
 		const method = editingSlug ? 'PUT' : 'POST';
 
 		try {
-			const response = await fetch(url, {
+			const existingSnapshot = editingConfig?.snapshot || null;
+		const updatedSnapshot = existingSnapshot !== null || macosPrefs.length > 0
+			? { ...(existingSnapshot || {}), macos_prefs: macosPrefs }
+			: null;
+
+		const response = await fetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					...formData,
 					alias: formData.alias.trim() || null,
-					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({ name, type, desc: packageDescs.get(name) || '' }))
+					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({ name, type, desc: packageDescs.get(name) || '' })),
+					snapshot: updatedSnapshot
 				})
 			});
 
@@ -865,6 +924,47 @@
 				</div>
 			</div>
 			{/if}
+
+			<div class="form-group">
+				<label class="form-label">macOS Preferences (Optional)</label>
+				{#if macosPrefs.length > 0}
+					<div class="prefs-list">
+						{#each macosPrefs as pref, i}
+							<div class="pref-row">
+								<code class="pref-key">{pref.domain}.{pref.key}</code>
+								{#if pref.type}
+									<span class="pref-type-badge">{pref.type}</span>
+								{/if}
+								<span class="pref-eq">=</span>
+								<code class="pref-value">{pref.value}</code>
+								<button type="button" class="pref-remove" onclick={() => removePref(i)} title="Remove">×</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
+				<div class="pref-input-row">
+					<input
+						type="text"
+						class="form-input pref-input"
+						bind:value={prefInput}
+						placeholder="com.apple.dock.tilesize=48"
+						onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addPref())}
+					/>
+					<select class="pref-type-select" bind:value={prefTypeInput} title="Value type (leave auto to infer)">
+						<option value="">auto</option>
+						<option value="string">string</option>
+						<option value="int">int</option>
+						<option value="bool">bool</option>
+						<option value="float">float</option>
+					</select>
+					<button type="button" class="pref-add-btn" onclick={addPref}>Add</button>
+				</div>
+				{#if prefInputError}
+					<p class="pref-error">{prefInputError}</p>
+				{:else}
+					<p class="form-hint">Format: domain.key=value (e.g. com.apple.dock.tilesize=48)</p>
+				{/if}
+			</div>
 
 			<div class="form-group">
 				<label class="form-label" for="config-script">Custom Post-Install Script (Optional)</label>
@@ -1624,6 +1724,118 @@
 
 	.share-option-label {
 		font-weight: 500;
+	}
+
+	.prefs-list {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin-bottom: 10px;
+	}
+
+	.pref-row {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 0.8rem;
+	}
+
+	.pref-key {
+		color: var(--text-secondary);
+		font-family: 'JetBrains Mono', monospace;
+	}
+
+	.pref-eq {
+		color: var(--text-muted);
+	}
+
+	.pref-value {
+		color: var(--accent);
+		font-family: 'JetBrains Mono', monospace;
+		flex: 1;
+	}
+
+	.pref-remove {
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		cursor: pointer;
+		font-size: 1.1rem;
+		line-height: 1;
+		padding: 0 2px;
+		transition: color 0.15s;
+	}
+
+	.pref-remove:hover {
+		color: var(--danger);
+	}
+
+	.pref-input-row {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+
+	.pref-input {
+		flex: 1;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.85rem;
+	}
+
+	.pref-type-badge {
+		font-size: 0.65rem;
+		padding: 1px 5px;
+		background: rgba(96, 165, 250, 0.15);
+		color: #60a5fa;
+		border-radius: 3px;
+		text-transform: uppercase;
+		font-weight: 600;
+		flex-shrink: 0;
+	}
+
+	.pref-type-select {
+		padding: 10px 8px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		font-family: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.pref-type-select:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+
+	.pref-add-btn {
+		padding: 10px 16px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+		font-family: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: all 0.15s;
+	}
+
+	.pref-add-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.pref-error {
+		font-size: 0.8rem;
+		color: var(--danger);
+		margin-top: 6px;
 	}
 
 </style>
