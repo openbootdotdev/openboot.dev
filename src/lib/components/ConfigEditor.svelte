@@ -19,6 +19,18 @@
 	let saving = $state(false);
 	let error = $state('');
 	let editingConfig = $state<any>(null);
+	let initialSnapshot = $state('');
+
+	function captureSnapshot(): string {
+		return JSON.stringify({
+			formData,
+			packages: [...selectedPackages.entries()].sort(),
+			packageDescs: [...packageDescs.entries()].sort(),
+			macosPrefs,
+		});
+	}
+
+	const hasChanges = $derived(isNew || initialSnapshot === '' || captureSnapshot() !== initialSnapshot);
 	let showScriptModal = $state(false);
 	let scriptDraft = $state('');
 	let scriptTextarea: HTMLTextAreaElement | undefined = $state();
@@ -343,6 +355,7 @@
 			} catch {
 				error = 'Failed to load configuration';
 			}
+			initialSnapshot = captureSnapshot();
 			loading = false;
 		}
 	});
@@ -423,7 +436,7 @@
 				{#if error}
 					<span class="header-error">{error}</span>
 				{/if}
-				<button class="save-btn" onclick={save} disabled={saving}>
+				<button class="save-btn" class:save-btn-inactive={!hasChanges} onclick={save} disabled={saving || !hasChanges}>
 					{saving ? 'Saving...' : isNew ? 'Create Config' : 'Save Changes'}
 				</button>
 			</div>
@@ -808,6 +821,11 @@
 	.save-btn:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	.save-btn-inactive {
+		background: var(--border);
+		color: var(--text-muted);
 	}
 
 	/* Sections */
