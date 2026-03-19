@@ -78,14 +78,9 @@ D1 (SQLite), no ORM — direct parameterized SQL via `env.DB.prepare(sql).bind(.
 
 ## CI/CD
 
-Tag-based releases. Push to `main` runs CI only (tests + build). Push a version tag (`v*`) triggers deployment:
+Push to `main` runs CI (type check + tests + build) then auto-deploys. PRs only run CI, no deploy.
 
-```bash
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-Deploy workflow: test → build → D1 migrations → wrangler deploy. Migrations run before deploy — safe for schema changes that new code depends on.
+Deploy pipeline: check (type check → test → build) → deploy (build → D1 migrations → wrangler deploy → health check). Migrations run before deploy — safe for schema changes that new code depends on.
 
 ## Testing
 
