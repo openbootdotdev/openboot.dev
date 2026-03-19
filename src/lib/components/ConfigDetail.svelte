@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { getCatalogItem } from '$lib/macos-prefs-catalog';
 
 	let {
 		configUser,
@@ -143,6 +144,24 @@
 	const snapshot = $derived(config.snapshot || {});
 	const snapshotPkgs = $derived(snapshot.packages || {});
 	const macosPrefs = $derived(snapshot.macos_prefs || []);
+	interface PrefGroup {
+		category: string;
+		items: { pref: any; catalogItem: ReturnType<typeof getCatalogItem> }[];
+	}
+	const groupedMacosPrefs = $derived.by((): PrefGroup[] => {
+		const result: PrefGroup[] = [];
+		for (const pref of macosPrefs) {
+			const catalogItem = getCatalogItem(pref.domain, pref.key);
+			const category = catalogItem?.category ?? 'Custom';
+			const existing = result.find((g: PrefGroup) => g.category === category);
+			if (existing) {
+				existing.items = [...existing.items, { pref, catalogItem }];
+			} else {
+				result.push({ category, items: [{ pref, catalogItem }] });
+			}
+		}
+		return result;
+	});
 	const shell = $derived(snapshot.shell || {});
 	const git = $derived(snapshot.git || {});
 	const devToolsRaw = $derived(snapshot.dev_tools || []);
@@ -417,17 +436,38 @@
 		{#if macosPrefs.length > 0}
 			<section class="section">
 				<h2 class="section-title">🍎 macOS Preferences</h2>
-				<div class="prefs">
-					{#each macosPrefs as pref}
-						<div class="pref">
-							<div class="pref-header">
-								<span class="pref-key">{pref.key}</span>
-								<span class="pref-domain">{pref.domain}</span>
+				<div class="prefs-groups">
+					{#each groupedMacosPrefs as group}
+						<div class="prefs-category-block">
+							<div class="prefs-category-name">{group.category}</div>
+							<div class="prefs-category-items">
+								{#each group.items as { pref, catalogItem }}
+									<div class="pref-card">
+										<div class="pref-card-body">
+											<div class="pref-card-label">{catalogItem?.label ?? pref.key}</div>
+											{#if catalogItem?.description}
+												<div class="pref-card-desc">{catalogItem.description}</div>
+											{:else if pref.desc}
+												<div class="pref-card-desc">{pref.desc}</div>
+											{:else}
+												<div class="pref-card-desc pref-card-raw">{pref.domain} · {pref.key}</div>
+											{/if}
+										</div>
+										<div class="pref-card-value">
+											{#if (catalogItem?.type ?? pref.type) === 'bool'}
+												<span class="pref-bool {pref.value === 'true' ? 'pref-bool-on' : 'pref-bool-off'}">
+													{pref.value === 'true' ? 'ON' : 'OFF'}
+												</span>
+											{:else if catalogItem?.options}
+												{@const opt = catalogItem.options.find((o: { value: string; label: string }) => o.value === pref.value)}
+												<span class="pref-option-val">{opt?.label ?? pref.value}</span>
+											{:else}
+												<span class="pref-raw-val">{pref.value}</span>
+											{/if}
+										</div>
+									</div>
+								{/each}
 							</div>
-							{#if pref.desc}
-								<p class="pref-desc">{pref.desc}</p>
-							{/if}
-							<div class="pref-val">{pref.value}</div>
 						</div>
 					{/each}
 				</div>
@@ -1086,56 +1126,102 @@
 		color: var(--text-primary);
 	}
 
-	.prefs {
+	.prefs-groups {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 28px;
 	}
 
-	.pref {
-		padding: 20px;
+	.prefs-category-block {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.prefs-category-name {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+		padding-bottom: 8px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.prefs-category-items {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.pref-card {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 14px 18px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 10px;
 	}
 
-	.pref-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 10px;
+	.pref-card-body {
+		flex: 1;
+		min-width: 0;
 	}
 
-	.pref-key {
-		font-family: 'JetBrains Mono', monospace;
+	.pref-card-label {
 		font-size: 0.95rem;
 		font-weight: 600;
 		color: var(--text-primary);
+		margin-bottom: 3px;
 	}
 
-	.pref-domain {
-		font-size: 0.8rem;
+	.pref-card-desc {
+		font-size: 0.82rem;
 		color: var(--text-muted);
-		background: var(--bg-secondary);
+		line-height: 1.4;
+	}
+
+	.pref-card-raw {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.78rem;
+	}
+
+	.pref-card-value {
+		flex-shrink: 0;
+	}
+
+	.pref-bool {
+		display: inline-block;
 		padding: 4px 10px;
 		border-radius: 6px;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
 	}
 
-	.pref-desc {
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-		margin: 0 0 10px;
-		line-height: 1.5;
+	.pref-bool-on {
+		background: rgba(34, 197, 94, 0.15);
+		color: var(--accent);
+		border: 1px solid rgba(34, 197, 94, 0.3);
 	}
 
-	.pref-val {
-		padding: 12px 16px;
+	.pref-bool-off {
 		background: var(--bg-secondary);
+		color: var(--text-muted);
 		border: 1px solid var(--border);
-		border-radius: 8px;
+	}
+
+	.pref-option-val,
+	.pref-raw-val {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.85rem;
 		color: var(--accent);
+		background: var(--bg-secondary);
+		padding: 4px 10px;
+		border-radius: 6px;
+		border: 1px solid var(--border);
 	}
 
 	.cta {
