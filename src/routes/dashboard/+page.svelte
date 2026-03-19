@@ -94,7 +94,7 @@
 					snapshot: source.snapshot || null,
 				})
 			);
-			goto('/dashboard/edit/new');
+			goto('/dashboard/edit/_new');
 		} catch {
 			alert('Failed to duplicate');
 		}
@@ -241,7 +241,7 @@
 					})),
 				})
 			);
-			goto('/dashboard/edit/new');
+			goto('/dashboard/edit/_new');
 		} catch {
 			importError = 'Failed to parse Brewfile';
 		} finally {
@@ -275,7 +275,7 @@
 				<Button variant="secondary" onclick={() => (showImportModal = true)}>
 					Import Brewfile
 				</Button>
-				<Button variant="primary" onclick={() => goto('/dashboard/edit/new')}>
+				<Button variant="primary" onclick={() => goto('/dashboard/edit/_new')}>
 					+ New Config
 				</Button>
 			</div>
@@ -296,7 +296,7 @@
 				<p class="empty-desc">
 					Define your machine's DNA. Create a config to get a custom install URL.
 				</p>
-				<Button variant="primary" onclick={() => goto('/dashboard/edit/new')}>
+				<Button variant="primary" onclick={() => goto('/dashboard/edit/_new')}>
 					Create First Config
 				</Button>
 			</div>

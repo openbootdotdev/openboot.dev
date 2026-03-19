@@ -204,6 +204,8 @@
 					desc: item.description,
 				},
 			];
+			// Keep catalog open so user can continue adding
+			showPrefCatalog = true;
 		}
 	}
 
@@ -780,7 +782,7 @@
 	}
 
 	.identity-glass {
-		background: rgba(10, 10, 10, 0.75);
+		background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
 		backdrop-filter: blur(20px);
 		-webkit-backdrop-filter: blur(20px);
 		border-radius: 17px;
@@ -790,14 +792,10 @@
 		gap: 12px;
 	}
 
-	[data-theme='light'] .identity-glass {
-		background: rgba(255, 255, 255, 0.8);
-	}
-
 	.name-input {
 		background: none;
 		border: none;
-		color: #fff;
+		color: var(--text-primary);
 		font-size: 2.2rem;
 		font-weight: 800;
 		font-family: inherit;
@@ -807,22 +805,15 @@
 		width: 100%;
 	}
 
-	[data-theme='light'] .name-input {
-		color: var(--text-primary);
-	}
-
 	.name-input::placeholder {
-		color: rgba(255, 255, 255, 0.3);
-	}
-
-	[data-theme='light'] .name-input::placeholder {
 		color: var(--text-muted);
+		opacity: 0.5;
 	}
 
 	.desc-input {
 		background: none;
 		border: none;
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--text-secondary);
 		font-size: 1.05rem;
 		font-family: inherit;
 		outline: none;
@@ -830,16 +821,9 @@
 		width: 100%;
 	}
 
-	[data-theme='light'] .desc-input {
-		color: var(--text-secondary);
-	}
-
 	.desc-input::placeholder {
-		color: rgba(255, 255, 255, 0.25);
-	}
-
-	[data-theme='light'] .desc-input::placeholder {
 		color: var(--text-muted);
+		opacity: 0.5;
 	}
 
 	.identity-row {
@@ -854,33 +838,23 @@
 	.vis-pills {
 		display: flex;
 		gap: 0;
-		border: 1px solid rgba(255, 255, 255, 0.15);
+		border: 1px solid var(--border);
 		border-radius: 10px;
 		overflow: hidden;
 	}
 
-	[data-theme='light'] .vis-pills {
-		border-color: var(--border);
-	}
-
 	.vis-pill {
 		padding: 8px 16px;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--bg-tertiary);
 		border: none;
-		color: rgba(255, 255, 255, 0.5);
+		color: var(--text-muted);
 		font-size: 0.78rem;
 		font-weight: 600;
 		font-family: inherit;
 		cursor: pointer;
 		text-transform: capitalize;
 		transition: all 0.15s;
-		border-right: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	[data-theme='light'] .vis-pill {
-		background: var(--bg-tertiary);
-		color: var(--text-muted);
-		border-right-color: var(--border);
+		border-right: 1px solid var(--border);
 	}
 
 	.vis-pill:last-child {
@@ -888,23 +862,13 @@
 	}
 
 	.vis-pill:hover {
-		color: rgba(255, 255, 255, 0.8);
-		background: rgba(255, 255, 255, 0.1);
-	}
-
-	[data-theme='light'] .vis-pill:hover {
 		color: var(--text-secondary);
 		background: var(--bg-hover);
 	}
 
 	.vis-pill.active {
-		background: rgba(255, 255, 255, 0.95);
-		color: #000;
-	}
-
-	[data-theme='light'] .vis-pill.active {
 		background: var(--accent);
-		color: #fff;
+		color: #000;
 	}
 
 	.alias-field {
@@ -914,39 +878,25 @@
 	}
 
 	.alias-prefix {
-		color: rgba(255, 255, 255, 0.4);
+		color: var(--text-muted);
 		font-size: 0.82rem;
 		white-space: nowrap;
-	}
-
-	[data-theme='light'] .alias-prefix {
-		color: var(--text-muted);
 	}
 
 	.alias-input {
 		width: 120px;
 		padding: 8px 10px;
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
 		border-radius: 8px;
-		color: #fff;
+		color: var(--text-primary);
 		font-size: 0.82rem;
 		font-family: 'JetBrains Mono', monospace;
 		outline: none;
 		transition: border-color 0.2s;
 	}
 
-	[data-theme='light'] .alias-input {
-		background: var(--bg-tertiary);
-		border-color: var(--border);
-		color: var(--text-primary);
-	}
-
 	.alias-input:focus {
-		border-color: rgba(255, 255, 255, 0.4);
-	}
-
-	[data-theme='light'] .alias-input:focus {
 		border-color: var(--accent);
 	}
 
@@ -1204,17 +1154,6 @@
 
 	.pref-rm:hover {
 		color: var(--danger);
-	}
-
-	.prefs-empty {
-		text-align: center;
-		padding: 20px;
-		color: var(--text-muted);
-		font-size: 0.82rem;
-		background: var(--bg-tertiary);
-		border: 1px dashed var(--border);
-		border-radius: 10px;
-		margin: 0;
 	}
 
 	.custom-pref-toggle {

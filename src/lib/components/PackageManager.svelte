@@ -42,15 +42,16 @@
 		}
 		searchLoading = true;
 		try {
-			const [brewRes, npmRes] = await Promise.all([
+			const [brewRes, npmRes] = await Promise.allSettled([
 				fetch(`/api/homebrew/search?q=${encodeURIComponent(query)}`).then((r) => r.json()),
 				fetch(`/api/npm/search?q=${encodeURIComponent(query)}`).then((r) => r.json()),
 			]);
-			const brew: SearchResult[] = brewRes.results || [];
-			const npm: SearchResult[] = (npmRes.results || []).map((r: any) => ({
-				...r,
-				type: 'npm' as const,
-			}));
+			const brew: SearchResult[] =
+				brewRes.status === 'fulfilled' ? brewRes.value.results || [] : [];
+			const npm: SearchResult[] =
+				npmRes.status === 'fulfilled'
+					? (npmRes.value.results || []).map((r: any) => ({ ...r, type: 'npm' as const }))
+					: [];
 			searchResults = [...brew, ...npm];
 
 			if (isTapPackage(query) && !searchResults.some((r) => r.name === query)) {
@@ -91,12 +92,6 @@
 		{ key: 'developer', label: 'Developer', desc: 'Ready-to-code' },
 		{ key: 'full', label: 'Full', desc: 'Everything' },
 	];
-
-	function getTypeColor(type: string): string {
-		if (type === 'cask') return '#3b82f6';
-		if (type === 'npm') return '#f97316';
-		return '#22c55e';
-	}
 
 	async function importBrewfile() {
 		if (!brewfileContent.trim()) {

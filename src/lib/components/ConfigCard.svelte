@@ -325,10 +325,6 @@
 		overflow: hidden;
 	}
 
-	[data-theme='light'] .terminal {
-		background: #1a1a2e;
-	}
-
 	.term-chrome {
 		display: flex;
 		gap: 5px;
