@@ -95,20 +95,18 @@
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
 		color: var(--text-muted);
-		opacity: 0;
-		transform: translateX(6px);
+		opacity: 0.5;
 		transition: all 0.2s;
 		white-space: nowrap;
-		pointer-events: none;
 	}
 
 	.snav-item:hover .lbl {
 		opacity: 1;
-		transform: translateX(0);
 	}
 
 	.snav-item.active .lbl {
 		color: var(--accent);
+		opacity: 1;
 	}
 
 	@media (max-width: 1200px) {
