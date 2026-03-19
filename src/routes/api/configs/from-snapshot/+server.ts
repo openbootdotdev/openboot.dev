@@ -38,17 +38,22 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Snapshot payload too large (max 100KB)' }, { status: 400 });
 	}
 
-	const matchedNames: string[] = snapshot.catalog_match?.matched || [];
 	const base_preset = snapshot.matched_preset || 'developer';
 
-	// Convert plain string names from CLI snapshot into typed package objects
-	const snapshotCasks = new Set<string>(snapshot.packages?.casks || []);
-	const snapshotNpm = new Set<string>(snapshot.packages?.npm || []);
-	const packages = matchedNames.map((name: string) => {
-		if (snapshotCasks.has(name)) return { name, type: 'cask' };
-		if (snapshotNpm.has(name)) return { name, type: 'npm' };
-		return { name, type: 'formula' };
-	});
+	// Build typed package objects from the full snapshot.
+	// catalog_match.matched only contains packages known to the catalog; custom
+	// packages (e.g. ack, awscli) would be silently dropped if we relied on it.
+	// Instead, read directly from snapshot.packages.* so every installed package
+	// is preserved regardless of whether it appears in the catalog.
+	const snapshotFormulae: string[] = snapshot.packages?.formulae || [];
+	const snapshotCasks: string[] = snapshot.packages?.casks || [];
+	const snapshotNpm: string[] = snapshot.packages?.npm || [];
+
+	const packages = [
+		...snapshotFormulae.map((name: string) => ({ name, type: 'formula' })),
+		...snapshotCasks.map((name: string) => ({ name, type: 'cask' })),
+		...snapshotNpm.map((name: string) => ({ name, type: 'npm' })),
+	];
 
 	const pv = validatePackages(packages);
 	if (!pv.valid) return json({ error: pv.error }, { status: 400 });
