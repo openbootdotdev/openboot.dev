@@ -48,11 +48,13 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const snapshotFormulae: string[] = snapshot.packages?.formulae || [];
 	const snapshotCasks: string[] = snapshot.packages?.casks || [];
 	const snapshotNpm: string[] = snapshot.packages?.npm || [];
+	const snapshotTaps: string[] = snapshot.packages?.taps || [];
 
 	const packages = [
 		...snapshotFormulae.map((name: string) => ({ name, type: 'formula' })),
 		...snapshotCasks.map((name: string) => ({ name, type: 'cask' })),
 		...snapshotNpm.map((name: string) => ({ name, type: 'npm' })),
+		...snapshotTaps.map((name: string) => ({ name, type: 'tap' })),
 	];
 
 	const pv = validatePackages(packages);
