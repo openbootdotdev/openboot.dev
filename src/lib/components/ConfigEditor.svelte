@@ -7,6 +7,7 @@
 	import SectionNav from './SectionNav.svelte';
 	import {
 		MACOS_PREF_CATALOG,
+		CATALOG_CATEGORIES,
 		getCatalogItem,
 		type MacOSPrefCatalogItem,
 	} from '$lib/macos-prefs-catalog';
@@ -56,8 +57,7 @@
 		desc: string;
 	}
 	let macosPrefs = $state<MacOSPref[]>([]);
-	let showPrefCatalog = $state(false);
-	let catalogSearch = $state('');
+	let expandedPrefCats = $state<Set<string>>(new Set());
 	let showCustomPref = $state(false);
 	let prefInput = $state('');
 	let prefTypeInput = $state('');
@@ -103,35 +103,49 @@
 			: GRADIENTS[0]
 	);
 
-	const filteredCatalogItems = $derived(
-		catalogSearch.length < 2
-			? MACOS_PREF_CATALOG
-			: MACOS_PREF_CATALOG.filter(
-					(item) =>
-						item.label.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-						item.description.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-						item.key.toLowerCase().includes(catalogSearch.toLowerCase())
-				)
+	const catalogByCategory = $derived.by(() => {
+		const map: Record<string, MacOSPrefCatalogItem[]> = {};
+		for (const cat of CATALOG_CATEGORIES) {
+			map[cat] = MACOS_PREF_CATALOG.filter((i) => i.category === cat);
+		}
+		return map;
+	});
+
+	const addedCountByCategory = $derived.by(() => {
+		const counts: Record<string, number> = {};
+		for (const pref of macosPrefs) {
+			const ci = getCatalogItem(pref.domain, pref.key);
+			const cat = ci?.category ?? 'Custom';
+			counts[cat] = (counts[cat] || 0) + 1;
+		}
+		return counts;
+	});
+
+	const customPrefs = $derived(
+		macosPrefs
+			.map((p, i) => ({ pref: p, index: i }))
+			.filter(({ pref }) => !getCatalogItem(pref.domain, pref.key))
 	);
 
-	const filteredCatalogCategories = $derived([
-		...new Set(filteredCatalogItems.map((i) => i.category)),
-	]);
+	function togglePrefCat(cat: string) {
+		const next = new Set(expandedPrefCats);
+		if (next.has(cat)) next.delete(cat);
+		else next.add(cat);
+		expandedPrefCats = next;
+	}
 
-	const groupedPrefs = $derived.by(() => {
-		return macosPrefs.reduce<
-			{ category: string; items: { pref: MacOSPref; index: number }[] }[]
-		>((groups, pref, index) => {
-			const category = getCatalogItem(pref.domain, pref.key)?.category ?? 'Custom';
-			const existing = groups.find((g) => g.category === category);
-			if (existing) {
-				return groups.map((g) =>
-					g.category === category ? { ...g, items: [...g.items, { pref, index }] } : g
-				);
-			}
-			return [...groups, { category, items: [{ pref, index }] }];
-		}, []);
-	});
+	function getAddedPrefIndex(item: MacOSPrefCatalogItem): number {
+		return macosPrefs.findIndex((p) => p.domain === item.domain && p.key === item.key);
+	}
+
+	function initExpandedCats() {
+		const cats = new Set<string>();
+		for (const pref of macosPrefs) {
+			const ci = getCatalogItem(pref.domain, pref.key);
+			if (ci) cats.add(ci.category);
+		}
+		expandedPrefCats = cats.size > 0 ? cats : new Set([CATALOG_CATEGORIES[0]]);
+	}
 
 	function initPackagesForPreset(preset: string) {
 		const p = PRESET_PACKAGES[preset];
@@ -199,6 +213,13 @@
 		macosPrefs = macosPrefs.filter((_, i) => i !== index);
 	}
 
+	function normalizePrefValue(type: string, value: string): string {
+		if (type === 'bool') {
+			return (value === '1' || value === 'true') ? 'true' : 'false';
+		}
+		return value;
+	}
+
 	function isPrefAdded(item: MacOSPrefCatalogItem): boolean {
 		return macosPrefs.some((p) => p.domain === item.domain && p.key === item.key);
 	}
@@ -219,8 +240,6 @@
 					desc: item.description,
 				},
 			];
-			// Keep catalog open so user can continue adding
-			showPrefCatalog = true;
 		}
 	}
 
@@ -269,14 +288,18 @@
 						initPackagesForPreset(formData.base_preset);
 					}
 					if (data.snapshot?.macos_prefs) {
-						macosPrefs = data.snapshot.macos_prefs.map((p: any) => ({
-							domain: p.domain || '',
-							key: p.key || '',
-							type: p.type || '',
-							value: String(p.value ?? ''),
-							desc: p.desc || '',
-						}));
+						macosPrefs = data.snapshot.macos_prefs.map((p: any) => {
+							const type = p.type || '';
+							return {
+								domain: p.domain || '',
+								key: p.key || '',
+								type,
+								value: normalizePrefValue(type, String(p.value ?? '')),
+								desc: p.desc || '',
+							};
+						});
 					}
+					initExpandedCats();
 				} catch {
 					initPackagesForPreset('developer');
 				}
@@ -300,14 +323,18 @@
 					dotfiles_repo: config.dotfiles_repo || '',
 				};
 				macosPrefs = Array.isArray(config.snapshot?.macos_prefs)
-					? config.snapshot.macos_prefs.map((p: any) => ({
-							domain: p.domain || '',
-							key: p.key || '',
-							type: p.type || '',
-							value: String(p.value ?? ''),
-							desc: p.desc || '',
-						}))
+					? config.snapshot.macos_prefs.map((p: any) => {
+							const type = p.type || '';
+							return {
+								domain: p.domain || '',
+								key: p.key || '',
+								type,
+								value: normalizePrefValue(type, String(p.value ?? '')),
+								desc: p.desc || '',
+							};
+						})
 					: [];
+				initExpandedCats();
 				const savedPkgs = config.packages || [];
 				if (savedPkgs.length > 0) {
 					const newMap = new Map<string, string>();
@@ -488,100 +515,115 @@
 						<div class="prefs-top">
 							<span class="prefs-title">macOS Preferences</span>
 							{#if macosPrefs.length > 0}
-							<button
-								class="catalog-toggle"
-								onclick={() => {
-									showPrefCatalog = !showPrefCatalog;
-									catalogSearch = '';
-								}}
-							>
-								{showPrefCatalog ? 'Hide catalog' : 'Browse catalog'}
-							</button>
-						{/if}
+								<span class="prefs-count">{macosPrefs.length} configured</span>
+							{/if}
 						</div>
 
-						<!-- Catalog: always show when empty, toggle when has prefs -->
-						{#if showPrefCatalog || macosPrefs.length === 0}
-							<div class="catalog">
-								<input
-									class="catalog-search"
-									type="text"
-									bind:value={catalogSearch}
-									placeholder="Search preferences..."
-								/>
-								<div class="catalog-list">
-									{#each filteredCatalogCategories as category}
-										<div class="cat-label">{category}</div>
-										{#each filteredCatalogItems.filter((i) => i.category === category) as item}
-											{@const added = isPrefAdded(item)}
-											<button
-												class="cat-item"
-												class:cat-added={added}
-												onclick={() => addPrefFromCatalog(item)}
-											>
-												<span class="cat-check">{added ? '✓' : '+'}</span>
-												<div class="cat-body">
-													<span class="cat-name">{item.label}</span>
-													<span class="cat-desc">{item.description}</span>
+						<!-- Accordion groups by category -->
+						<div class="pref-accordion">
+							{#each CATALOG_CATEGORIES as cat}
+								{@const items = catalogByCategory[cat]}
+								{@const count = addedCountByCategory[cat] || 0}
+								{@const total = items.length}
+								{@const expanded = expandedPrefCats.has(cat)}
+								<div class="pref-acc-group" class:pref-acc-has-items={count > 0}>
+									<button class="pref-acc-header" onclick={() => togglePrefCat(cat)}>
+										<svg class="pref-acc-chevron" class:pref-acc-chevron-open={expanded} width="12" height="12" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+										<span class="pref-acc-name">{cat}</span>
+										{#if count > 0}
+											<span class="pref-acc-badge">{count}/{total}</span>
+										{:else}
+											<span class="pref-acc-total">{total}</span>
+										{/if}
+									</button>
+									{#if expanded}
+										<div class="pref-acc-body">
+											{#each items as item}
+												{@const added = isPrefAdded(item)}
+												{@const prefIdx = getAddedPrefIndex(item)}
+												<div class="pref-row" class:pref-row-active={added}>
+													<button
+														class="pref-toggle-btn"
+														onclick={() => addPrefFromCatalog(item)}
+													>
+														<span class="pref-check" class:pref-check-on={added}>{added ? '✓' : ''}</span>
+													</button>
+													<div class="pref-info">
+														<span class="pref-label">{item.label}</span>
+														<span class="pref-meta">{item.description}</span>
+													</div>
+													{#if added && prefIdx >= 0}
+														<div class="pref-control">
+															{#if item.type === 'bool'}
+																<button
+																	class="pref-bool"
+																	class:on={macosPrefs[prefIdx].value === 'true'}
+																	onclick={() => updatePrefValue(prefIdx, macosPrefs[prefIdx].value === 'true' ? 'false' : 'true')}
+																>
+																	{macosPrefs[prefIdx].value === 'true' ? 'ON' : 'OFF'}
+																</button>
+															{:else if item.options}
+																<select
+																	class="pref-sel"
+																	value={macosPrefs[prefIdx].value}
+																	onchange={(e) => updatePrefValue(prefIdx, e.currentTarget.value)}
+																>
+																	{#each item.options as opt}
+																		<option value={opt.value}>{opt.label}</option>
+																	{/each}
+																</select>
+															{:else}
+																<input
+																	type={(item.type === 'int' || item.type === 'float') ? 'number' : 'text'}
+																	class="pref-val"
+																	value={macosPrefs[prefIdx].value}
+																	min={item.min}
+																	max={item.max}
+																	oninput={(e) => updatePrefValue(prefIdx, e.currentTarget.value)}
+																/>
+															{/if}
+														</div>
+													{/if}
 												</div>
-											</button>
-										{/each}
-									{/each}
-									{#if filteredCatalogItems.length === 0}
-										<div class="catalog-empty">No matches</div>
+											{/each}
+										</div>
 									{/if}
 								</div>
-							</div>
-						{/if}
+							{/each}
+						</div>
 
-						{#if macosPrefs.length > 0}
-							{#each groupedPrefs as group}
-								<div class="prefs-group">
-									<div class="prefs-group-label">{group.category}</div>
-									{#each group.items as { pref, index }}
-										{@const ci = getCatalogItem(pref.domain, pref.key)}
-										<div class="pref-row">
+						<!-- Custom prefs not in catalog -->
+						{#if customPrefs.length > 0}
+							<div class="pref-acc-group pref-acc-has-items">
+								<div class="pref-acc-header pref-acc-header-static">
+									<span class="pref-acc-name">Custom</span>
+									<span class="pref-acc-badge">{customPrefs.length}</span>
+								</div>
+								<div class="pref-acc-body">
+									{#each customPrefs as { pref, index }}
+										<div class="pref-row pref-row-active">
+											<button class="pref-toggle-btn" onclick={() => removePref(index)}>
+												<span class="pref-check pref-check-on">✓</span>
+											</button>
 											<div class="pref-info">
-												<span class="pref-label">{ci?.label ?? `${pref.domain}.${pref.key}`}</span>
-												{#if ci?.description}
-													<span class="pref-meta">{ci.description}</span>
+												<span class="pref-label">{pref.domain}.{pref.key}</span>
+												{#if pref.desc}
+													<span class="pref-meta">{pref.desc}</span>
 												{/if}
 											</div>
 											<div class="pref-control">
-												{#if (ci?.type ?? pref.type) === 'bool'}
-													<button
-														class="pref-bool"
-														class:on={pref.value === 'true'}
-														onclick={() => updatePrefValue(index, pref.value === 'true' ? 'false' : 'true')}
-													>
-														{pref.value === 'true' ? 'ON' : 'OFF'}
-													</button>
-												{:else if ci?.options}
-													<select
-														class="pref-sel"
-														value={pref.value}
-														onchange={(e) => updatePrefValue(index, e.currentTarget.value)}
-													>
-														{#each ci.options as opt}
-															<option value={opt.value}>{opt.label}</option>
-														{/each}
-													</select>
-												{:else}
-													<input
-														type={(pref.type === 'int' || pref.type === 'float' || ci?.type === 'int' || ci?.type === 'float') ? 'number' : 'text'}
-														class="pref-val"
-														value={pref.value}
-														min={ci?.min}
-														max={ci?.max}
-														oninput={(e) => updatePrefValue(index, e.currentTarget.value)}
-													/>
-												{/if}
+												<input
+													type="text"
+													class="pref-val"
+													value={pref.value}
+													oninput={(e) => updatePrefValue(index, e.currentTarget.value)}
+												/>
 											</div>
 											<button class="pref-rm" onclick={() => removePref(index)}>&times;</button>
 										</div>
 									{/each}
 								</div>
-							{/each}
+							</div>
 						{/if}
 
 						<button
@@ -988,65 +1030,36 @@
 		color: var(--text-primary);
 	}
 
-	.catalog-toggle {
-		padding: 6px 14px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--accent);
+	.prefs-count {
 		font-size: 0.78rem;
-		font-weight: 600;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
+		color: var(--text-muted);
+		font-weight: 500;
 	}
 
-	.catalog-toggle:hover {
-		background: color-mix(in srgb, var(--accent) 10%, var(--bg-secondary));
-		border-color: var(--accent);
-	}
-
-	.catalog {
-		background: var(--bg-tertiary);
+	/* Accordion */
+	.pref-accordion {
+		display: flex;
+		flex-direction: column;
 		border: 1px solid var(--border);
 		border-radius: 12px;
 		overflow: hidden;
 	}
 
-	.catalog-search {
-		width: 100%;
-		padding: 12px 16px;
-		background: var(--bg-secondary);
-		border: none;
+	.pref-acc-group {
 		border-bottom: 1px solid var(--border);
-		color: var(--text-primary);
-		font-size: 0.88rem;
-		font-family: inherit;
-		outline: none;
 	}
 
-	.catalog-list {
-		max-height: 280px;
-		overflow-y: auto;
-		padding: 6px 0;
+	.pref-acc-group:last-child {
+		border-bottom: none;
 	}
 
-	.cat-label {
-		padding: 10px 16px 4px;
-		font-size: 0.65rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--text-muted);
-	}
-
-	.cat-item {
+	.pref-acc-header {
 		display: flex;
-		align-items: flex-start;
-		gap: 10px;
+		align-items: center;
+		gap: 8px;
 		width: 100%;
-		padding: 8px 16px;
-		background: none;
+		padding: 10px 14px;
+		background: var(--bg-tertiary);
 		border: none;
 		font-family: inherit;
 		cursor: pointer;
@@ -1054,85 +1067,97 @@
 		transition: background 0.1s;
 	}
 
-	.cat-item:hover {
+	.pref-acc-header:hover {
 		background: var(--bg-secondary);
 	}
 
-	.cat-added {
-		background: color-mix(in srgb, var(--accent) 8%, transparent);
+	.pref-acc-header-static {
+		cursor: default;
 	}
 
-	.cat-check {
+	.pref-acc-header-static:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.pref-acc-chevron {
+		color: var(--text-muted);
+		transition: transform 0.15s;
+		flex-shrink: 0;
+	}
+
+	.pref-acc-chevron-open {
+		transform: rotate(90deg);
+	}
+
+	.pref-acc-name {
+		font-size: 0.84rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		flex: 1;
+	}
+
+	.pref-acc-badge {
+		padding: 2px 7px;
+		background: var(--accent);
+		border-radius: 8px;
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: #000;
+		line-height: 1.3;
+	}
+
+	.pref-acc-total {
+		font-size: 0.72rem;
+		color: var(--text-muted);
+	}
+
+	.pref-acc-body {
+		display: flex;
+		flex-direction: column;
+		background: var(--bg-primary);
+	}
+
+	/* Pref rows */
+	.pref-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 14px;
+		border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+		transition: background 0.1s;
+	}
+
+	.pref-row-active {
+		background: color-mix(in srgb, var(--accent) 4%, transparent);
+	}
+
+	.pref-toggle-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	.pref-check {
 		width: 18px;
 		height: 18px;
-		min-width: 18px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border: 1.5px solid var(--border);
 		border-radius: 4px;
-		font-size: 0.68rem;
+		font-size: 0.65rem;
 		font-weight: 700;
-		color: var(--text-muted);
+		color: transparent;
 		background: var(--bg-secondary);
-		margin-top: 1px;
+		transition: all 0.15s;
 	}
 
-	.cat-added .cat-check {
+	.pref-check-on {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: #000;
-	}
-
-	.cat-body {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.cat-name {
-		font-size: 0.86rem;
-		font-weight: 500;
-		color: var(--text-primary);
-	}
-
-	.cat-desc {
-		font-size: 0.75rem;
-		color: var(--text-muted);
-		line-height: 1.4;
-	}
-
-	.catalog-empty {
-		padding: 20px;
-		text-align: center;
-		font-size: 0.82rem;
-		color: var(--text-muted);
-	}
-
-	/* Prefs items */
-	.prefs-group {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-
-	.prefs-group-label {
-		font-size: 0.65rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-muted);
-		margin-top: 4px;
-	}
-
-	.pref-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 10px 14px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 10px;
 	}
 
 	.pref-info {
@@ -1141,15 +1166,17 @@
 	}
 
 	.pref-label {
-		font-size: 0.86rem;
+		font-size: 0.84rem;
 		font-weight: 500;
 		color: var(--text-primary);
 		display: block;
 	}
 
 	.pref-meta {
-		font-size: 0.72rem;
+		font-size: 0.7rem;
 		color: var(--text-muted);
+		display: block;
+		line-height: 1.3;
 	}
 
 	.pref-control {
@@ -1157,7 +1184,7 @@
 	}
 
 	.pref-bool {
-		padding: 5px 10px;
+		padding: 4px 10px;
 		border-radius: 6px;
 		font-size: 0.72rem;
 		font-weight: 700;
@@ -1177,12 +1204,12 @@
 	}
 
 	.pref-sel {
-		padding: 6px 8px;
+		padding: 4px 8px;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		color: var(--text-primary);
-		font-size: 0.8rem;
+		font-size: 0.78rem;
 		font-family: inherit;
 		cursor: pointer;
 		outline: none;
@@ -1193,13 +1220,13 @@
 	}
 
 	.pref-val {
-		width: 80px;
-		padding: 6px 8px;
+		width: 72px;
+		padding: 4px 8px;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		color: var(--text-primary);
-		font-size: 0.82rem;
+		font-size: 0.78rem;
 		font-family: 'JetBrains Mono', monospace;
 		outline: none;
 	}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getCatalogItem } from '$lib/macos-prefs-catalog';
+	import { getCatalogItem, CATALOG_CATEGORIES } from '$lib/macos-prefs-catalog';
 
 	let {
 		configUser,
@@ -144,24 +144,19 @@
 	const snapshot = $derived(config.snapshot || {});
 	const snapshotPkgs = $derived(snapshot.packages || {});
 	const macosPrefs = $derived(snapshot.macos_prefs || []);
-	interface PrefGroup {
-		category: string;
-		items: { pref: any; catalogItem: ReturnType<typeof getCatalogItem> }[];
-	}
-	const groupedMacosPrefs = $derived.by((): PrefGroup[] => {
-		const result: PrefGroup[] = [];
+
+	const prefsByCategory = $derived.by(() => {
+		const map: Record<string, { pref: any; catalogItem: ReturnType<typeof getCatalogItem> }[]> = {};
 		for (const pref of macosPrefs) {
 			const catalogItem = getCatalogItem(pref.domain, pref.key);
 			const category = catalogItem?.category ?? 'Custom';
-			const existing = result.find((g: PrefGroup) => g.category === category);
-			if (existing) {
-				existing.items = [...existing.items, { pref, catalogItem }];
-			} else {
-				result.push({ category, items: [{ pref, catalogItem }] });
-			}
+			if (!map[category]) map[category] = [];
+			map[category] = [...map[category], { pref, catalogItem }];
 		}
-		return result;
+		return map;
 	});
+
+	const prefCategoryNames = $derived(Object.keys(prefsByCategory));
 	const shell = $derived(snapshot.shell || {});
 	const git = $derived(snapshot.git || {});
 	const devToolsRaw = $derived(snapshot.dev_tools || []);
@@ -436,27 +431,23 @@
 		{#if macosPrefs.length > 0}
 			<section class="section">
 				<h2 class="section-title">🍎 macOS Preferences</h2>
-				<div class="prefs-groups">
-					{#each groupedMacosPrefs as group}
-						<div class="prefs-category-block">
-							<div class="prefs-category-name">{group.category}</div>
-							<div class="prefs-category-items">
-								{#each group.items as { pref, catalogItem }}
-									<div class="pref-card">
-										<div class="pref-card-body">
-											<div class="pref-card-label">{catalogItem?.label ?? pref.key}</div>
-											{#if catalogItem?.description}
-												<div class="pref-card-desc">{catalogItem.description}</div>
-											{:else if pref.desc}
-												<div class="pref-card-desc">{pref.desc}</div>
-											{:else}
-												<div class="pref-card-desc pref-card-raw">{pref.domain} · {pref.key}</div>
-											{/if}
-										</div>
-										<div class="pref-card-value">
+				<div class="prefs-accordion">
+					{#each prefCategoryNames as cat}
+						{@const items = prefsByCategory[cat]}
+						<div class="prefs-acc-group">
+							<div class="prefs-acc-header">
+								<span class="prefs-acc-name">{cat}</span>
+								<span class="prefs-acc-count">{items.length}</span>
+							</div>
+							<div class="prefs-acc-body">
+								{#each items as { pref, catalogItem }}
+									<div class="prefs-kv-row">
+										<span class="prefs-kv-label">{catalogItem?.label ?? pref.key}</span>
+										<span class="prefs-kv-value">
 											{#if (catalogItem?.type ?? pref.type) === 'bool'}
-												<span class="pref-bool {pref.value === 'true' ? 'pref-bool-on' : 'pref-bool-off'}">
-													{pref.value === 'true' ? 'ON' : 'OFF'}
+												{@const boolOn = pref.value === 'true' || pref.value === '1'}
+												<span class="pref-bool {boolOn ? 'pref-bool-on' : 'pref-bool-off'}">
+													{boolOn ? 'ON' : 'OFF'}
 												</span>
 											{:else if catalogItem?.options}
 												{@const opt = catalogItem.options.find((o: { value: string; label: string }) => o.value === pref.value)}
@@ -464,7 +455,7 @@
 											{:else}
 												<span class="pref-raw-val">{pref.value}</span>
 											{/if}
-										</div>
+										</span>
 									</div>
 								{/each}
 							</div>
@@ -1126,77 +1117,77 @@
 		color: var(--text-primary);
 	}
 
-	.prefs-groups {
-		display: flex;
-		flex-direction: column;
-		gap: 28px;
+	.prefs-accordion {
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		overflow: hidden;
 	}
 
-	.prefs-category-block {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-
-	.prefs-category-name {
-		font-size: 0.75rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--text-muted);
-		padding-bottom: 8px;
+	.prefs-acc-group {
 		border-bottom: 1px solid var(--border);
 	}
 
-	.prefs-category-items {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
+	.prefs-acc-group:last-child {
+		border-bottom: none;
 	}
 
-	.pref-card {
+	.prefs-acc-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 16px;
+		background: var(--bg-tertiary);
+	}
+
+	.prefs-acc-name {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-muted);
+		flex: 1;
+	}
+
+	.prefs-acc-count {
+		font-size: 0.7rem;
+		color: var(--text-muted);
+	}
+
+	.prefs-acc-body {
+		display: grid;
+		grid-template-columns: 1fr;
+	}
+
+	@media (min-width: 640px) {
+		.prefs-acc-body {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	.prefs-kv-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 16px;
-		padding: 14px 18px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 10px;
+		gap: 12px;
+		padding: 8px 16px;
+		border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
 	}
 
-	.pref-card-body {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.pref-card-label {
-		font-size: 0.95rem;
-		font-weight: 600;
+	.prefs-kv-label {
+		font-size: 0.88rem;
 		color: var(--text-primary);
-		margin-bottom: 3px;
+		font-weight: 500;
 	}
 
-	.pref-card-desc {
-		font-size: 0.82rem;
-		color: var(--text-muted);
-		line-height: 1.4;
-	}
-
-	.pref-card-raw {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.78rem;
-	}
-
-	.pref-card-value {
+	.prefs-kv-value {
 		flex-shrink: 0;
 	}
 
 	.pref-bool {
 		display: inline-block;
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 0.78rem;
+		padding: 3px 8px;
+		border-radius: 5px;
+		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.05em;
 	}
@@ -1216,11 +1207,11 @@
 	.pref-option-val,
 	.pref-raw-val {
 		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
+		font-size: 0.8rem;
 		color: var(--accent);
 		background: var(--bg-secondary);
-		padding: 4px 10px;
-		border-radius: 6px;
+		padding: 3px 8px;
+		border-radius: 5px;
 		border: 1px solid var(--border);
 	}
 
