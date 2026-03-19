@@ -11,6 +11,7 @@
 		type MacOSPrefCatalogItem,
 	} from '$lib/macos-prefs-catalog';
 	import { PRESET_PACKAGES } from '$lib/presets';
+	import ShellEditor from './ShellEditor.svelte';
 
 	let { slug, skipAuth = false }: { slug?: string; skipAuth?: boolean } = $props();
 	const isNew = !slug;
@@ -33,34 +34,6 @@
 	const hasChanges = $derived(isNew || initialSnapshot === '' || captureSnapshot() !== initialSnapshot);
 	let showScriptModal = $state(false);
 	let scriptDraft = $state('');
-	let scriptTextarea: HTMLTextAreaElement | undefined = $state();
-	let lineNumbers = $derived((() => {
-		const count = (scriptDraft || '').split('\n').length;
-		return Array.from({ length: Math.max(count, 1) }, (_, i) => i + 1);
-	})());
-
-	function syncLineScroll(e: Event) {
-		const textarea = e.target as HTMLTextAreaElement;
-		const gutter = textarea.parentElement?.querySelector('.line-gutter') as HTMLElement | null;
-		if (gutter) {
-			gutter.scrollTop = textarea.scrollTop;
-		}
-	}
-
-	function handleEditorKeydown(e: KeyboardEvent) {
-		if (e.key === 'Tab') {
-			e.preventDefault();
-			const ta = e.target as HTMLTextAreaElement;
-			const start = ta.selectionStart;
-			const end = ta.selectionEnd;
-			const value = ta.value;
-			scriptDraft = value.substring(0, start) + '\t' + value.substring(end);
-			// Restore cursor after tick
-			requestAnimationFrame(() => {
-				ta.selectionStart = ta.selectionEnd = start + 1;
-			});
-		}
-	}
 
 	let formData = $state({
 		name: '',
@@ -693,22 +666,16 @@
 				</div>
 			</div>
 			<div class="script-modal-body">
-				<div class="code-editor">
-					<div class="line-gutter" aria-hidden="true">
-						{#each lineNumbers as num}
-							<div class="line-number">{num}</div>
-						{/each}
-					</div>
-					<textarea
-						class="script-modal-textarea"
-						bind:this={scriptTextarea}
-						bind:value={scriptDraft}
-						placeholder="#!/bin/bash&#10;# Commands to run after package installation&#10;&#10;# Example:&#10;# mkdir -p ~/Projects&#10;# npm install -g vercel&#10;# defaults write com.apple.dock autohide -bool true"
-						spellcheck="false"
-						onscroll={syncLineScroll}
-						onkeydown={handleEditorKeydown}
-					></textarea>
-				</div>
+				<ShellEditor
+					bind:value={scriptDraft}
+					placeholder="#!/bin/bash
+# Commands to run after package installation
+
+# Example:
+# mkdir -p ~/Projects
+# npm install -g vercel
+# defaults write com.apple.dock autohide -bool true"
+				/>
 			</div>
 			<div class="script-modal-hint">
 				Commands run sequentially in your home directory after packages, shell, dotfiles, and macOS preferences are applied.
@@ -1539,52 +1506,6 @@
 		overflow: hidden;
 	}
 
-	.code-editor {
-		display: flex;
-		height: 100%;
-		background: var(--bg-primary);
-	}
-
-	.line-gutter {
-		flex-shrink: 0;
-		width: 52px;
-		padding: 16px 0;
-		background: var(--bg-secondary, var(--bg-tertiary));
-		border-right: 1px solid var(--border);
-		overflow: hidden;
-		user-select: none;
-		text-align: right;
-	}
-
-	.line-number {
-		padding: 0 12px 0 0;
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.8rem;
-		line-height: 1.7;
-		color: var(--text-muted);
-		opacity: 0.5;
-	}
-
-	.script-modal-textarea {
-		flex: 1;
-		width: 100%;
-		height: 100%;
-		padding: 16px 20px;
-		background: var(--bg-primary);
-		border: none;
-		color: var(--text-primary);
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.8rem;
-		line-height: 1.7;
-		resize: none;
-		outline: none;
-		tab-size: 4;
-	}
-
-	.script-modal-textarea::placeholder {
-		color: var(--text-muted);
-		opacity: 0.4;
-	}
 
 	.script-modal-hint {
 		padding: 10px 20px;
