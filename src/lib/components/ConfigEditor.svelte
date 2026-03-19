@@ -1449,7 +1449,7 @@
 	.script-modal {
 		position: relative;
 		width: 100%;
-		max-width: 760px;
+		max-width: 860px;
 		height: 80vh;
 		max-height: 700px;
 		background: var(--bg-primary);
@@ -1521,15 +1521,42 @@
 		overflow: hidden;
 	}
 
+	.code-editor {
+		display: flex;
+		height: 100%;
+		background: var(--bg-primary);
+	}
+
+	.line-gutter {
+		flex-shrink: 0;
+		width: 52px;
+		padding: 16px 0;
+		background: var(--bg-secondary, var(--bg-tertiary));
+		border-right: 1px solid var(--border);
+		overflow: hidden;
+		user-select: none;
+		text-align: right;
+	}
+
+	.line-number {
+		padding: 0 12px 0 0;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.8rem;
+		line-height: 1.7;
+		color: var(--text-muted);
+		opacity: 0.5;
+	}
+
 	.script-modal-textarea {
+		flex: 1;
 		width: 100%;
 		height: 100%;
-		padding: 20px;
+		padding: 16px 20px;
 		background: var(--bg-primary);
 		border: none;
 		color: var(--text-primary);
 		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
+		font-size: 0.8rem;
 		line-height: 1.7;
 		resize: none;
 		outline: none;
