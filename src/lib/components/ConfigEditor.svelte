@@ -21,6 +21,34 @@
 	let editingConfig = $state<any>(null);
 	let showScriptModal = $state(false);
 	let scriptDraft = $state('');
+	let scriptTextarea: HTMLTextAreaElement | undefined = $state();
+	let lineNumbers = $derived((() => {
+		const count = (scriptDraft || '').split('\n').length;
+		return Array.from({ length: Math.max(count, 1) }, (_, i) => i + 1);
+	})());
+
+	function syncLineScroll(e: Event) {
+		const textarea = e.target as HTMLTextAreaElement;
+		const gutter = textarea.parentElement?.querySelector('.line-gutter') as HTMLElement | null;
+		if (gutter) {
+			gutter.scrollTop = textarea.scrollTop;
+		}
+	}
+
+	function handleEditorKeydown(e: KeyboardEvent) {
+		if (e.key === 'Tab') {
+			e.preventDefault();
+			const ta = e.target as HTMLTextAreaElement;
+			const start = ta.selectionStart;
+			const end = ta.selectionEnd;
+			const value = ta.value;
+			scriptDraft = value.substring(0, start) + '\t' + value.substring(end);
+			// Restore cursor after tick
+			requestAnimationFrame(() => {
+				ta.selectionStart = ta.selectionEnd = start + 1;
+			});
+		}
+	}
 
 	let formData = $state({
 		name: '',
@@ -652,12 +680,22 @@
 				</div>
 			</div>
 			<div class="script-modal-body">
-				<textarea
-					class="script-modal-textarea"
-					bind:value={scriptDraft}
-					placeholder="#!/bin/bash&#10;# Commands to run after package installation&#10;&#10;# Example:&#10;# mkdir -p ~/Projects&#10;# npm install -g vercel&#10;# defaults write com.apple.dock autohide -bool true"
-					spellcheck="false"
-				></textarea>
+				<div class="code-editor">
+					<div class="line-gutter" aria-hidden="true">
+						{#each lineNumbers as num}
+							<div class="line-number">{num}</div>
+						{/each}
+					</div>
+					<textarea
+						class="script-modal-textarea"
+						bind:this={scriptTextarea}
+						bind:value={scriptDraft}
+						placeholder="#!/bin/bash&#10;# Commands to run after package installation&#10;&#10;# Example:&#10;# mkdir -p ~/Projects&#10;# npm install -g vercel&#10;# defaults write com.apple.dock autohide -bool true"
+						spellcheck="false"
+						onscroll={syncLineScroll}
+						onkeydown={handleEditorKeydown}
+					></textarea>
+				</div>
 			</div>
 			<div class="script-modal-hint">
 				Commands run sequentially in your home directory after packages, shell, dotfiles, and macOS preferences are applied.
@@ -698,7 +736,7 @@
 	/* Header */
 	.editor-header {
 		position: sticky;
-		top: 0;
+		top: 53px;
 		z-index: 40;
 		display: flex;
 		justify-content: space-between;
