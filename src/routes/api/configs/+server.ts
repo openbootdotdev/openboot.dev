@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
 	}
 
-	const { results } = await env.DB.prepare('SELECT id, slug, name, description, base_preset, visibility, alias, updated_at, snapshot, snapshot_at FROM configs WHERE user_id = ? ORDER BY updated_at DESC')
+	const { results } = await env.DB.prepare('SELECT id, slug, name, description, base_preset, visibility, alias, packages, install_count, updated_at, snapshot, snapshot_at FROM configs WHERE user_id = ? ORDER BY updated_at DESC')
 		.bind(user.id)
 		.all();
 
@@ -27,13 +27,21 @@ export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 			try {
 				snapshot = JSON.parse(config.snapshot);
 			} catch {
-				// Invalid JSON in database - return null instead of crashing
 				snapshot = null;
+			}
+		}
+		let packages = null;
+		if (config.packages) {
+			try {
+				packages = JSON.parse(config.packages);
+			} catch {
+				packages = null;
 			}
 		}
 		return {
 			...config,
-			snapshot
+			snapshot,
+			packages
 		};
 	});
 
