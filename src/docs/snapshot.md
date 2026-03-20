@@ -27,7 +27,7 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
 | **Homebrew Casks** | All installed GUI apps | `brew list --cask` |
 | **Homebrew Taps** | Third-party repositories | `brew tap` |
 | **NPM Global Packages** | Globally installed npm packages | `npm list -g` |
-| **macOS Preferences** | 23 whitelisted developer settings | Curated list |
+| **macOS Preferences** | 26 whitelisted developer settings | Curated list |
 | **Shell Config** | Oh-My-Zsh plugins, theme, aliases | `.zshrc` parsing |
 | **Git Config** | user.name, user.email, editor, default branch | `~/.gitconfig` |
 | **Dev Tools** | Go, Node.js, Python, Rust, Java, Ruby, Docker | Version detection |

@@ -78,33 +78,19 @@ OpenBoot applies a curated set of developer-friendly macOS settings. These are a
 
 ### What Gets Configured
 
-**Global**
-- Show all file extensions
-- Always show scrollbars
-- Disable auto-correct and auto-capitalization
-- Fast key repeat rate and short repeat delay
+**Dock** — Auto-hide, hide delay, icon size, show recent apps, position, minimize animation, show only active apps, launch animation
 
-**Finder**
-- Show path bar and status bar
-- Default to list view
-- No warning when changing file extensions
-- Show hidden files
+**Finder** — Default view style, new window location, search scope, path bar, status bar, hidden files, file extensions, POSIX path in title bar
 
-**Dock**
-- Keep Dock visible (no autohide by default)
-- Hide recent applications
-- Set icon size
-- Use scale effect for minimize
+**Trackpad** — Tap to click, natural scrolling, three-finger drag
 
-**Screenshots**
-- Save to `~/Screenshots`
-- PNG format
-- Disable shadow
+**Desktop** — Click wallpaper to show desktop
 
-**Other**
-- Safari developer menu enabled
-- TextEdit defaults to plain text
-- Time Machine won't prompt for new backup disks
+**Keyboard** — Key repeat rate, delay until repeat, press-and-hold for accents
+
+**Screenshots** — File format (PNG/JPEG/PDF/TIFF), disable window shadows
+
+**Menu Bar** — Show Sound control
 
 ### Skipping macOS Preferences
 

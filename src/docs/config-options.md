@@ -1,6 +1,6 @@
 ---
 title: Config Options
-description: Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 23 macOS preferences whitelist.
+description: Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 26 macOS preferences whitelist.
 group: Reference
 order: 10
 ---
@@ -22,7 +22,8 @@ Every OpenBoot config — whether created from a preset, a snapshot, or the dash
     { "name": "ripgrep", "type": "formula" },
     { "name": "visual-studio-code", "type": "cask" },
     { "name": "arc", "type": "cask" },
-    { "name": "typescript", "type": "npm" }
+    { "name": "typescript", "type": "npm" },
+    { "name": "homebrew/cask-fonts", "type": "tap" }
   ],
   "custom_script": "mkdir -p ~/projects\ngit clone git@github.com:yourorg/main-repo.git ~/projects/main-repo",
   "dotfiles_repo": "https://github.com/yourorg/team-dotfiles.git",
@@ -66,8 +67,9 @@ The tools and apps to install. Stored as an array of package objects, each with 
 - **`formula`** — CLI tools installed via `brew install`
 - **`cask`** — GUI apps installed via `brew install --cask`
 - **`npm`** — Global npm packages installed via `npm install -g`
+- **`tap`** — Third-party Homebrew repositories added via `brew tap`
 
-Each entry is an object: `{ "name": "package-name", "type": "formula" | "cask" | "npm" }`. Names must match Homebrew or npm package names exactly.
+Each entry is an object: `{ "name": "package-name", "type": "formula" | "cask" | "npm" | "tap" }`. Names must match Homebrew or npm package names exactly. Taps are added before formulae and casks are installed.
 
 ### `custom_script`
 
@@ -128,62 +130,65 @@ You can export any config as a JSON file from the dashboard. Click the **Export*
 
 ## macOS Preferences Whitelist
 
-These are the 23 system settings that OpenBoot can configure. Only these are captured by `openboot snapshot` and applied during install.
-
-### Global
-
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Show all file extensions | Files show `.txt`, `.js`, etc. in Finder | on |
-| Always show scrollbars | No auto-hiding scrollbars | on |
-| Disable auto-correct | No automatic text correction | on |
-| Disable auto-capitalization | No automatic capitalization | on |
-| Fast key repeat | Faster character repeat when holding a key | on |
-| Short key repeat delay | Shorter delay before repeat starts | on |
-
-### Finder
-
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Show path bar | Full path shown at bottom of Finder | on |
-| Show status bar | Item count and disk space at bottom | on |
-| Default to list view | Finder opens in list view | on |
-| No extension change warning | No alert when renaming file extensions | on |
-| Show hidden files | Dotfiles and hidden folders visible | on |
+These are the 26 system settings that OpenBoot can configure. Only these are captured by `openboot snapshot` and applied during install. In the dashboard, preferences are grouped into collapsible accordion sections by category.
 
 ### Dock
 
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Keep Dock visible | Dock does not auto-hide | on |
-| Hide recent applications | No "recent apps" section in Dock | on |
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Auto-hide Dock | Automatically hide and show the Dock | on |
+| Auto-hide delay (s) | Delay before Dock appears on hover — 0 for instant | 0 |
 | Icon size | Dock icon size in pixels | 48 |
-| Scale minimize effect | Use scale animation instead of genie | on |
+| Show recent apps | Show recently used apps in a separate Dock section | off |
+| Position on screen | Which edge the Dock appears on (bottom, left, right) | bottom |
+| Minimize animation | Visual effect when minimizing windows (genie or scale) | genie |
+| Show only active apps | Hide non-running apps from the Dock | off |
+| Animate app launches | Bounce icons when launching an app | on |
+
+### Finder
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Default view style | How files display in new windows (icon, list, column, gallery) | list |
+| New window opens | Default location for new Finder windows | Home folder |
+| Default search scope | Where Finder searches by default (This Mac, current folder) | Current folder |
+| Show path bar | Full folder path at bottom of windows | on |
+| Show status bar | Item count and disk space at bottom of windows | on |
+| Show hidden files | Show files and folders starting with a dot | off |
+| Always show file extensions | Show extensions for all files | on |
+| Show full path in title bar | Display POSIX path in window title | off |
+
+### Trackpad
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Tap to click | Tap the trackpad to click instead of pressing down | on |
+| Natural scrolling | Scroll content in the direction your fingers move | on |
+| Three-finger drag | Drag windows and items using three fingers | off |
+
+### Desktop
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Click desktop to show it | Click wallpaper to hide all windows | off |
+
+### Keyboard
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Key repeat rate | How fast keys repeat when held — lower = faster | 2 |
+| Delay until key repeat | How long before a held key starts repeating | 15 |
+| Press and hold for accents | Show accent menu when holding a key (disable for faster repeat) | off |
 
 ### Screenshots
 
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Save location | Where screenshots are saved | `~/Screenshots` |
-| PNG format | Save as PNG instead of other formats | on |
-| Disable shadow | No drop shadow on window screenshots | on |
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Screenshot format | File format for screenshots (PNG, JPEG, PDF, TIFF) | PNG |
+| Disable window shadows | Remove drop shadows from window screenshots | on |
 
-### Safari
+### Menu Bar
 
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Developer menu | Show Develop menu in menu bar | on |
-| WebKit developer extras | Enable Web Inspector and other dev tools | on |
-
-### TextEdit
-
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Plain text mode | Default to plain text, not rich text | on |
-| UTF-8 encoding | Use UTF-8 for plain text files | on |
-
-### Time Machine
-
-| Setting | Description | Default Value |
-|---------|-------------|---------------|
-| Don't prompt for new disks | No "use this disk for backup?" popups | on |
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Show Sound in menu bar | Always show volume control in the menu bar | on |
