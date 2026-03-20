@@ -2,7 +2,7 @@ import { getPackageDescription } from './package-metadata';
 
 export interface PresetPackage {
 	name: string;
-	type: 'formula' | 'cask' | 'npm';
+	type: 'formula' | 'cask' | 'npm' | 'tap';
 	desc: string;
 }
 

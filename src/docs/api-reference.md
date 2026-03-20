@@ -163,7 +163,8 @@ POST /api/configs/from-snapshot
     "packages": {
       "formulae": ["node", "go"],
       "casks": ["visual-studio-code"],
-      "npm": ["typescript"]
+      "npm": ["typescript"],
+      "taps": ["homebrew/cask-fonts"]
     },
     "macos_prefs": [...],
     "shell": {...},
