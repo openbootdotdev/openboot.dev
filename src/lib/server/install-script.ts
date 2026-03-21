@@ -97,9 +97,7 @@ main "\$@"
 
 export function generateInstallScript(
 	username: string,
-	slug: string,
-	customScript: string,
-	dotfilesRepo: string
+	slug: string
 ): string {
 	const safeUsername = sanitizeShellArg(username);
 	const safeSlug = sanitizeShellArg(slug);
@@ -245,56 +243,6 @@ echo ""
 echo "Starting OpenBoot setup with config: @${safeUsername}/${safeSlug}"
 echo ""
 openboot --user "${safeUsername}/${safeSlug}" "\$@"
-
-${
-		customScript
-			? `
-echo ""
-echo "=== Running Custom Post-Install Script ==="
-set +e
-CUSTOM_SCRIPT_B64="${btoa(unescape(encodeURIComponent(customScript)))}"
-echo "\$CUSTOM_SCRIPT_B64" | base64 -d | bash
-CUSTOM_SCRIPT_EXIT=$?
-set -e
-if [ $CUSTOM_SCRIPT_EXIT -ne 0 ]; then
-  echo ""
-  echo "⚠ Custom script exited with code $CUSTOM_SCRIPT_EXIT"
-  echo "  Installation will continue, but check script output above."
-fi
-`
-			: ''
-	}
-${
-		dotfilesRepo
-			? `
-echo ""
-echo "=== Setting up Dotfiles ==="
-DOTFILES_REPO="${dotfilesRepo}"
-DOTFILES_DIR="\$HOME/.dotfiles"
-
-if [[ ! "\$DOTFILES_REPO" =~ ^https:// ]]; then
-  echo "Error: Invalid dotfiles repo URL (must use HTTPS)"
-  exit 1
-fi
-
-if [ -d "\$DOTFILES_DIR" ]; then
-  echo "Dotfiles directory already exists at \$DOTFILES_DIR"
-  echo "Pulling latest changes..."
-  cd "\$DOTFILES_DIR" && git pull
-else
-  echo "Cloning dotfiles from \$DOTFILES_REPO..."
-  git clone "\$DOTFILES_REPO" "\$DOTFILES_DIR"
-fi
-
-cd "\$DOTFILES_DIR"
-echo "Deploying dotfiles with stow..."
-rm -f "\$HOME/.zshrc" "\$HOME/.zshrc.pre-oh-my-zsh"
-for dir in */; do
-  [ -d "\$dir" ] && stow -v --target="\$HOME" "\${dir%/}" 2>/dev/null || true
-done
-`
-			: ''
-	}
 
 echo ""
 echo "Installation complete!"
