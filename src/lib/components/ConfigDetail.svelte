@@ -157,7 +157,7 @@
 	}
 
 	const snapshot = $derived(config.snapshot || {});
-	const snapshotPkgs = $derived(snapshot.packages || {});
+
 	const macosPrefs = $derived(snapshot.macos_prefs || []);
 
 	const prefsByCategory = $derived.by(() => {
@@ -185,12 +185,10 @@
 	const configApps = $derived(configPkgs.filter((p: any) => p.type === 'cask'));
 	const configNpm = $derived(configPkgs.filter((p: any) => p.type === 'npm'));
 
-	const formulaeRaw = $derived(snapshotPkgs.formulae?.length ? snapshotPkgs.formulae : configCli.map((p: any) => p.name));
-	const casksRaw = $derived(snapshotPkgs.casks?.length ? snapshotPkgs.casks : configApps.map((p: any) => p.name));
-
-	const formulae = $derived(formulaeRaw.map((f: any) => typeof f === 'string' ? f : (f?.name || String(f))));
-	const casks = $derived(casksRaw.map((c: any) => typeof c === 'string' ? c : (c?.name || String(c))));
-	const taps = $derived(snapshotPkgs.taps || []);
+	const formulae = $derived(configCli.map((p: any) => p.name));
+	const casks = $derived(configApps.map((p: any) => p.name));
+	const configTaps = $derived(configPkgs.filter((p: any) => p.type === 'tap'));
+	const taps = $derived(configTaps.map((p: any) => p.name));
 
 	const displayedApps = $derived(showAllApps ? casks : casks.slice(0, 12));
 	const displayedCli = $derived(showAllCli ? formulae : formulae.slice(0, 24));
@@ -721,8 +719,6 @@
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.85rem;
 		color: var(--text-secondary);
-		flex: 1;
-		text-align: left;
 	}
 
 	.copy-curl {
