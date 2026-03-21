@@ -100,35 +100,58 @@ export function generateInstallScript(
 	const safeSlug = sanitizeShellArg(slug);
 
 	return `#!/bin/bash
-set -e
+set -euo pipefail
+
+TAP_NAME="openbootdotdev/tap"
 
 main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
-# Reopen stdin from /dev/tty so interactive prompts (sudo, Homebrew) work.
-if [ ! -t 0 ] && [ -e /dev/tty ]; then
+# Reopen stdin from /dev/tty so interactive prompts (read, sudo, Homebrew) work.
+if [[ ! -t 0 ]] && [[ -e /dev/tty ]]; then
   exec < /dev/tty || true
 fi
 
-echo "========================================"
-echo "  OpenBoot - Custom Install"
+echo ""
+echo "OpenBoot Installer"
+echo "=================="
 echo "  Config: @${safeUsername}/${safeSlug}"
-echo "========================================"
 echo ""
 
-TMPDIR="\${TMPDIR:-/tmp}"
-OPENBOOT_BIN="\$TMPDIR/openboot-\$\$"
+detect_os() {
+  local os
+  os=\$(uname -s | tr '[:upper:]' '[:lower:]')
+  case "\$os" in
+    darwin) echo "darwin" ;;
+    *)      echo "Error: OpenBoot only supports macOS" >&2; exit 1 ;;
+  esac
+}
 
-trap 'rm -f "\$OPENBOOT_BIN"' EXIT
+detect_arch() {
+  local arch
+  arch=\$(uname -m)
+  case "\$arch" in
+    x86_64)  echo "amd64" ;;
+    arm64)   echo "arm64" ;;
+    aarch64) echo "arm64" ;;
+    *)       echo "unsupported: \$arch" >&2; exit 1 ;;
+  esac
+}
 
 install_xcode_clt() {
   if xcode-select -p &>/dev/null; then
     return 0
   fi
-  echo "Installing Xcode Command Line Tools..."
-  echo "(A dialog may appear - please click 'Install')"
+
   echo ""
+  echo "Xcode Command Line Tools need to be installed."
+  echo "A dialog will appear - please click 'Install' and enter your password."
+  echo ""
+  read -p "Press Enter to launch installer..." -r
+  echo ""
+
   xcode-select --install 2>/dev/null || true
-  echo "Waiting for Xcode Command Line Tools installation..."
+
+  echo "Waiting for installation to complete..."
   until xcode-select -p &>/dev/null; do
     sleep 5
   done
@@ -140,36 +163,80 @@ install_homebrew() {
   if command -v brew &>/dev/null; then
     return 0
   fi
+
   echo "Installing Homebrew..."
   echo ""
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  if [ "$(uname -m)" = "arm64" ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  else
-    eval "$(/usr/local/bin/brew shellenv)"
-  fi
+
+  /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  local arch
+  arch=\$(uname -m)
+  case "\$arch" in
+    arm64)
+      if [[ -x "/opt/homebrew/bin/brew" ]]; then
+        export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH"
+        export HOMEBREW_PREFIX="/opt/homebrew"
+        export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
+        export HOMEBREW_REPOSITORY="/opt/homebrew"
+      fi
+      ;;
+    x86_64)
+      if [[ -x "/usr/local/bin/brew" ]]; then
+        export PATH="/usr/local/bin:/usr/local/sbin:\$PATH"
+        export HOMEBREW_PREFIX="/usr/local"
+        export HOMEBREW_CELLAR="/usr/local/Cellar"
+        export HOMEBREW_REPOSITORY="/usr/local/Homebrew"
+      fi
+      ;;
+    *)
+      echo "Error: Unsupported architecture: \$arch" >&2
+      exit 1
+      ;;
+  esac
+
+  echo ""
   echo "Homebrew installed!"
   echo ""
 }
 
+local os arch
+os=\$(detect_os)
+arch=\$(detect_arch)
+
+echo "Detected: \${os}/\${arch}"
+echo ""
+
 install_xcode_clt
 install_homebrew
 
-ARCH="$(uname -m)"
-if [ "$ARCH" = "arm64" ]; then
-  ARCH="arm64"
+if brew list openboot &>/dev/null 2>&1; then
+  echo "OpenBoot is already installed via Homebrew."
+  echo ""
+  read -p "Reinstall? (y/N) " -n 1 -r
+  echo
+
+  if [[ \$REPLY =~ ^[Yy]\$ ]]; then
+    echo "Reinstalling OpenBoot..."
+    brew reinstall \${TAP_NAME}/openboot
+    echo ""
+    echo "OpenBoot reinstalled!"
+  else
+    echo "Using existing installation."
+  fi
 else
-  ARCH="amd64"
+  echo "Installing OpenBoot via Homebrew..."
+  echo ""
+
+  brew install \${TAP_NAME}/openboot
+
+  echo ""
+  echo "OpenBoot installed!"
 fi
 
-OPENBOOT_URL="https://github.com/openbootdotdev/openboot/releases/latest/download/openboot-darwin-\${ARCH}"
-
-echo "Downloading OpenBoot..."
-curl -fsSL "\$OPENBOOT_URL" -o "\$OPENBOOT_BIN"
-chmod +x "\$OPENBOOT_BIN"
-
-echo "Using remote config: @${safeUsername}/${safeSlug}"
-"\$OPENBOOT_BIN" --user "${safeUsername}/${safeSlug}" "\$@"
+echo ""
+echo "Starting OpenBoot setup with config: @${safeUsername}/${safeSlug}"
+echo ""
+openboot --user "${safeUsername}/${safeSlug}" "\$@"
 
 ${
 		customScript
