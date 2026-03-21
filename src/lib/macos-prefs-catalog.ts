@@ -38,8 +38,8 @@ export const MACOS_PREF_CATALOG: MacOSPrefCatalogItem[] = [
 	{ id: 'trackpad-natural-scroll', category: 'Trackpad', label: 'Natural scrolling', description: 'Scroll content in the direction your fingers move (iOS-style)', domain: 'NSGlobalDomain', key: 'com.apple.swipescrolldirection', type: 'bool', defaultValue: 'true' },
 	{ id: 'trackpad-three-finger-drag', category: 'Trackpad', label: 'Three-finger drag', description: 'Drag windows and items using three fingers on the trackpad', domain: 'com.apple.AppleMultitouchTrackpad', key: 'TrackpadThreeFingerDrag', type: 'bool', defaultValue: 'false' },
 
-	// Desktop
-	{ id: 'desktop-click-to-show', category: 'Desktop', label: 'Click desktop to show it', description: 'Click the desktop wallpaper to bring it to the front and hide all windows', domain: 'com.apple.WindowManager', key: 'EnableStandardClickToShowDesktop', type: 'bool', defaultValue: 'false' },
+	// Desktop & Stage Manager
+	{ id: 'desktop-click-to-show', category: 'Desktop & Stage Manager', label: 'Click wallpaper to show desktop', description: 'When clicking the desktop wallpaper, hide windows to reveal the desktop', domain: 'com.apple.WindowManager', key: 'EnableStandardClickToShowDesktop', type: 'bool', defaultValue: 'false', options: [{ value: 'true', label: 'Always' }, { value: 'false', label: 'Only in Stage Manager' }] },
 
 	// Keyboard
 	{ id: 'keyboard-key-repeat', category: 'Keyboard', label: 'Key repeat rate', description: 'How fast keys repeat when held down — lower number = faster (min 1)', domain: 'NSGlobalDomain', key: 'KeyRepeat', type: 'int', defaultValue: '2', min: 1, max: 15 },

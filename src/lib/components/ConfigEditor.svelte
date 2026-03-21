@@ -554,15 +554,7 @@
 													</div>
 													{#if added && prefIdx >= 0}
 														<div class="pref-control">
-															{#if item.type === 'bool'}
-																<button
-																	class="pref-bool"
-																	class:on={macosPrefs[prefIdx].value === 'true'}
-																	onclick={() => updatePrefValue(prefIdx, macosPrefs[prefIdx].value === 'true' ? 'false' : 'true')}
-																>
-																	{macosPrefs[prefIdx].value === 'true' ? 'ON' : 'OFF'}
-																</button>
-															{:else if item.options}
+															{#if item.options}
 																<select
 																	class="pref-sel"
 																	value={macosPrefs[prefIdx].value}
@@ -572,6 +564,14 @@
 																		<option value={opt.value}>{opt.label}</option>
 																	{/each}
 																</select>
+															{:else if item.type === 'bool'}
+																<button
+																	class="pref-bool"
+																	class:on={macosPrefs[prefIdx].value === 'true'}
+																	onclick={() => updatePrefValue(prefIdx, macosPrefs[prefIdx].value === 'true' ? 'false' : 'true')}
+																>
+																	{macosPrefs[prefIdx].value === 'true' ? 'ON' : 'OFF'}
+																</button>
 															{:else}
 																<input
 																	type={(item.type === 'int' || item.type === 'float') ? 'number' : 'text'}

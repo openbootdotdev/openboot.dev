@@ -468,14 +468,14 @@
 									<div class="prefs-kv-row">
 										<span class="prefs-kv-label">{catalogItem?.label ?? pref.key}</span>
 										<span class="prefs-kv-value">
-											{#if (catalogItem?.type ?? pref.type) === 'bool'}
+											{#if catalogItem?.options}
+												{@const opt = catalogItem.options.find((o: { value: string; label: string }) => o.value === pref.value)}
+												<span class="pref-option-val">{opt?.label ?? pref.value}</span>
+											{:else if (catalogItem?.type ?? pref.type) === 'bool'}
 												{@const boolOn = pref.value === 'true' || pref.value === '1'}
 												<span class="pref-bool {boolOn ? 'pref-bool-on' : 'pref-bool-off'}">
 													{boolOn ? 'ON' : 'OFF'}
 												</span>
-											{:else if catalogItem?.options}
-												{@const opt = catalogItem.options.find((o: { value: string; label: string }) => o.value === pref.value)}
-												<span class="pref-option-val">{opt?.label ?? pref.value}</span>
 											{:else}
 												<span class="pref-raw-val">{pref.value}</span>
 											{/if}
