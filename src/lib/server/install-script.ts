@@ -16,6 +16,9 @@ set -e
 main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
 # Reopen stdin from /dev/tty so interactive prompts (sudo, Homebrew) work.
+# IMPORTANT: This redirects stdin for the ENTIRE process. After main() returns,
+# bash would try to read the next command from /dev/tty (not the pipe) and hang.
+# Therefore main() MUST exit explicitly — never let it return to the caller.
 if [ ! -t 0 ] && [ -e /dev/tty ]; then
   exec < /dev/tty || true
 fi
@@ -84,6 +87,8 @@ echo "Authorized! Fetching install script..."
 echo ""
 
 exec bash <(curl -fsSL -H "Authorization: Bearer \$TOKEN" "\$APP_URL/${safeUsername}/${safeSlug}/install")
+echo "Error: Failed to launch install script" >&2
+exit 1
 }
 
 main "\$@"
@@ -107,6 +112,9 @@ TAP_NAME="openbootdotdev/tap"
 main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
 # Reopen stdin from /dev/tty so interactive prompts (read, sudo, Homebrew) work.
+# IMPORTANT: This redirects stdin for the ENTIRE process. After main() returns,
+# bash would try to read the next command from /dev/tty (not the pipe) and hang.
+# Therefore main() MUST exit explicitly — never let it return to the caller.
 if [[ ! -t 0 ]] && [[ -e /dev/tty ]]; then
   exec < /dev/tty || true
 fi
@@ -290,9 +298,9 @@ done
 
 echo ""
 echo "Installation complete!"
+exit 0
 }
 
 main "\$@"
-exit 0
 `;
 }

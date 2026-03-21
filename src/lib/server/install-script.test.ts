@@ -12,6 +12,11 @@ describe('generatePrivateInstallScript', () => {
 		expect(script).toContain('main()');
 		expect(script).toMatch(/main "\$@"\s*$/);
 		expect(script).toContain('exec < /dev/tty');
+
+		// CRITICAL: main() must never return after exec < /dev/tty redirects stdin.
+		// Every code path inside main() must end with exit or exec, otherwise
+		// bash hangs waiting on /dev/tty when run via "curl | bash".
+		expect(script).toContain('exit 1\n}');
 	});
 
 	it('should generate private install script with sanitized username and slug', () => {
@@ -116,8 +121,15 @@ describe('generateInstallScript', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
 		expect(script).toContain('main()');
-		expect(script).toMatch(/main "\$@"\s*\nexit 0\s*$/);
+		expect(script).toMatch(/main "\$@"\s*$/);
 		expect(script).toContain('exec < /dev/tty');
+
+		// CRITICAL: main() must never return after exec < /dev/tty redirects stdin.
+		// Every code path inside main() must end with exit or exec, otherwise
+		// bash hangs waiting on /dev/tty when run via "curl | bash".
+		expect(script).toContain('exit 0\n}');
+		// No code should appear between main "$@" and end of script
+		expect(script).not.toMatch(/main "\$@"[\s\S]*exit/);
 	});
 
 	it('should generate basic install script without custom content', () => {
