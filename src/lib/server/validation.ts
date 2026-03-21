@@ -140,7 +140,7 @@ interface Package {
 
 /** Validates packages array: prevents shell injection in package names.
  *  Package names must match standard package manager formats (alphanumeric, hyphens, underscores, dots, slashes for scoped packages).
- *  Types must be: formula, cask, tap, mas, npm, pip, gem, cargo, go.
+ *  Types must be: formula, cask, tap, npm.
  *  Maximum 500 packages per config. */
 export function validatePackages(packages: unknown): ValidationResult {
 	if (!packages) {
@@ -155,7 +155,7 @@ export function validatePackages(packages: unknown): ValidationResult {
 		return { valid: false, error: 'Maximum 500 packages allowed' };
 	}
 
-	const validTypes = ['formula', 'cask', 'tap', 'mas', 'npm', 'pip', 'gem', 'cargo', 'go'];
+	const validTypes = ['formula', 'cask', 'tap', 'npm'];
 
 	for (let i = 0; i < packages.length; i++) {
 		const pkg = packages[i];
