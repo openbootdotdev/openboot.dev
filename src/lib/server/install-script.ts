@@ -293,5 +293,6 @@ echo "Installation complete!"
 }
 
 main "\$@"
+exit 0
 `;
 }

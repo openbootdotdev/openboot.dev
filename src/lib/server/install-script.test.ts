@@ -116,7 +116,7 @@ describe('generateInstallScript', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
 		expect(script).toContain('main()');
-		expect(script).toMatch(/main "\$@"\s*$/);
+		expect(script).toMatch(/main "\$@"\s*\nexit 0\s*$/);
 		expect(script).toContain('exec < /dev/tty');
 	});
 
