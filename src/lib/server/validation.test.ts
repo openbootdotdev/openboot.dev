@@ -292,9 +292,8 @@ describe('validatePackages', () => {
 		expect(result.valid).toBe(true);
 	});
 
-	it('should accept packages with slashes (go modules, npm scopes)', () => {
+	it('should accept packages with slashes (npm scopes)', () => {
 		const packages = [
-			{ name: 'github.com/user/repo', type: 'go' },
 			{ name: '@org/package', type: 'npm' }
 		];
 		const result = validatePackages(packages);
@@ -417,12 +416,20 @@ describe('validatePackages', () => {
 	});
 
 	it('should accept all valid package types', () => {
-		const types = ['formula', 'cask', 'tap', 'mas', 'npm', 'pip', 'gem', 'cargo', 'go'];
+		const types = ['formula', 'cask', 'tap', 'npm'];
 		for (const type of types) {
 			const packages = [{ name: 'valid-package', type }];
 			const result = validatePackages(packages);
 
 			expect(result.valid).toBe(true);
+		}
+	});
+
+	it('should reject previously-allowed types that are no longer valid', () => {
+		for (const type of ['pip', 'gem', 'cargo', 'mas', 'go']) {
+			const result = validatePackages([{ name: 'pkg', type }]);
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain('Invalid package type');
 		}
 	});
 

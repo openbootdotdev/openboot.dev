@@ -16,6 +16,11 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
 	}
 
+	const contentLength = parseInt(request.headers.get('content-length') ?? '0', 10);
+	if (contentLength > 1_048_576) {
+		return json({ error: 'Snapshot payload too large (max 1MB)' }, { status: 413 });
+	}
+
 	let body;
 	try {
 		body = await request.json();
@@ -33,9 +38,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const validVisibilities = ['public', 'unlisted', 'private'];
 	const validVisibility = validVisibilities.includes(visibility) ? visibility : 'unlisted';
 
+	// Post-parse size check as a fallback (Content-Length can be spoofed or absent).
 	const snapshotSize = JSON.stringify(snapshot).length;
-	if (snapshotSize > 100000) {
-		return json({ error: 'Snapshot payload too large (max 100KB)' }, { status: 400 });
+	if (snapshotSize > 1_048_576) {
+		return json({ error: 'Snapshot payload too large (max 1MB)' }, { status: 413 });
 	}
 
 	const base_preset = snapshot.matched_preset || 'developer';
