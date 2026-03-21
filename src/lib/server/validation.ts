@@ -49,14 +49,8 @@ export function validateDotfilesRepo(url: string | null | undefined): Validation
 		const parsed = new URL(url);
 		const hostname = parsed.hostname.toLowerCase();
 
-		const allowedHosts = ['github.com', 'gitlab.com', 'bitbucket.org', 'codeberg.org'];
-		const isAllowed = allowedHosts.includes(hostname);
-
-		if (!isAllowed) {
-			return {
-				valid: false,
-				error: 'Dotfiles repo must be hosted on GitHub, GitLab, Bitbucket, or Codeberg'
-			};
+		if (!hostname) {
+			return { valid: false, error: 'Dotfiles repo URL is missing a hostname' };
 		}
 
 		if (parsed.pathname.includes('..') || parsed.pathname.includes('//')) {

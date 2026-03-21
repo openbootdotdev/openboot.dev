@@ -141,11 +141,10 @@ describe('validateDotfilesRepo', () => {
 		expect(result.error).toContain('too long');
 	});
 
-	it('should reject disallowed hosts', () => {
-		const result = validateDotfilesRepo('https://example.com/user/dotfiles.git');
+	it('should accept any HTTPS host including self-hosted', () => {
+		const result = validateDotfilesRepo('https://git.internal.example.com/user/dotfiles.git');
 
-		expect(result.valid).toBe(false);
-		expect(result.error).toContain('GitHub, GitLab, Bitbucket, or Codeberg');
+		expect(result.valid).toBe(true);
 	});
 
 
