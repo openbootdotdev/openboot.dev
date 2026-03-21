@@ -66,8 +66,8 @@
 						<div class="install-command-wrapper">
 							<div class="install-command">
 								<div class="install-prompt">$</div>
-								<code>brew install openbootdotdev/tap/openboot</code>
-								<button class="copy-btn" onclick={() => copyCommand('brew install openbootdotdev/tap/openboot', 'main')}>
+								<code>curl -fsSL openboot.dev/install.sh | bash</code>
+								<button class="copy-btn" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
 									{#if copied === 'main'}
 										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 											<polyline points="20 6 9 17 4 12"/>
@@ -84,7 +84,10 @@
 							</div>
 						</div>
 						<p class="install-alt">
-							Alternative: <code>curl -fsSL openboot.dev/install.sh | bash</code>
+							Want to inspect first? <code>curl -fsSL openboot.dev/install.sh -o install.sh && cat install.sh && bash install.sh</code>
+						</p>
+						<p class="install-alt">
+							Already have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
 						</p>
 				</div>
 			</div>
