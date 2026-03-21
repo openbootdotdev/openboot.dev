@@ -33,6 +33,21 @@
 		setTimeout(() => (copied = false), 2000);
 	}
 
+	function getCurlCommand() {
+		if (config.alias) {
+			return `curl -fsSL openboot.dev/${config.alias} | bash`;
+		}
+		return `curl -fsSL openboot.dev/${configUser.username}/${config.slug} | bash`;
+	}
+
+	let curlCopied = $state(false);
+
+	function copyCurlCommand() {
+		navigator.clipboard.writeText(getCurlCommand());
+		curlCopied = true;
+		setTimeout(() => (curlCopied = false), 2000);
+	}
+
 	function getShareUrl() {
 		if (config.alias) {
 			return `https://openboot.dev/${config.alias}`;
@@ -217,7 +232,18 @@
 					{/if}
 				</button>
 			</div>
-			<div class="install-actions">
+			<div class="curl-alt">
+				<span class="curl-label">Alternative:</span>
+				<code>{getCurlCommand()}</code>
+				<button class="copy copy-curl" onclick={copyCurlCommand}>
+					{#if curlCopied}
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+					{:else}
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+					{/if}
+				</button>
+			</div>
+		<div class="install-actions">
 				<button class="share-inline" onclick={openShareModal}>
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
 					Share
@@ -675,6 +701,32 @@
 		color: var(--accent);
 		font-weight: 500;
 		text-align: left;
+	}
+
+	.curl-alt {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+		padding: 0 4px;
+	}
+
+	.curl-label {
+		font-size: 0.85rem;
+		color: var(--text-tertiary);
+		white-space: nowrap;
+	}
+
+	.curl-alt code {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		flex: 1;
+		text-align: left;
+	}
+
+	.copy-curl {
+		padding: 6px 10px;
 	}
 
 	.copy {
@@ -1490,6 +1542,15 @@
 		}
 
 		.terminal code {
+			text-align: center;
+		}
+
+		.curl-alt {
+			flex-direction: column;
+			text-align: center;
+		}
+
+		.curl-alt code {
 			text-align: center;
 		}
 
