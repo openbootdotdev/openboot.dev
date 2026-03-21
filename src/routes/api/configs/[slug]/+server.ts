@@ -25,15 +25,22 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 	const rawPkgs = JSON.parse((config.packages as string) || '[]');
 	const needsTypeInference = rawPkgs.length > 0 && typeof rawPkgs[0] === 'string';
 
-	let caskSet = new Set<string>();
-	if (needsTypeInference && config.snapshot) {
+	// Parse snapshot once and reuse for cask inference and macos_prefs extraction.
+	let parsedSnapshot: Record<string, unknown> | null = null;
+	if (config.snapshot) {
 		try {
-			const snapshot = JSON.parse(config.snapshot as string);
-			const casks: string[] = snapshot.packages?.casks || [];
-			for (const c of casks) {
-				caskSet.add(c);
-			}
-		} catch {}
+			parsedSnapshot = JSON.parse(config.snapshot as string);
+		} catch (err) {
+			console.error(`[api/configs] failed to parse snapshot for slug ${params.slug}:`, err);
+		}
+	}
+
+	let caskSet = new Set<string>();
+	if (needsTypeInference && parsedSnapshot) {
+		const casks: string[] = (parsedSnapshot as any).packages?.casks || [];
+		for (const c of casks) {
+			caskSet.add(c);
+		}
 	}
 
 	const packages = rawPkgs.map((p: any) => {
@@ -46,12 +53,27 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		return p;
 	});
 
-	let parsedSnapshot = null;
-	if (config.snapshot) {
-		try {
-			parsedSnapshot = JSON.parse(config.snapshot as string);
-		} catch {
-			parsedSnapshot = null;
+	let macosPrefs: { domain: string; key: string; type?: string; value: string; desc?: string }[] | null = null;
+	if (parsedSnapshot) {
+		const rawPrefs = (parsedSnapshot as any).macos_prefs;
+		if (Array.isArray(rawPrefs) && rawPrefs.length > 0) {
+			const filtered = rawPrefs
+				.filter(
+					(p: unknown): p is Record<string, unknown> =>
+						typeof p === 'object' &&
+						p !== null &&
+						typeof (p as Record<string, unknown>).domain === 'string' &&
+						typeof (p as Record<string, unknown>).key === 'string' &&
+						typeof (p as Record<string, unknown>).value === 'string'
+				)
+				.map((p: Record<string, unknown>) => ({
+					domain: p.domain as string,
+					key: p.key as string,
+					type: typeof p.type === 'string' ? p.type : '',
+					value: p.value as string,
+					desc: typeof p.desc === 'string' ? p.desc : ''
+				}));
+			if (filtered.length > 0) macosPrefs = filtered;
 		}
 	}
 
@@ -59,7 +81,8 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		config: {
 			...config,
 			packages,
-			snapshot: parsedSnapshot
+			snapshot: parsedSnapshot,
+			macos_prefs: macosPrefs
 		},
 		install_url: installUrl
 	});
