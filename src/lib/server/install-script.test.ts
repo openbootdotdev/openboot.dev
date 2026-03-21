@@ -124,9 +124,9 @@ describe('generateInstallScript', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
 		expect(script).toContain('#!/bin/bash');
-		expect(script).toContain('OpenBoot - Custom Install');
+		expect(script).toContain('OpenBoot Installer');
 		expect(script).toContain('Config: @testuser/my-config');
-		expect(script).toContain('openboot-darwin-${ARCH}');
+		expect(script).toContain('brew install ${TAP_NAME}/openboot');
 		expect(script).toContain('--user "testuser/my-config"');
 	});
 
@@ -149,9 +149,9 @@ describe('generateInstallScript', () => {
 	it('should handle ARM64 architecture', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
-		expect(script).toContain('if [ "$ARCH" = "arm64" ]');
+		expect(script).toContain('detect_arch()');
 		expect(script).toContain('/opt/homebrew/bin/brew');
-		expect(script).toContain('openboot-darwin-${ARCH}');
+		expect(script).toContain('arm64)');
 	});
 
 	it('should include custom script when provided', () => {
@@ -240,16 +240,18 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('Setting up Dotfiles');
 	});
 
-	it('should include cleanup trap for temporary binary', () => {
+	it('should install openboot via Homebrew tap', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
-		expect(script).toContain('OPENBOOT_BIN="$TMPDIR/openboot-$$"');
-		expect(script).toContain('trap \'rm -f "$OPENBOOT_BIN"\' EXIT');
+		expect(script).toContain('TAP_NAME="openbootdotdev/tap"');
+		expect(script).toContain('brew install ${TAP_NAME}/openboot');
+		expect(script).toContain('brew list openboot');
+		expect(script).toContain('Reinstall? (y/N)');
 	});
 
-	it('should pass through additional arguments to openboot binary', () => {
+	it('should pass through additional arguments to openboot', () => {
 		const script = generateInstallScript('testuser', 'my-config', '', '');
 
-		expect(script).toContain('"$OPENBOOT_BIN" --user "testuser/my-config" "$@"');
+		expect(script).toContain('openboot --user "testuser/my-config" "$@"');
 	});
 });
