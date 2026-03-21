@@ -118,22 +118,20 @@ describe('generatePrivateInstallScript', () => {
 
 describe('generateInstallScript', () => {
 	it('should wrap everything in main() for safe curl|bash piping', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('main()');
 		expect(script).toMatch(/main "\$@"\s*$/);
 		expect(script).toContain('exec < /dev/tty');
 
 		// CRITICAL: main() must never return after exec < /dev/tty redirects stdin.
-		// Every code path inside main() must end with exit or exec, otherwise
-		// bash hangs waiting on /dev/tty when run via "curl | bash".
 		expect(script).toContain('exit 0\n}');
 		// No code should appear between main "$@" and end of script
 		expect(script).not.toMatch(/main "\$@"[\s\S]*exit/);
 	});
 
-	it('should generate basic install script without custom content', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+	it('should generate basic install script', () => {
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('#!/bin/bash');
 		expect(script).toContain('OpenBoot Installer');
@@ -143,7 +141,7 @@ describe('generateInstallScript', () => {
 	});
 
 	it('should include Xcode CLT installation', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('install_xcode_clt()');
 		expect(script).toContain('xcode-select -p');
@@ -151,7 +149,7 @@ describe('generateInstallScript', () => {
 	});
 
 	it('should include Homebrew installation', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('install_homebrew()');
 		expect(script).toContain('command -v brew');
@@ -159,101 +157,33 @@ describe('generateInstallScript', () => {
 	});
 
 	it('should handle ARM64 architecture', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('detect_arch()');
 		expect(script).toContain('/opt/homebrew/bin/brew');
 		expect(script).toContain('arm64)');
 	});
 
-	it('should include custom script when provided', () => {
-		const customScript = 'mkdir -p ~/projects\necho "Setup complete"';
-		const script = generateInstallScript('testuser', 'my-config', customScript, '');
-
-		expect(script).toContain('Running Custom Post-Install Script');
-		expect(script).toContain('base64 -d | bash');
-		expect(script).toContain('CUSTOM_SCRIPT_EXIT=$?');
-	});
-
-	it('should handle custom script errors gracefully', () => {
-		const customScript = 'exit 1';
-		const script = generateInstallScript('testuser', 'my-config', customScript, '');
-
-		expect(script).toContain('set +e');
-		expect(script).toContain('if [ $CUSTOM_SCRIPT_EXIT -ne 0 ]');
-		expect(script).toContain('Custom script exited with code');
-		expect(script).toContain('Installation will continue');
-	});
-
-	it('should not include custom script section when empty', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+	it('should not include custom script or dotfiles sections', () => {
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).not.toContain('Running Custom Post-Install Script');
 		expect(script).not.toContain('base64 -d');
-	});
-
-	it('should include dotfiles setup when repo provided', () => {
-		const dotfilesRepo = 'https://github.com/testuser/dotfiles.git';
-		const script = generateInstallScript('testuser', 'my-config', '', dotfilesRepo);
-
-		expect(script).toContain('Setting up Dotfiles');
-		expect(script).toContain('DOTFILES_REPO="https://github.com/testuser/dotfiles.git"');
-		expect(script).toContain('DOTFILES_DIR="$HOME/.dotfiles"');
-		expect(script).toContain('git clone "$DOTFILES_REPO"');
-		expect(script).toContain('stow -v --target="$HOME"');
-	});
-
-	it('should validate dotfiles repo URL is HTTPS', () => {
-		const dotfilesRepo = 'https://github.com/testuser/dotfiles.git';
-		const script = generateInstallScript('testuser', 'my-config', '', dotfilesRepo);
-
-		expect(script).toContain('if [[ ! "$DOTFILES_REPO" =~ ^https:// ]]');
-		expect(script).toContain('Invalid dotfiles repo URL (must use HTTPS)');
-	});
-
-	it('should handle existing dotfiles directory with git pull', () => {
-		const dotfilesRepo = 'https://github.com/testuser/dotfiles.git';
-		const script = generateInstallScript('testuser', 'my-config', '', dotfilesRepo);
-
-		expect(script).toContain('if [ -d "$DOTFILES_DIR" ]');
-		expect(script).toContain('Pulling latest changes...');
-		expect(script).toContain('git pull');
-	});
-
-	it('should remove existing zshrc files before stow', () => {
-		const dotfilesRepo = 'https://github.com/testuser/dotfiles.git';
-		const script = generateInstallScript('testuser', 'my-config', '', dotfilesRepo);
-
-		expect(script).toContain('rm -f "$HOME/.zshrc" "$HOME/.zshrc.pre-oh-my-zsh"');
-	});
-
-	it('should not include dotfiles section when repo not provided', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
-
 		expect(script).not.toContain('Setting up Dotfiles');
 		expect(script).not.toContain('DOTFILES_REPO');
 		expect(script).not.toContain('stow');
 	});
 
 	it('should sanitize username and slug in all references', () => {
-		const script = generateInstallScript('user@test', 'my config!', '', '');
+		const script = generateInstallScript('user@test', 'my config!');
 
 		expect(script).toContain('usertest/myconfig');
 		expect(script).not.toContain('user@test');
 		expect(script).not.toContain('my config!');
 	});
 
-	it('should include both custom script and dotfiles when both provided', () => {
-		const customScript = 'echo "Custom setup"';
-		const dotfilesRepo = 'https://github.com/testuser/dotfiles.git';
-		const script = generateInstallScript('testuser', 'my-config', customScript, dotfilesRepo);
-
-		expect(script).toContain('Running Custom Post-Install Script');
-		expect(script).toContain('Setting up Dotfiles');
-	});
-
 	it('should install openboot via Homebrew tap', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('TAP_NAME="openbootdotdev/tap"');
 		expect(script).toContain('brew install ${TAP_NAME}/openboot');
@@ -262,7 +192,7 @@ describe('generateInstallScript', () => {
 	});
 
 	it('should pass through additional arguments to openboot', () => {
-		const script = generateInstallScript('testuser', 'my-config', '', '');
+		const script = generateInstallScript('testuser', 'my-config');
 
 		expect(script).toContain('openboot --user "testuser/my-config" "$@"');
 	});

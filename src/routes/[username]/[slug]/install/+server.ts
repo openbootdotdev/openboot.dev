@@ -12,9 +12,9 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		return new Response('User not found', { status: 404 });
 	}
 
-	const config = await env.DB.prepare('SELECT custom_script, visibility, dotfiles_repo FROM configs WHERE user_id = ? AND slug = ?')
+	const config = await env.DB.prepare('SELECT visibility FROM configs WHERE user_id = ? AND slug = ?')
 		.bind(user.id, params.slug)
-		.first<{ custom_script: string; visibility: string; dotfiles_repo: string }>();
+		.first<{ visibility: string }>();
 
 	if (!config) {
 		return new Response('Config not found', { status: 404 });
@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		}
 	}
 
-	const script = generateInstallScript(params.username, params.slug, config.custom_script, config.dotfiles_repo || '');
+	const script = generateInstallScript(params.username, params.slug);
 
 	return new Response(script, {
 		headers: {

@@ -67,7 +67,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 						}));
 					}
 
-					const script = generateInstallScript(config.username, config.slug, config.custom_script, config.dotfiles_repo || '');
+					const script = generateInstallScript(config.username, config.slug);
 
 					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch((e: unknown) => console.error('install count update failed:', e));
 
@@ -92,8 +92,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const slug = installShMatch[2];
 
 			const config = await env.DB.prepare(
-				'SELECT c.custom_script, c.visibility, c.dotfiles_repo, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
-			).bind(username, slug).first<{ custom_script: string; visibility: string; dotfiles_repo: string; user_id: string }>();
+				'SELECT c.visibility, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
+			).bind(username, slug).first<{ visibility: string; user_id: string }>();
 
 			if (config) {
 				if (config.visibility === 'private') {
@@ -103,7 +103,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					}));
 				}
 
-				const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+				const script = generateInstallScript(username, slug);
 
 				env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
 
@@ -139,7 +139,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 						}));
 					}
 
-					const script = generateInstallScript(username, slug, config.custom_script, config.dotfiles_repo || '');
+					const script = generateInstallScript(username, slug);
 
 					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
 
