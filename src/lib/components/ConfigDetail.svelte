@@ -122,7 +122,21 @@
 	function getPackageUrl(name: string, type: 'formula' | 'cask' | 'npm'): string {
 		if (type === 'npm') return `https://www.npmjs.com/package/${name}`;
 		if (type === 'cask') return `https://formulae.brew.sh/cask/${name}`;
+		// Tap formulae like "cirruslabs/cli/tart" link to the tap repo
+		if (name.includes('/')) {
+			const parts = name.split('/');
+			return `https://github.com/${parts[0]}/homebrew-${parts[1]}`;
+		}
 		return `https://formulae.brew.sh/formula/${name}`;
+	}
+
+	/** Extract display name from a package name. "cirruslabs/cli/tart" → "tart" */
+	function displayName(name: string): string {
+		if (name.includes('/')) {
+			const parts = name.split('/');
+			return parts[parts.length - 1];
+		}
+		return name;
 	}
 
 	function getAppGradient(index: number): string {
@@ -181,7 +195,7 @@
 		? config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
 		: []);
 
-	const configCli = $derived(configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm'));
+	const configCli = $derived(configPkgs.filter((p: any) => p.type !== 'cask' && p.type !== 'npm' && p.type !== 'tap'));
 	const configApps = $derived(configPkgs.filter((p: any) => p.type === 'cask'));
 	const configNpm = $derived(configPkgs.filter((p: any) => p.type === 'npm'));
 
@@ -292,9 +306,9 @@
 					{#each displayedApps as app, i}
 						<a href={getPackageUrl(app, 'cask')} target="_blank" rel="noopener noreferrer" class="app-card">
 							<div class="app-icon" style="background: {getAppGradient(i)}">
-								{app.charAt(0).toUpperCase()}
+								{displayName(app).charAt(0).toUpperCase()}
 							</div>
-							<div class="app-name">{app}</div>
+							<div class="app-name">{displayName(app)}</div>
 						</a>
 					{/each}
 				</div>
@@ -327,7 +341,7 @@
 				<h2 class="section-title">⌘ CLI Tools</h2>
 				<div class="cli-tags">
 					{#each displayedCli as pkg}
-						<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="cli-tag">{pkg}</a>
+						<a href={getPackageUrl(pkg, 'formula')} target="_blank" rel="noopener noreferrer" class="cli-tag">{displayName(pkg)}</a>
 					{/each}
 				</div>
 				{#if formulae.length > 24}

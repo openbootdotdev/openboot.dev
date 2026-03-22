@@ -75,6 +75,15 @@
 		searchTimer = setTimeout(() => search(value), 300);
 	}
 
+	/** Extract display name from a package name. "cirruslabs/cli/tart" → "tart" */
+	function displayName(name: string): string {
+		if (name.includes('/')) {
+			const parts = name.split('/');
+			return parts[parts.length - 1];
+		}
+		return name;
+	}
+
 	const grouped = $derived.by(() => {
 		const apps: string[] = [];
 		const cli: string[] = [];
@@ -231,7 +240,7 @@
 				<div class="group-tags">
 					{#each grouped.apps as pkg}
 						<button class="tag cask" onclick={() => togglePackage(pkg, 'cask')}>
-							{pkg}<span class="tag-x">&times;</span>
+							{displayName(pkg)}<span class="tag-x">&times;</span>
 						</button>
 					{/each}
 				</div>
@@ -248,7 +257,7 @@
 				<div class="group-tags">
 					{#each grouped.cli as pkg}
 						<button class="tag cli" onclick={() => togglePackage(pkg, 'formula')}>
-							{pkg}<span class="tag-x">&times;</span>
+							{displayName(pkg)}<span class="tag-x">&times;</span>
 						</button>
 					{/each}
 				</div>
