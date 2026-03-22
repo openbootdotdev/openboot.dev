@@ -188,3 +188,6 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		packages: createdPackages
 	}, { status: 201 });
 };
+
+// The CLI sends PUT for updates — route to the same handler.
+export const PUT: RequestHandler = POST;
