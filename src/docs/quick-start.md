@@ -9,26 +9,22 @@ order: 2
 
 ## Installation
 
-### Homebrew (Recommended)
-
-If you have Homebrew:
-
-```bash
-brew install openbootdotdev/tap/openboot
-openboot
-```
-
-That's it. The interactive TUI opens and you pick what to install.
-
-### One-Line Installer
-
-Don't have Homebrew yet? Use this:
+### One Command
 
 ```bash
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
 It installs Xcode Command Line Tools and Homebrew if you don't have them, downloads OpenBoot, and launches the TUI. Everything in one go.
+
+### Already Have Homebrew?
+
+```bash
+brew install openbootdotdev/tap/openboot
+openboot
+```
+
+The interactive TUI opens and you pick what to install.
 
 ## First Run
 
@@ -70,10 +66,10 @@ This scans your Homebrew packages, macOS preferences, shell config, and git sett
 After uploading, you get a shareable install command:
 
 ```bash
-openboot install yourname/my-setup
+curl -fsSL openboot.dev/yourname/my-setup | bash
 ```
 
-Anyone can run that and get your exact setup. See [Snapshot](/docs/snapshot) for details.
+Anyone can run that and get your exact setup — no tools to install first. See [Snapshot](/docs/snapshot) for details.
 
 ## Share a Config with Your Team
 
@@ -83,8 +79,7 @@ Setting up a standard environment for your team:
 2. Share the install command in your onboarding docs:
 
 ```bash
-brew tap openbootdotdev/tap && brew install openboot
-openboot install yourteam/frontend
+curl -fsSL openboot.dev/yourteam/frontend | bash
 ```
 
 3. New hires run that and get your exact setup

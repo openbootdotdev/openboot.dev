@@ -6,7 +6,7 @@ OpenBoot automates your entire Mac dev environment — Homebrew packages, GUI ap
 
 ## Quick Links
 
-- Install: `brew tap openbootdotdev/tap && brew install openboot`
+- Install: `curl -fsSL openboot.dev/install.sh | bash`
 - Website: https://openboot.dev
 - GitHub: https://github.com/openbootdotdev
 

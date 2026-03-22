@@ -61,7 +61,7 @@ curl -fsSL https://openboot.dev/install.sh | bash -s -- snapshot
 If you upload, you'll authenticate via browser (like `gh auth login`), name your config, and get a one-line install command:
 
 ```bash
-openboot install yourname/my-setup
+curl -fsSL openboot.dev/yourname/my-setup | bash
 ```
 
 ## Restoring from a Snapshot
