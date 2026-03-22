@@ -88,12 +88,14 @@
 		const apps: string[] = [];
 		const cli: string[] = [];
 		const npm: string[] = [];
+		const taps: string[] = [];
 		for (const [pkg, type] of selectedPackages) {
 			if (type === 'cask') apps.push(pkg);
 			else if (type === 'npm') npm.push(pkg);
+			else if (type === 'tap') taps.push(pkg);
 			else cli.push(pkg);
 		}
-		return { apps, cli, npm };
+		return { apps, cli, npm, taps };
 	});
 
 	const presets = [
@@ -274,6 +276,23 @@
 				<div class="group-tags">
 					{#each grouped.npm as pkg}
 						<button class="tag npm" onclick={() => togglePackage(pkg, 'npm')}>
+							{pkg}<span class="tag-x">&times;</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if grouped.taps.length > 0}
+			<div class="group">
+				<div class="group-label">
+					<span class="group-dot" style="background: #a855f7"></span>
+					TAPS
+					<span class="group-count">{grouped.taps.length}</span>
+				</div>
+				<div class="group-tags">
+					{#each grouped.taps as pkg}
+						<button class="tag tap" onclick={() => togglePackage(pkg, 'tap')}>
 							{pkg}<span class="tag-x">&times;</span>
 						</button>
 					{/each}
