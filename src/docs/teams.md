@@ -20,10 +20,10 @@ OpenBoot replaces The Doc with one command.
 Your new hire opens the `CONTRIBUTING.md`. Step one:
 
 ```bash
-openboot install acme/frontend
+curl -fsSL openboot.dev/acme/frontend | bash
 ```
 
-That's the entire setup section. They run it and go read the architecture docs while packages stream by:
+That's the entire setup section. No tools to install first — the script handles everything. They go read the architecture docs while packages stream by:
 
 ```text
 ✓ Homebrew installed
@@ -88,9 +88,9 @@ Add the install command to your `CONTRIBUTING.md`:
 ```markdown
 ## Development Setup
 
-    openboot install acme/frontend
+    curl -fsSL openboot.dev/acme/frontend | bash
 
-Preview first: `openboot install acme/frontend --dry-run`
+Already have OpenBoot? `openboot install acme/frontend`
 ```
 
 The URL never changes. When the stack changes, update the config in the [Dashboard](/dashboard). Everyone who runs the command next gets the latest version. No more editing a 47-step Google Doc.
@@ -114,8 +114,8 @@ Each has its own custom script. Backend clones the API monorepo and seeds the lo
 Full-stack dev working across teams? Run both. OpenBoot skips what's already installed.
 
 ```bash
-openboot install acme/frontend
-openboot install acme/backend
+curl -fsSL openboot.dev/acme/frontend | bash
+curl -fsSL openboot.dev/acme/backend | bash
 ```
 
 ## Keeping everyone in sync

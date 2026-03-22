@@ -84,7 +84,7 @@ Everything that isn't a package — directory structure, SSH keys, repo cloning 
 When the new machine arrives, or when IT finally sends that hardware refresh email:
 
 ```bash
-openboot install alex/my-setup
+curl -fsSL openboot.dev/alex/my-setup | bash
 ```
 
 Everything restored. Twenty minutes, done.
@@ -108,7 +108,7 @@ openboot snapshot
 Updates your config. At home:
 
 ```bash
-openboot install alex/my-setup
+curl -fsSL openboot.dev/alex/my-setup | bash
 ```
 
 OpenBoot sees `jq` is in your config but not installed. Adds it. Two commands, both machines in sync. Works the other way too — install something at home, snapshot, pull it down at work next Monday.

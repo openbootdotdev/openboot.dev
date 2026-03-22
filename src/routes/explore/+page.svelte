@@ -230,7 +230,7 @@
 							</div>
 						</div>
 						<div class="install-preview">
-							<code><span class="prompt">$</span> openboot install {config.username}/{config.slug}</code>
+							<code><span class="prompt">$</span> curl -fsSL openboot.dev/{config.username}/{config.slug} | bash</code>
 						</div>
 					</a>
 				{/each}

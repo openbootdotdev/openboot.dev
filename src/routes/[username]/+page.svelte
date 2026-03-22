@@ -40,7 +40,7 @@
 	}
 
 	function copyCommand(configSlug: string, configId: string) {
-		const cmd = `openboot install ${data.profileUser.username}/${configSlug}`;
+		const cmd = `curl -fsSL openboot.dev/${data.profileUser.username}/${configSlug} | bash`;
 		navigator.clipboard.writeText(cmd);
 		copiedId = configId;
 		setTimeout(() => copiedId = '', 2000);
@@ -199,7 +199,7 @@
 								</div>
 							</a>
 							<div class="config-install">
-								<code class="install-command"><span class="prompt">$</span> openboot install {data.profileUser.username}/{config.slug}</code>
+								<code class="install-command"><span class="prompt">$</span> curl -fsSL openboot.dev/{data.profileUser.username}/{config.slug} | bash</code>
 								<button class="copy-button" onclick={() => copyCommand(config.slug, config.id)}>
 									{copiedId === config.id ? 'Copied!' : 'Copy'}
 								</button>

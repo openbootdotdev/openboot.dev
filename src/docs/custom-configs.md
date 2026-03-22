@@ -39,10 +39,10 @@ Already have a Brewfile? Upload it in the dashboard. OpenBoot parses all `brew` 
 Every config gets an install command:
 
 ```bash
-openboot install sarah/frontend-team
+curl -fsSL openboot.dev/sarah/frontend-team | bash
 ```
 
-Put it in your README, onboarding docs, or Slack. One command, everyone gets the same setup.
+Put it in your README, onboarding docs, or Slack. One command, everyone gets the same setup — no tools to install first.
 
 ## The Config Page
 

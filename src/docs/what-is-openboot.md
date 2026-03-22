@@ -25,21 +25,22 @@ OpenBoot is an open-source CLI that automates the boring part of setting up a ne
 
 ## Installation
 
-**Via Homebrew (recommended):**
-
-```bash
-brew tap openbootdotdev/tap
-brew install openboot
-openboot
-```
-
-**Or use the one-liner:**
+**One command:**
 
 ```bash
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-The one-liner installs Xcode Command Line Tools and Homebrew if you don't have them yet, downloads the `openboot` binary, and launches the TUI. From there:
+This installs Xcode Command Line Tools and Homebrew if you don't have them yet, downloads the `openboot` binary, and launches the TUI.
+
+**Already have Homebrew?**
+
+```bash
+brew install openbootdotdev/tap/openboot
+openboot
+```
+
+Either way, from there:
 
 1. Pick a preset (`minimal`, `developer`, `full`) or customize package by package
 2. Confirm and wait for Homebrew to install everything
