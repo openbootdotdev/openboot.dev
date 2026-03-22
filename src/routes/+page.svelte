@@ -35,7 +35,7 @@
 			<section class="hero">
 				<div class="hero-content">
 				<h1 class="hero-title">
-					Fresh Mac? Don't spend<br />3 hours setting it up
+					Fresh Mac? Don't spend 3 hours <span style="white-space:nowrap">setting it up</span>
 				</h1>
 				<p class="hero-subtitle">
 					One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd normally spend your first day installing. Then snapshot your setup and share it with your team so they get the same thing.
@@ -69,25 +69,20 @@
 								<code>curl -fsSL openboot.dev/install.sh | bash</code>
 								<button class="copy-btn" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
 									{#if copied === 'main'}
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 											<polyline points="20 6 9 17 4 12"/>
 										</svg>
-										Copied
 									{:else}
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 											<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
 											<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
 										</svg>
-										Copy
 									{/if}
 								</button>
 							</div>
 						</div>
 						<p class="install-alt">
-							Want to inspect first? <code>curl -fsSL openboot.dev/install.sh -o install.sh && cat install.sh && bash install.sh</code>
-						</p>
-						<p class="install-alt">
-							Already have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
+							Have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
 						</p>
 				</div>
 			</div>
@@ -300,7 +295,7 @@
 	.hero {
 		padding: 80px 0 60px;
 		display: grid;
-		grid-template-columns: 1fr 1.2fr;
+		grid-template-columns: 1.2fr 1fr;
 		gap: 64px;
 		align-items: center;
 		position: relative;
@@ -429,30 +424,27 @@
 		color: var(--text-primary);
 		flex: 1;
 		min-width: 0;
+		white-space: nowrap;
 	}
 
 	.copy-btn {
-		background: var(--accent);
-		border: none;
-		color: #000;
-		padding: 10px 18px;
+		background: transparent;
+		border: 1px solid var(--border);
+		color: var(--text-secondary);
+		padding: 8px;
 		border-radius: 8px;
-		font-size: 0.85rem;
-		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		white-space: nowrap;
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		justify-content: center;
 		flex-shrink: 0;
-		box-shadow: 0 0 20px var(--accent-glow);
 	}
 
 	.copy-btn:hover {
-		background: var(--accent-hover);
-		transform: translateY(-2px) scale(1.02);
-		box-shadow: 0 0 30px var(--accent-glow);
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--accent-glow);
 	}
 
 	.install-alt {
@@ -905,7 +897,7 @@
 		}
 
 		.install-command code {
-			font-size: 0.8rem;
+			font-size: 0.72rem;
 		}
 
 		.install-prompt {
@@ -913,8 +905,8 @@
 		}
 
 		.copy-btn {
-			padding: 8px 14px;
-			font-size: 0.8rem;
+			padding: 8px 12px;
+			font-size: 0.75rem;
 		}
 
 		.steps-grid {
