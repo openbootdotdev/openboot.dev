@@ -56,11 +56,26 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const snapshotNpm: string[] = snapshot.packages?.npm || [];
 	const snapshotTaps: string[] = snapshot.packages?.taps || [];
 
+	// Build a set of formula names that are already covered by a tap entry
+	// (e.g. "argoproj/tap/kubectl-argo-rollouts" covers "kubectl-argo-rollouts")
+	// so they don't appear in both CLI and TAPS sections.
+	// Only consider three-segment tap entries (owner/tap/formula) to avoid
+	// false-positive collisions with two-segment tap names like "homebrew/cask".
+	const tapFormulaNames = new Set<string>();
+	for (const t of snapshotTaps) {
+		const parts = t.split('/');
+		if (parts.length === 3) {
+			tapFormulaNames.add(parts[2]);
+		}
+	}
+
 	const packages = [
-		...snapshotFormulae.map((name: string) => ({ name, type: 'formula' })),
-		...snapshotCasks.map((name: string) => ({ name, type: 'cask' })),
-		...snapshotNpm.map((name: string) => ({ name, type: 'npm' })),
-		...snapshotTaps.map((name: string) => ({ name, type: 'tap' })),
+		...snapshotFormulae
+			.filter((name) => !tapFormulaNames.has(name))
+			.map((name) => ({ name, type: 'formula' })),
+		...snapshotCasks.map((name) => ({ name, type: 'cask' })),
+		...snapshotNpm.map((name) => ({ name, type: 'npm' })),
+		...snapshotTaps.map((name) => ({ name, type: 'tap' })),
 	];
 
 	const pv = validatePackages(packages);
