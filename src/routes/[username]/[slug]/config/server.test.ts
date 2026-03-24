@@ -221,10 +221,10 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			});
 
 			const json = await getJSON(response);
-			expect(json.packages).toContain('git');
-			expect(json.packages).not.toContain('visual-studio-code');
-			expect(json.casks).toContain('visual-studio-code');
-			expect(json.npm).toContain('typescript');
+			expect(json.packages).toContainEqual(expect.objectContaining({ name: 'git' }));
+			expect(json.packages.map((p: any) => p.name)).not.toContain('visual-studio-code');
+			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'visual-studio-code' }));
+			expect(json.npm).toContainEqual(expect.objectContaining({ name: 'typescript' }));
 		});
 
 		it('should parse snapshot for taps and casks', async () => {
@@ -485,8 +485,8 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			});
 
 			const json = await getJSON(response);
-			expect(json.packages).toEqual(['git', 'wget']);
-			expect(json.casks).toContain('curl');
+			expect(json.packages.map((p: any) => p.name)).toEqual(['git', 'wget']);
+			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'curl' }));
 		});
 
 		it('should extract taps from fully-qualified package names', async () => {
@@ -617,6 +617,133 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 
 			const json = await getJSON(response);
 			expect(json.dotfiles_repo).toBe('');
+		});
+
+		it('should handle typed objects with desc (from-snapshot format)', async () => {
+			const config = {
+				...mockPublicConfig,
+				packages: JSON.stringify([
+					{ name: 'git', type: 'formula', desc: 'Version control' },
+					{ name: 'docker', type: 'cask', desc: 'Containers' },
+					{ name: 'typescript', type: 'npm', desc: 'Typed JS' },
+					{ name: 'homebrew/cask-fonts', type: 'tap' }
+				])
+			};
+
+			const db = createMockDB({
+				users: [mockUser],
+				configs: [config]
+			});
+
+			const request = createMockRequest({ url: baseUrl });
+			const platform = createMockPlatform(db);
+
+			const response = await GET({
+				request,
+				platform,
+				params: { username: 'testuser', slug: 'public-config' },
+				url: new URL(baseUrl),
+				route: { id: '/[username]/[slug]/config' },
+				locals: {},
+				isDataRequest: false,
+				isSubRequest: false,
+				cookies: {} as any,
+				getClientAddress: () => '',
+				fetch: globalThis.fetch
+			});
+
+			const json = await getJSON(response);
+			// Formulae: git + tap entry
+			expect(json.packages).toContainEqual({ name: 'git', desc: 'Version control' });
+			expect(json.packages).toContainEqual(expect.objectContaining({ name: 'homebrew/cask-fonts' }));
+			expect(json.casks).toContainEqual({ name: 'docker', desc: 'Containers' });
+			expect(json.npm).toContainEqual({ name: 'typescript', desc: 'Typed JS' });
+		});
+
+		it('should handle typed objects without desc (fills from metadata)', async () => {
+			const config = {
+				...mockPublicConfig,
+				packages: JSON.stringify([
+					{ name: 'curl', type: 'formula' },
+					{ name: 'warp', type: 'cask' }
+				])
+			};
+
+			const db = createMockDB({
+				users: [mockUser],
+				configs: [config]
+			});
+
+			const request = createMockRequest({ url: baseUrl });
+			const platform = createMockPlatform(db);
+
+			const response = await GET({
+				request,
+				platform,
+				params: { username: 'testuser', slug: 'public-config' },
+				url: new URL(baseUrl),
+				route: { id: '/[username]/[slug]/config' },
+				locals: {},
+				isDataRequest: false,
+				isSubRequest: false,
+				cookies: {} as any,
+				getClientAddress: () => '',
+				fetch: globalThis.fetch
+			});
+
+			const json = await getJSON(response);
+			// curl is in package-metadata.ts, so desc should be filled
+			const curlPkg = json.packages.find((p: any) => p.name === 'curl');
+			expect(curlPkg).toBeDefined();
+			expect(curlPkg.desc).toBeTruthy();
+			expect(curlPkg.desc).not.toBe('curl'); // should be a real description
+		});
+
+		it('should handle mixed format (strings + typed objects)', async () => {
+			const config = {
+				...mockPublicConfig,
+				packages: JSON.stringify([
+					'git',
+					{ name: 'docker', type: 'cask' },
+					'wget'
+				]),
+				snapshot: JSON.stringify({
+					packages: { taps: [], casks: [] }
+				})
+			};
+
+			const db = createMockDB({
+				users: [mockUser],
+				configs: [config]
+			});
+
+			const request = createMockRequest({ url: baseUrl });
+			const platform = createMockPlatform(db);
+
+			const response = await GET({
+				request,
+				platform,
+				params: { username: 'testuser', slug: 'public-config' },
+				url: new URL(baseUrl),
+				route: { id: '/[username]/[slug]/config' },
+				locals: {},
+				isDataRequest: false,
+				isSubRequest: false,
+				cookies: {} as any,
+				getClientAddress: () => '',
+				fetch: globalThis.fetch
+			});
+
+			const json = await getJSON(response);
+			// Strings become formulae, typed objects route by type
+			expect(json.packages.map((p: any) => p.name)).toContain('git');
+			expect(json.packages.map((p: any) => p.name)).toContain('wget');
+			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'docker' }));
+			// All entries are objects with name and desc
+			for (const pkg of [...json.packages, ...json.casks]) {
+				expect(pkg).toHaveProperty('name');
+				expect(pkg).toHaveProperty('desc');
+			}
 		});
 
 		it('should handle empty packages', async () => {

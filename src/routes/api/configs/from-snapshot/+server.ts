@@ -46,10 +46,14 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const base_preset = snapshot.matched_preset || 'developer';
 
+	// Validate snapshot.packages is the canonical structured format:
+	// { formulae: string[], casks: string[], taps: string[], npm: string[] }
+	if (!snapshot.packages || typeof snapshot.packages !== 'object' || Array.isArray(snapshot.packages)) {
+		return json({ error: 'snapshot.packages must be an object with formulae, casks, taps, npm arrays' }, { status: 400 });
+	}
+
 	// Build typed package objects from the full snapshot.
-	// catalog_match.matched only contains packages known to the catalog; custom
-	// packages (e.g. ack, awscli) would be silently dropped if we relied on it.
-	// Instead, read directly from snapshot.packages.* so every installed package
+	// Read directly from snapshot.packages.* so every installed package
 	// is preserved regardless of whether it appears in the catalog.
 	const snapshotFormulae: string[] = snapshot.packages?.formulae || [];
 	const snapshotCasks: string[] = snapshot.packages?.casks || [];

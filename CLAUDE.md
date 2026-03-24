@@ -42,7 +42,7 @@ Local dev requires `.dev.vars` with `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, 
 | `src/lib/server/` | Server-only: `auth.ts` (JWT + OAuth), `install-script.ts`, `rate-limit.ts`, `validation.ts` |
 | `src/lib/stores/` | Svelte stores: `auth.ts` (user state), `theme.ts` (light/dark) |
 | `src/lib/presets.ts` | Package presets (minimal, developer, full) |
-| `src/lib/package-metadata.ts` | Descriptions for 100+ packages |
+| `src/lib/package-metadata.ts` | Source of truth for package metadata (100+ packages). Served via `/api/packages` for CLI consumption |
 | `src/routes/api/` | REST API endpoints (`+server.ts` convention) |
 | `src/routes/[username]/[slug]/` | Config page, install endpoint, config JSON, OG image |
 | `src/docs/` | Markdown docs (mdsvex preprocessed) |
@@ -57,7 +57,7 @@ Three auth flows:
 
 ### Database
 
-D1 (SQLite), no ORM — direct parameterized SQL via `env.DB.prepare(sql).bind(...)`. Four tables: `users`, `configs`, `api_tokens`, `cli_auth_codes`. The `configs.packages` field is a JSON array of `{name, type, desc}`. Config visibility: `public` (discoverable), `unlisted` (accessible but not listed), `private` (owner-only, 403 on install).
+D1 (SQLite), no ORM — direct parameterized SQL via `env.DB.prepare(sql).bind(...)`. Four tables: `users`, `configs`, `api_tokens`, `cli_auth_codes`. The `configs.packages` field is a JSON array (stored as `{name, type}` objects; the config endpoint transforms to `{name, desc}` on read, filling descriptions from `package-metadata.ts`). Config visibility: `public` (discoverable), `unlisted` (accessible but not listed), `private` (owner-only, 403 on install).
 
 **D1 limitation**: No `ALTER TABLE DROP COLUMN`. Plan column removals via new table + data migration.
 

@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  repository_dispatch:
+    types: [contract-updated]
 
 jobs:
   check:
@@ -40,6 +42,43 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Contract schema validation
+        run: |
+          git clone --depth 1 https://github.com/openbootdotdev/openboot-contract.git /tmp/contract
+          pip install jsonschema
+
+          python3 -c "
+          import json, jsonschema, sys
+
+          checks = [
+            ('/tmp/contract/schemas/remote-config.json', '/tmp/contract/fixtures/config-v1.json'),
+            ('/tmp/contract/schemas/snapshot.json', '/tmp/contract/fixtures/snapshot-v1.json'),
+          ]
+
+          failed = 0
+          for schema_path, fixture_path in checks:
+            schema = json.load(open(schema_path))
+            data = json.load(open(fixture_path))
+            try:
+              jsonschema.validate(data, schema)
+              print(f'  ✓ {fixture_path.split(\"/\")[-1]} matches {schema_path.split(\"/\")[-1]}')
+            except jsonschema.ValidationError as e:
+              print(f'  ✗ {fixture_path.split(\"/\")[-1]}: {e.message}')
+              failed += 1
+
+          # Also validate the packages schema structure against package-metadata expectations
+          pkg_schema = json.load(open('/tmp/contract/schemas/packages.json'))
+          required_fields = set(pkg_schema['properties']['packages']['items']['required'])
+          expected = {'name', 'desc', 'category', 'type', 'installer'}
+          if required_fields != expected:
+            print(f'  ✗ packages schema required fields mismatch: {required_fields} vs {expected}')
+            failed += 1
+          else:
+            print(f'  ✓ packages schema has correct required fields')
+
+          sys.exit(1 if failed else 0)
+          "
 
   deploy:
     needs: check

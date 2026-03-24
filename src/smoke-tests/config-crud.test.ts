@@ -110,9 +110,9 @@ describe('Smoke Test: Config CRUD Full Lifecycle', () => {
 		expect(configJsonRes.status).toBe(200);
 		const configJson = await getJSON(configJsonRes);
 		expect(configJson.username).toBe('testuser');
-		expect(configJson.packages).toContain('git');
-		expect(configJson.packages).toContain('node');
-		expect(configJson.casks).toContain('visual-studio-code');
+		expect(configJson.packages).toContainEqual(expect.objectContaining({ name: 'git' }));
+		expect(configJson.packages).toContainEqual(expect.objectContaining({ name: 'node' }));
+		expect(configJson.casks).toContainEqual(expect.objectContaining({ name: 'visual-studio-code' }));
 		expect(configJson.npm).toEqual([]);
 		expect(configJson.post_install).toEqual(['echo "setup complete"']);
 		expect(configJson.dotfiles_repo).toBe('https://github.com/testuser/dotfiles');

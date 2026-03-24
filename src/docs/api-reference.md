@@ -76,8 +76,7 @@ GET /api/configs/:slug
   "description": "Personal development environment",
   "base_preset": "developer",
   "packages": [
-    { "name": "node", "type": "formula" },
-    { "name": "visual-studio-code", "type": "cask" }
+    { "name": "node", "type": "formula", "desc": "JavaScript runtime built on V8 engine" }
   ],
   "custom_script": "mkdir -p ~/projects",
   "dotfiles_repo": "https://github.com/user/dotfiles.git",
@@ -214,6 +213,57 @@ GET /:username/:slug/install
 # OpenBoot install script for username/slug
 # ...
 ```
+
+---
+
+## Package Catalog
+
+### List All Packages
+
+Returns the complete package catalog with metadata. Used by the CLI to fetch package descriptions and installer types. Responses are cached (1h client, 24h CDN).
+
+```
+GET /api/packages
+```
+
+**Auth required:** No
+
+**Response:**
+
+```json
+{
+  "packages": [
+    {
+      "name": "git",
+      "desc": "Distributed version control system",
+      "category": "essential",
+      "type": "cli",
+      "installer": "formula"
+    },
+    {
+      "name": "visual-studio-code",
+      "desc": "Code editor with extensions and debugging",
+      "category": "essential",
+      "type": "gui",
+      "installer": "cask"
+    },
+    {
+      "name": "typescript",
+      "desc": "Typed superset of JavaScript",
+      "category": "essential",
+      "type": "language",
+      "installer": "npm"
+    }
+  ]
+}
+```
+
+**Fields:**
+- `name` — Package identifier
+- `desc` — Human-readable description
+- `category` — `essential`, `development`, `productivity`, or `optional`
+- `type` — Package kind: `cli`, `gui`, `language`, `devops`, or `database`
+- `installer` — Install method: `formula` (Homebrew), `cask` (Homebrew Cask), or `npm`
 
 ---
 
@@ -400,8 +450,8 @@ curl -X POST https://openboot.dev/api/configs \
     "name": "My Setup",
     "base_preset": "developer",
     "packages": [
-      {"name": "node", "type": "formula"},
-      {"name": "visual-studio-code", "type": "cask"}
+      {"name": "node", "type": "formula", "desc": "JavaScript runtime"},
+      {"name": "visual-studio-code", "type": "cask", "desc": "Code editor"}
     ]
   }'
 ```

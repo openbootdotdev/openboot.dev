@@ -150,7 +150,7 @@ describe('Smoke Test: CLI Auth Full Flow', () => {
 		const configData = await getJSON(privateRes);
 		expect(configData.username).toBe('testuser');
 		expect(configData.slug).toBe('secret-setup');
-		expect(configData.packages).toContain('git');
+		expect(configData.packages).toContainEqual(expect.objectContaining({ name: 'git' }));
 	});
 
 	it('expired code cannot be approved', async () => {

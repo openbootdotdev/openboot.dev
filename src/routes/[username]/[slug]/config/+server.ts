@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getPackageDescription } from '$lib/package-metadata';
 
 export const GET: RequestHandler = async ({ platform, params, request }) => {
 	const env = platform?.env;
@@ -75,30 +76,33 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 	}
 
 	const rawPackages: any[] = JSON.parse(config.packages || '[]');
-	const packageNames: string[] = [];
-	const caskNames: string[] = [];
-	const npmNames: string[] = [];
+	const formulae: { name: string; desc: string }[] = [];
+	const casks: { name: string; desc: string }[] = [];
+	const npms: { name: string; desc: string }[] = [];
 
 	for (const pkg of rawPackages) {
+		const name = typeof pkg === 'string' ? pkg : pkg.name;
+		const desc = (typeof pkg === 'object' && pkg.desc) || getPackageDescription(name);
+
 		if (typeof pkg === 'string') {
 			if (snapshotCasks.has(pkg)) {
-				caskNames.push(pkg);
+				casks.push({ name, desc });
 			} else {
-				packageNames.push(pkg);
+				formulae.push({ name, desc });
 			}
 		} else {
 			if (pkg.type === 'npm') {
-				npmNames.push(pkg.name);
+				npms.push({ name, desc });
 			} else if (pkg.type === 'cask') {
-				caskNames.push(pkg.name);
+				casks.push({ name, desc });
 			} else {
-				packageNames.push(pkg.name);
+				formulae.push({ name, desc });
 			}
 		}
 	}
 
-	for (const pkg of packageNames) {
-		const parts = pkg.split('/');
+	for (const pkg of formulae) {
+		const parts = pkg.name.split('/');
 		if (parts.length === 3) {
 			tapsSet.add(`${parts[0]}/${parts[1]}`);
 		}
@@ -111,10 +115,10 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		slug: config.slug,
 		name: config.name,
 		preset: config.base_preset,
-		packages: packageNames,
-		casks: caskNames,
-		taps: taps,
-		npm: npmNames,
+		packages: formulae,
+		casks,
+		taps,
+		npm: npms,
 		dotfiles_repo: config.dotfiles_repo || '',
 		post_install: config.custom_script
 			? config.custom_script.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0)

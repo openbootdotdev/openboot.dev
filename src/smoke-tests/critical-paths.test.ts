@@ -128,7 +128,8 @@ describe('Smoke Tests - Critical User Journeys', () => {
 			
 			if (data.packages.length > 0) {
 				expect(Array.isArray(data.packages)).toBe(true);
-				expect(typeof data.packages[0]).toBe('string');
+				expect(data.packages[0]).toHaveProperty('name');
+				expect(data.packages[0]).toHaveProperty('desc');
 			}
 			
 			expect(data.casks).toBeDefined();
