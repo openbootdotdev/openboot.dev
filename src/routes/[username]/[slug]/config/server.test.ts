@@ -222,7 +222,7 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 
 			const json = await getJSON(response);
 			expect(json.packages).toContain('git');
-			expect(json.packages).toContain('visual-studio-code');
+			expect(json.packages).not.toContain('visual-studio-code');
 			expect(json.casks).toContain('visual-studio-code');
 			expect(json.npm).toContain('typescript');
 		});
@@ -264,7 +264,7 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			expect(json.taps).toContain('homebrew/cask-fonts');
 		});
 
-		it('should parse shell config from snapshot', async () => {
+		it('should not include shell in API response', async () => {
 			const config = {
 				...mockPublicConfig,
 				snapshot: JSON.stringify({
@@ -300,84 +300,7 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			});
 
 			const json = await getJSON(response);
-			expect(json.shell).toEqual({
-				oh_my_zsh: true,
-				theme: 'powerlevel10k',
-				plugins: ['git', 'zsh-autosuggestions']
-			});
-		});
-
-		it('should default shell fields when partially present', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					shell: { oh_my_zsh: true }
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.shell).toEqual({
-				oh_my_zsh: true,
-				theme: '',
-				plugins: []
-			});
-		});
-
-		it('should return null shell when snapshot has no shell', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] }
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.shell).toBeNull();
+			expect(json.shell).toBeUndefined();
 		});
 
 		it('should parse macos_prefs from snapshot', async () => {
@@ -526,7 +449,7 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 
 			expect(response.status).toBe(200);
 			const json = await getJSON(response);
-			expect(json.shell).toBeNull();
+			expect(json.shell).toBeUndefined();
 			expect(json.macos_prefs).toBeNull();
 		});
 
@@ -562,7 +485,7 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			});
 
 			const json = await getJSON(response);
-			expect(json.packages).toEqual(['git', 'curl', 'wget']);
+			expect(json.packages).toEqual(['git', 'wget']);
 			expect(json.casks).toContain('curl');
 		});
 
