@@ -4,6 +4,10 @@ import { RESERVED_ALIASES } from '$lib/server/validation';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
+// Minimum CLI version that is compatible with the current API.
+// Bump this when a breaking API change is deployed.
+const MIN_CLI_VERSION = '0.25.0';
+
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Frame-Options': 'DENY',
 	'X-Content-Type-Options': 'nosniff',
@@ -34,6 +38,13 @@ function withSecurityHeaders(response: Response): Response {
 		statusText: response.statusText,
 		headers
 	});
+}
+
+function isVersionOlderThan(version: string, minVersion: string): boolean {
+	const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number);
+	const [aMaj = 0, aMin = 0, aPat = 0] = parse(version);
+	const [bMaj = 0, bMin = 0, bPat = 0] = parse(minVersion);
+	return aMaj < bMaj || (aMaj === bMaj && (aMin < bMin || (aMin === bMin && aPat < bPat)));
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -156,6 +167,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const response = await resolve(event);
 	const securedResponse = withSecurityHeaders(response);
+
+	// Version negotiation: if CLI sends X-OpenBoot-Version, check compatibility.
+	const cliVersion = event.request.headers.get('x-openboot-version');
+	if (cliVersion && cliVersion !== 'dev') {
+		securedResponse.headers.set('X-OpenBoot-Min-Version', MIN_CLI_VERSION);
+		if (isVersionOlderThan(cliVersion, MIN_CLI_VERSION)) {
+			securedResponse.headers.set('X-OpenBoot-Upgrade', 'true');
+		}
+	}
 
 	// Prevent indexing of non-content routes
 	const noindexPrefixes = ['/api/', '/dashboard/', '/cli-auth/', '/install'];

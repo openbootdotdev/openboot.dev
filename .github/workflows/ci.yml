@@ -133,3 +133,12 @@ jobs:
           echo "API: $(echo $HEALTH_RESPONSE | jq -r '.checks.api')"
           echo "Database: $(echo $HEALTH_RESPONSE | jq -r '.checks.database')"
           echo "Version: $(echo $HEALTH_RESPONSE | jq -r '.version')"
+
+      - name: Post-deploy smoke test
+        run: ./scripts/smoke-test-api.sh https://openboot.dev
+
+      - name: Post-deploy contract validation
+        run: |
+          pip install jsonschema
+          git clone --depth 1 https://github.com/openbootdotdev/openboot-contract.git /tmp/contract
+          SERVER_URL=https://openboot.dev /tmp/contract/golden-path/test.sh
