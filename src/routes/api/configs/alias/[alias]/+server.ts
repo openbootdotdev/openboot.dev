@@ -27,7 +27,6 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	const tapsSet = new Set<string>();
 	const snapshotCasks = new Set<string>();
-	let shell: { oh_my_zsh: boolean; theme: string; plugins: string[] } | null = null;
 	let macosPrefs: { domain: string; key: string; type: string; value: string; desc: string }[] | null = null;
 
 	if (config.snapshot) {
@@ -38,13 +37,6 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 			}
 			for (const cask of snapshot.packages?.casks || []) {
 				snapshotCasks.add(cask);
-			}
-			if (snapshot.shell) {
-				shell = {
-					oh_my_zsh: snapshot.shell.oh_my_zsh ?? false,
-					theme: snapshot.shell.theme ?? '',
-					plugins: snapshot.shell.plugins ?? []
-				};
 			}
 			if (Array.isArray(snapshot.macos_prefs) && snapshot.macos_prefs.length > 0) {
 				const filtered = snapshot.macos_prefs.filter(
@@ -75,18 +67,18 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	for (const pkg of rawPackages) {
 		if (typeof pkg === 'string') {
-			packageNames.push(pkg);
 			if (snapshotCasks.has(pkg)) {
 				caskNames.push(pkg);
+			} else {
+				packageNames.push(pkg);
 			}
 		} else {
 			if (pkg.type === 'npm') {
 				npmNames.push(pkg.name);
+			} else if (pkg.type === 'cask') {
+				caskNames.push(pkg.name);
 			} else {
 				packageNames.push(pkg.name);
-				if (pkg.type === 'cask') {
-					caskNames.push(pkg.name);
-				}
 			}
 		}
 	}
@@ -113,7 +105,6 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		post_install: config.custom_script
 			? config.custom_script.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
 			: [],
-		shell,
 		macos_prefs: macosPrefs
 	});
 };
