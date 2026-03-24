@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getConfigByAliasForAPI } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const env = platform?.env;
@@ -7,15 +8,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return json({ error: 'Platform env not available' }, { status: 500 });
 	}
 
-	const config = await env.DB.prepare(
-		`SELECT c.slug, c.name, c.base_preset, c.packages, c.snapshot, c.visibility, c.dotfiles_repo, c.custom_script,
-		        u.username
-		 FROM configs c
-		 JOIN users u ON c.user_id = u.id
-		 WHERE c.alias = ?`
-	)
-		.bind(params.alias)
-		.first<{ slug: string; name: string; base_preset: string; packages: string; snapshot: string; visibility: string; dotfiles_repo: string; custom_script: string; username: string }>();
+	const config = await getConfigByAliasForAPI(env.DB, params.alias);
 
 	if (!config) {
 		return json({ error: 'Alias not found' }, { status: 404 });

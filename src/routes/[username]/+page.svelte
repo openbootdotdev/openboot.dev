@@ -40,14 +40,14 @@
 	}
 
 	function copyCommand(configSlug: string, configId: string) {
-		const cmd = `curl -fsSL openboot.dev/${data.profileUser.username}/${configSlug} | bash`;
+		const cmd = `curl -fsSL openboot.dev/${data.profileUser?.username}/${configSlug} | bash`;
 		navigator.clipboard.writeText(cmd);
 		copiedId = configId;
 		setTimeout(() => copiedId = '', 2000);
 	}
 
 	function copyProfileUrl() {
-		const url = `openboot.dev/${data.profileUser.username}`;
+		const url = `openboot.dev/${data.profileUser?.username}`;
 		navigator.clipboard.writeText(url);
 		copiedUrl = true;
 		setTimeout(() => copiedUrl = false, 2000);

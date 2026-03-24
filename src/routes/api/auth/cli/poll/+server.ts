@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { getCliCode, getTokenById, getUserById, markCliCodeUsed } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, url }) => {
 	const env = platform?.env;
@@ -14,9 +15,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
 	}
 
-	const row = await env.DB.prepare('SELECT * FROM cli_auth_codes WHERE id = ?')
-		.bind(code_id)
-		.first<{ id: string; code: string; user_id: string | null; token_id: string | null; status: string; expires_at: string }>();
+	const row = await getCliCode(env.DB, code_id);
 
 	if (!row) return json({ status: 'expired' });
 
@@ -34,22 +33,16 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 
 	// Handle both 'approved' and 'used' status - CLI may need to poll multiple times
 	if ((row.status === 'approved' || row.status === 'used') && row.token_id && row.user_id) {
-		const token = await env.DB.prepare('SELECT * FROM api_tokens WHERE id = ?')
-			.bind(row.token_id)
-			.first<{ id: string; token: string; expires_at: string }>();
+		const token = await getTokenById(env.DB, row.token_id);
 
-		const user = await env.DB.prepare('SELECT username FROM users WHERE id = ?')
-			.bind(row.user_id)
-			.first<{ username: string }>();
+		const user = await getUserById(env.DB, row.user_id);
 
 		// Atomically mark as used to prevent double-redemption
 		if (row.status === 'approved') {
-			const updateResult = await env.DB.prepare(
-				"UPDATE cli_auth_codes SET status = 'used' WHERE id = ? AND status = 'approved'"
-			).bind(code_id).run();
+			const updateResult = await markCliCodeUsed(env.DB, code_id);
 
 			// If no rows were updated, another request already redeemed this code
-			if (!updateResult.meta.changes) {
+			if (!updateResult.changes) {
 				return json({ status: 'used' });
 			}
 		}

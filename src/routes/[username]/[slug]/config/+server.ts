@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getPackageDescription } from '$lib/package-metadata';
+import { getUserIdAndName, getConfigCLIData, getValidToken } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, params, request }) => {
 	const env = platform?.env;
@@ -8,19 +9,13 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		return json({ error: 'Platform env not available' }, { status: 500 });
 	}
 
-	const user = await env.DB.prepare('SELECT id, username FROM users WHERE username = ?')
-		.bind(params.username)
-		.first<{ id: string; username: string }>();
+	const user = await getUserIdAndName(env.DB, params.username);
 
 	if (!user) {
 		return json({ error: 'User not found' }, { status: 404 });
 	}
 
-	const config = await env.DB.prepare(
-		'SELECT slug, name, base_preset, packages, snapshot, visibility, dotfiles_repo, custom_script FROM configs WHERE user_id = ? AND slug = ?'
-	)
-		.bind(user.id, params.slug)
-		.first<{ slug: string; name: string; base_preset: string; packages: string; snapshot: string; visibility: string; dotfiles_repo: string; custom_script: string }>();
+	const config = await getConfigCLIData(env.DB, user.id, params.slug);
 
 	if (!config) {
 		return json({ error: 'Config not found' }, { status: 404 });
@@ -32,9 +27,7 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		if (!token) {
 			return json({ error: 'Config is private' }, { status: 403 });
 		}
-		const tokenRow = await env.DB.prepare(
-			"SELECT user_id FROM api_tokens WHERE token = ? AND expires_at > datetime('now')"
-		).bind(token).first<{ user_id: string }>();
+		const tokenRow = await getValidToken(env.DB, token);
 		if (!tokenRow || tokenRow.user_id !== user.id) {
 			return json({ error: 'Config is private' }, { status: 403 });
 		}

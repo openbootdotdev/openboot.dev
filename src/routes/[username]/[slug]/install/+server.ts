@@ -1,5 +1,6 @@
 import type { RequestHandler } from './$types';
 import { generateInstallScript } from '$lib/server/install-script';
+import { getUserByUsername, getConfigVisibility, getValidToken } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, params, request }) => {
 	const env = platform?.env;
@@ -7,14 +8,12 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		return new Response('Platform env not available', { status: 500 });
 	}
 
-	const user = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(params.username).first<{ id: string }>();
+	const user = await getUserByUsername(env.DB, params.username);
 	if (!user) {
 		return new Response('User not found', { status: 404 });
 	}
 
-	const config = await env.DB.prepare('SELECT visibility FROM configs WHERE user_id = ? AND slug = ?')
-		.bind(user.id, params.slug)
-		.first<{ visibility: string }>();
+	const config = await getConfigVisibility(env.DB, user.id, params.slug);
 
 	if (!config) {
 		return new Response('Config not found', { status: 404 });
@@ -26,9 +25,7 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		if (!token) {
 			return new Response('Config is private', { status: 403 });
 		}
-		const tokenRow = await env.DB.prepare(
-			"SELECT user_id FROM api_tokens WHERE token = ? AND expires_at > datetime('now')"
-		).bind(token).first<{ user_id: string }>();
+		const tokenRow = await getValidToken(env.DB, token);
 		if (!tokenRow || tokenRow.user_id !== user.id) {
 			return new Response('Config is private', { status: 403 });
 		}

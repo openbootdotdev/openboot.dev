@@ -3,6 +3,14 @@ import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
 import { validatePackages } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import {
+	getConfig,
+	getConfigId,
+	getConfigById,
+	countUserConfigs,
+	updateConfigFromSnapshot,
+	createConfigFromSnapshot
+} from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
@@ -86,57 +94,46 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	if (!pv.valid) return json({ error: pv.error }, { status: 400 });
 
 	if (config_slug) {
-		const existing = await env.DB.prepare(
-			'SELECT * FROM configs WHERE user_id = ? AND slug = ?'
-		).bind(user.id, config_slug).first();
+		const existing = await getConfig(env.DB, user.id, config_slug);
 
 		if (!existing) {
 			return json({ error: 'Config not found' }, { status: 404 });
 		}
 
-		await env.DB.prepare(
-			`UPDATE configs
-			SET snapshot = ?, snapshot_at = datetime('now'), packages = ?, visibility = ?, updated_at = datetime('now')
-			WHERE user_id = ? AND slug = ?`
-		)
-			.bind(
-				JSON.stringify(snapshot),
-				JSON.stringify(packages),
-				validVisibility,
-				user.id,
-				config_slug
-			)
-			.run();
+		await updateConfigFromSnapshot(
+			env.DB,
+			user.id,
+			config_slug,
+			JSON.stringify(snapshot),
+			JSON.stringify(packages),
+			validVisibility
+		);
 
-		const updated = await env.DB.prepare(
-		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE user_id = ? AND slug = ?'
-	).bind(user.id, config_slug).first();
+		const updated = await getConfig(env.DB, user.id, config_slug);
 
-	let parsedSnapshot = null;
-	let parsedPackages = [];
-	try {
-		parsedSnapshot = JSON.parse((updated as any).snapshot);
-	} catch {
-		parsedSnapshot = null;
-	}
-	try {
-		parsedPackages = JSON.parse((updated as any).packages);
-	} catch {
-		parsedPackages = [];
-	}
+		let parsedSnapshot = null;
+		let parsedPackages: unknown[] = [];
+		try {
+			parsedSnapshot = JSON.parse((updated as { snapshot: string }).snapshot);
+		} catch {
+			parsedSnapshot = null;
+		}
+		try {
+			parsedPackages = JSON.parse((updated as { packages: string }).packages);
+		} catch {
+			parsedPackages = [];
+		}
 
-	return json({
-		...updated,
-		snapshot: parsedSnapshot,
-		packages: parsedPackages
-	});
+		return json({
+			...updated,
+			snapshot: parsedSnapshot,
+			packages: parsedPackages
+		});
 	}
 
-	const configCount = await env.DB.prepare(
-		'SELECT COUNT(*) as count FROM configs WHERE user_id = ?'
-	).bind(user.id).first<{ count: number }>();
+	const count = await countUserConfigs(env.DB, user.id);
 
-	if (configCount && configCount.count >= 20) {
+	if (count >= 20) {
 		return json({ error: 'Maximum 20 configs per user' }, { status: 400 });
 	}
 
@@ -147,9 +144,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	let suffix = 2;
 	const MAX_SLUG_ATTEMPTS = 100;
 	while (suffix <= MAX_SLUG_ATTEMPTS + 1) {
-		const existing = await env.DB.prepare(
-			'SELECT id FROM configs WHERE user_id = ? AND slug = ?'
-		).bind(user.id, finalSlug).first();
+		const existing = await getConfigId(env.DB, user.id, finalSlug);
 
 		if (!existing) break;
 
@@ -163,40 +158,33 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const id = generateId();
 
 	try {
-		await env.DB.prepare(
-			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)`
-		)
-			.bind(
-				id,
-				user.id,
-				finalSlug,
-				name,
-				description || '',
-				base_preset,
-				JSON.stringify(packages),
-				JSON.stringify(snapshot),
-				validVisibility
-			)
-			.run();
+		await createConfigFromSnapshot(env.DB, {
+			id,
+			userId: user.id,
+			slug: finalSlug,
+			name,
+			description: description || '',
+			base_preset,
+			packages: JSON.stringify(packages),
+			snapshot: JSON.stringify(snapshot),
+			visibility: validVisibility
+		});
 	} catch (e) {
 		console.error('POST /api/configs/from-snapshot error:', e);
 		return json({ error: 'Failed to create config from snapshot' }, { status: 500 });
 	}
 
-	const created = await env.DB.prepare(
-		'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE id = ?'
-	).bind(id).first();
+	const created = await getConfigById(env.DB, id);
 
 	let createdSnapshot = null;
-	let createdPackages = [];
+	let createdPackages: unknown[] = [];
 	try {
-		createdSnapshot = JSON.parse((created as any).snapshot);
+		createdSnapshot = JSON.parse((created as { snapshot: string }).snapshot);
 	} catch {
 		createdSnapshot = null;
 	}
 	try {
-		createdPackages = JSON.parse((created as any).packages);
+		createdPackages = JSON.parse((created as { packages: string }).packages);
 	} catch {
 		createdPackages = [];
 	}

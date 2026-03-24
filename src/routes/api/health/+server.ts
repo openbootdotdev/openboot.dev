@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { checkDatabaseHealth } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform }) => {
 	const env = platform?.env;
-	
+
 	const checks = {
 		api: 'ok',
 		database: 'unknown',
@@ -11,12 +12,8 @@ export const GET: RequestHandler = async ({ platform }) => {
 	};
 
 	if (env?.DB) {
-		try {
-			const result = await env.DB.prepare('SELECT 1 as test').first<{ test: number }>();
-			checks.database = result?.test === 1 ? 'ok' : 'error';
-		} catch (e) {
-			checks.database = 'error';
-		}
+		const dbOk = await checkDatabaseHealth(env.DB);
+		checks.database = dbOk ? 'ok' : 'error';
 	}
 
 	const allOk = checks.database === 'ok';

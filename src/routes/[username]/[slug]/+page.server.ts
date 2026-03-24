@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getCurrentUser } from '$lib/server/auth';
+import { getUserWithAvatar, getConfig } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ params, platform, request, cookies }) => {
 	try {
@@ -9,18 +10,12 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 		if (!env) throw error(500, 'Platform env not available');
 
 		// 1. Find user
-		const targetUser = await env.DB.prepare('SELECT id, username, avatar_url FROM users WHERE username = ?')
-			.bind(username)
-			.first<{ id: string; username: string; avatar_url: string | null }>();
+		const targetUser = await getUserWithAvatar(env.DB, username);
 
 		if (!targetUser) throw error(404, 'User not found');
 
 		// 2. Find config
-		const config = await env.DB.prepare(
-			'SELECT * FROM configs WHERE user_id = ? AND slug = ?'
-		)
-			.bind(targetUser.id, slug)
-			.first<any>();
+		const config = await getConfig(env.DB, targetUser.id, slug);
 
 		if (!config) throw error(404, 'Configuration not found');
 
@@ -32,17 +27,21 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 		}
 
 		// Parse JSON fields
+		let parsedSnapshot: unknown = null;
+		let parsedPackages: unknown[] = [];
 		try {
-			config.snapshot = config.snapshot ? JSON.parse(config.snapshot) : null;
-			config.packages = config.packages ? JSON.parse(config.packages) : [];
+			parsedSnapshot = config.snapshot ? JSON.parse(config.snapshot) : null;
+			parsedPackages = config.packages ? JSON.parse(config.packages) : [];
 		} catch (e) {
 			console.error('Failed to parse config JSON', e);
-			config.snapshot = null;
-			config.packages = [];
+			parsedSnapshot = null;
+			parsedPackages = [];
 		}
 
-		const pkgs: {name: string; type: string; desc?: string}[] = Array.isArray(config.packages)
-			? config.packages.map((p: any) => typeof p === 'string' ? {name: p, type: 'formula'} : p)
+		const parsedConfig = { ...config, snapshot: parsedSnapshot, packages: parsedPackages };
+
+		const pkgs: {name: string; type: string; desc?: string}[] = Array.isArray(parsedPackages)
+			? parsedPackages.map((p: unknown) => typeof p === 'string' ? {name: p, type: 'formula'} : p as {name: string; type: string; desc?: string})
 			: [];
 
 		const packageDescriptions: Record<string, string> = {};
@@ -52,7 +51,7 @@ export const load: PageServerLoad = async ({ params, platform, request, cookies 
 
 		return {
 			configUser: targetUser,
-			config,
+			config: parsedConfig,
 			packageDescriptions
 		};
 	} catch (e) {

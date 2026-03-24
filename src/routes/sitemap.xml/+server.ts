@@ -1,5 +1,6 @@
 import { allDocs } from '../docs/docs-data';
 import type { RequestHandler } from './$types';
+import { getSitemapConfigs } from '$lib/server/db';
 
 const SITE_URL = 'https://openboot.dev';
 
@@ -23,9 +24,7 @@ export const GET: RequestHandler = async ({ platform }) => {
 	const env = platform?.env;
 	if (env) {
 		// Only include configs with meaningful slugs (exclude auto-generated 'default')
-		const { results: publicConfigs } = await env.DB.prepare(
-			`SELECT c.slug, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.visibility = 'public' AND c.slug != 'default' ORDER BY c.install_count DESC LIMIT 500`
-		).all<{ slug: string; username: string }>();
+		const publicConfigs = await getSitemapConfigs(env.DB);
 
 		// Only include user profile pages for users who have at least one non-default public config
 		const seenUsers = new Set<string>();

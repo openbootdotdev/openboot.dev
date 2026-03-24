@@ -1,6 +1,13 @@
 import type { Handle } from '@sveltejs/kit';
 import { generateInstallScript, generatePrivateInstallScript } from '$lib/server/install-script';
 import { RESERVED_ALIASES } from '$lib/server/validation';
+import {
+	getConfigForHookAlias,
+	getConfigForInstall,
+	getConfigForHookSlug,
+	incrementInstallByAlias,
+	incrementInstallBySlug
+} from '$lib/server/db';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
@@ -60,9 +67,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const env = event.platform?.env;
 
 		if (env) {
-			const config = await env.DB.prepare('SELECT c.slug, c.custom_script, c.dotfiles_repo, c.visibility, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.alias = ?')
-				.bind(alias)
-				.first<{ slug: string; username: string; custom_script: string; dotfiles_repo: string; visibility: string }>();
+			const config = await getConfigForHookAlias(env.DB, alias);
 
 			if (config) {
 				const ua = event.request.headers.get('user-agent') || '';
@@ -80,7 +85,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 					const script = generateInstallScript(config.username, config.slug);
 
-					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE alias = ?').bind(alias).run().catch((e: unknown) => console.error('install count update failed:', e));
+					incrementInstallByAlias(env.DB, alias);
 
 					return withSecurityHeaders(new Response(script, {
 						headers: {
@@ -102,9 +107,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const username = installShMatch[1];
 			const slug = installShMatch[2];
 
-			const config = await env.DB.prepare(
-				'SELECT c.visibility, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
-			).bind(username, slug).first<{ visibility: string; user_id: string }>();
+			const config = await getConfigForInstall(env.DB, username, slug);
 
 			if (config) {
 				if (config.visibility === 'private') {
@@ -116,7 +119,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 				const script = generateInstallScript(username, slug);
 
-				env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
+				incrementInstallBySlug(env.DB, config.user_id, slug);
 
 				return withSecurityHeaders(new Response(script, {
 					headers: {
@@ -138,9 +141,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				const username = twoSegMatch[1];
 				const slug = twoSegMatch[2];
 
-				const config = await env.DB.prepare(
-					'SELECT c.custom_script, c.visibility, c.dotfiles_repo, c.user_id FROM configs c JOIN users u ON c.user_id = u.id WHERE u.username = ? AND c.slug = ?'
-				).bind(username, slug).first<{ custom_script: string; visibility: string; dotfiles_repo: string; user_id: string }>();
+				const config = await getConfigForHookSlug(env.DB, username, slug);
 
 				if (config) {
 					if (config.visibility === 'private') {
@@ -152,7 +153,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 					const script = generateInstallScript(username, slug);
 
-					env.DB.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?').bind(config.user_id, slug).run().catch((e: unknown) => console.error('install count update failed:', e));
+					incrementInstallBySlug(env.DB, config.user_id, slug);
 
 					return withSecurityHeaders(new Response(script, {
 						headers: {

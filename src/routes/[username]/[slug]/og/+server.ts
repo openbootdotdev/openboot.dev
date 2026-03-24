@@ -1,5 +1,6 @@
 import type { RequestHandler } from './$types';
 import { Resvg } from '@cf-wasm/resvg';
+import { getUserWithAvatar, getConfigOGData } from '$lib/server/db';
 
 let fontCacheRegular: Uint8Array | null = null;
 let fontCacheBold: Uint8Array | null = null;
@@ -138,23 +139,11 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 
 	const { username, slug } = params;
 
-	const targetUser = await env.DB.prepare('SELECT id, username, avatar_url FROM users WHERE username = ?')
-		.bind(username)
-		.first<{ id: string; username: string; avatar_url: string | null }>();
+	const targetUser = await getUserWithAvatar(env.DB, username);
 
 	if (!targetUser) return new Response('Not found', { status: 404 });
 
-	const config = await env.DB.prepare(
-		'SELECT name, description, packages, visibility, base_preset FROM configs WHERE user_id = ? AND slug = ?'
-	)
-		.bind(targetUser.id, slug)
-		.first<{
-			name: string;
-			description: string;
-			packages: string;
-			visibility: string;
-			base_preset: string;
-		}>();
+	const config = await getConfigOGData(env.DB, targetUser.id, slug);
 
 	if (!config || config.visibility === 'private') return new Response('Not found', { status: 404 });
 

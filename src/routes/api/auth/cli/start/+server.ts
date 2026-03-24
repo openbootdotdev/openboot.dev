@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { generateId } from '$lib/server/auth';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { cleanExpiredCodes, createCliCode } from '$lib/server/db';
 
 const DEVICE_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -26,19 +27,14 @@ export const POST: RequestHandler = async ({ platform, request }) => {
 	}
 
 	// Clean up expired codes opportunistically (fire-and-forget)
-	env.DB.prepare("DELETE FROM cli_auth_codes WHERE expires_at < datetime('now')").run().catch(() => {});
+	cleanExpiredCodes(env.DB);
 
 	const code = generateDeviceCode();
 
 	const code_id = generateId();
 
 	try {
-		await env.DB.prepare(
-			`INSERT INTO cli_auth_codes (id, code, status, expires_at)
-			VALUES (?, ?, 'pending', datetime('now', '+10 minutes'))`
-		)
-			.bind(code_id, code)
-			.run();
+		await createCliCode(env.DB, code_id, code);
 	} catch (e) {
 		console.error('POST /api/auth/cli/start error:', e);
 		return json({ error: 'Failed to start authentication' }, { status: 500 });

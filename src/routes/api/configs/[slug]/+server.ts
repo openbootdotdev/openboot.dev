@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
 import { validateCustomScript, validateDotfilesRepo, validatePackages, validateMacOSPrefs, RESERVED_ALIASES } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { getConfig, getConfigIdAndAlias, slugConflict, aliasExistsExcluding, updateConfig, deleteConfig } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
@@ -17,7 +18,7 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
 	}
 
-	const config = await env.DB.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).first();
+	const config = await getConfig(env.DB, user.id, params.slug);
 	if (!config) return json({ error: 'Config not found' }, { status: 404 });
 
 	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}`;
@@ -134,13 +135,13 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 
 	const slug = params.slug;
 
-	const existing = await env.DB.prepare('SELECT id, alias FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, slug).first<{ id: string; alias: string | null }>();
+	const existing = await getConfigIdAndAlias(env.DB, user.id, slug);
 	if (!existing) return json({ error: 'Config not found' }, { status: 404 });
 
 	let newSlug = slug;
 	if (name && slugify(name) !== slug) {
 		newSlug = slugify(name);
-		const conflict = await env.DB.prepare('SELECT id FROM configs WHERE user_id = ? AND slug = ? AND id != ?').bind(user.id, newSlug, existing.id).first();
+		const conflict = await slugConflict(env.DB, user.id, newSlug, existing.id);
 		if (conflict) return json({ error: 'Config with this name already exists' }, { status: 409 });
 	}
 
@@ -149,54 +150,36 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		if (alias === '' || alias === null) {
 			newAlias = null;
 		} else {
-			newAlias = alias
+			const cleanedAlias = alias
 				.toLowerCase()
 				.replace(/[^a-z0-9-]/g, '')
 				.substring(0, 20);
-			if (newAlias.length < 2) return json({ error: 'Alias must be at least 2 characters' }, { status: 400 });
-			if ((RESERVED_ALIASES as readonly string[]).includes(newAlias)) {
+			if (cleanedAlias.length < 2) return json({ error: 'Alias must be at least 2 characters' }, { status: 400 });
+			if ((RESERVED_ALIASES as readonly string[]).includes(cleanedAlias)) {
 				return json({ error: 'This alias is reserved' }, { status: 400 });
 			}
-			const aliasExists = await env.DB.prepare('SELECT id FROM configs WHERE alias = ? AND id != ?').bind(newAlias, existing.id).first();
-			if (aliasExists) return json({ error: 'This alias is already taken' }, { status: 409 });
+			const aliasExistsRow = await aliasExistsExcluding(env.DB, cleanedAlias, existing.id);
+			if (aliasExistsRow) return json({ error: 'This alias is already taken' }, { status: 409 });
+			newAlias = cleanedAlias;
 		}
 	}
 
 	try {
-		await env.DB.prepare(
-			`
-			UPDATE configs SET
-				slug = ?,
-				name = COALESCE(?, name),
-				description = COALESCE(?, description),
-				base_preset = COALESCE(?, base_preset),
-				packages = COALESCE(?, packages),
-				custom_script = COALESCE(?, custom_script),
-				visibility = COALESCE(?, visibility),
-				alias = ?,
-				dotfiles_repo = COALESCE(?, dotfiles_repo),
-				snapshot = ?,
-				snapshot_at = ?,
-				updated_at = datetime('now')
-			WHERE user_id = ? AND slug = ?
-		`
-		)
-			.bind(
-				newSlug,
-				name || null,
-				description !== undefined ? description : null,
-				base_preset || null,
-				packages ? JSON.stringify(packages) : null,
-				custom_script !== undefined ? custom_script : null,
-				visibility !== undefined ? visibility : null,
-				newAlias,
-				dotfiles_repo !== undefined ? dotfiles_repo : null,
-				snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
-				snapshot_at !== undefined ? snapshot_at : null,
-				user.id,
-				slug
-			)
-			.run();
+		await updateConfig(env.DB, {
+			newSlug,
+			name: name || null,
+			description: description !== undefined ? description : null,
+			base_preset: base_preset || null,
+			packages: packages ? JSON.stringify(packages) : null,
+			custom_script: custom_script !== undefined ? custom_script : null,
+			visibility: visibility !== undefined ? visibility : null,
+			alias: newAlias,
+			dotfiles_repo: dotfiles_repo !== undefined ? dotfiles_repo : null,
+			snapshot: snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
+			snapshot_at: snapshot_at !== undefined ? snapshot_at : null,
+			userId: user.id,
+			slug
+		});
 	} catch (e) {
 		console.error('PUT /api/configs/[slug] error:', e);
 		return json({ error: 'Failed to update config' }, { status: 500 });
@@ -220,7 +203,7 @@ export const DELETE: RequestHandler = async ({ platform, cookies, params, reques
 		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlD.retryAfter! / 1000)) } });
 	}
 
-	await env.DB.prepare('DELETE FROM configs WHERE user_id = ? AND slug = ?').bind(user.id, params.slug).run();
+	await deleteConfig(env.DB, user.id, params.slug);
 
 	return json({ success: true });
 };

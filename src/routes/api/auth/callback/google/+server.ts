@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { signToken, generateId, slugify } from '$lib/server/auth';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 import { validateReturnTo } from '$lib/server/validation';
+import { getUserById, getUserByUsername, upsertUser, countUserConfigs, createDefaultConfig } from '$lib/server/db';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
@@ -66,40 +67,22 @@ export const GET: RequestHandler = async ({ url, platform, cookies, request }) =
 			username = `user-${googleUser.id.slice(-8)}`;
 		}
 
-		const existingUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
+		const existingUser = await getUserById(env.DB, userId);
 		if (existingUser) {
-			username = (existingUser as { username: string }).username;
+			username = existingUser.username;
 		} else {
-			const usernameTaken = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first();
+			const usernameTaken = await getUserByUsername(env.DB, username);
 			if (usernameTaken) {
 				username = `${username}-${googleUser.id.slice(-6)}`;
 			}
 		}
 
-		await env.DB.prepare(
-			`
-			INSERT INTO users (id, username, email, avatar_url, updated_at)
-			VALUES (?, ?, ?, ?, datetime('now'))
-			ON CONFLICT(id) DO UPDATE SET
-				email = excluded.email,
-				avatar_url = excluded.avatar_url,
-				updated_at = datetime('now')
-		`
-		)
-			.bind(userId, username, googleUser.email, googleUser.picture || '')
-			.run();
+		await upsertUser(env.DB, userId, username, googleUser.email, googleUser.picture || '');
 
-		const configCount = await env.DB.prepare('SELECT COUNT(*) as count FROM configs WHERE user_id = ?').bind(userId).first<{ count: number }>();
+		const configCount = await countUserConfigs(env.DB, userId);
 
-		if (!configCount || configCount.count === 0) {
-			await env.DB.prepare(
-				`
-				INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
-				VALUES (?, ?, 'default', 'Default', 'My default configuration', 'developer', '[]')
-			`
-			)
-				.bind(generateId(), userId)
-				.run();
+		if (configCount === 0) {
+			await createDefaultConfig(env.DB, generateId(), userId);
 		}
 
 		const thirtyDays = 30 * 24 * 60 * 60;

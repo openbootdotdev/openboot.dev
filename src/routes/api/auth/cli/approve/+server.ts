@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, generateId } from '$lib/server/auth';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
+import { claimCliCode, getProcessingCliCode, prepareCreateApiToken, prepareApproveCliCode } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const env = platform?.env;
@@ -31,32 +32,19 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const tokenValue = 'obt_' + crypto.randomUUID().replace(/-/g, '');
 
 	try {
-		const claimResult = await env.DB.prepare(
-			"UPDATE cli_auth_codes SET status = 'processing' WHERE code = ? AND status = 'pending' AND expires_at > datetime('now')"
-		)
-			.bind(code)
-			.run();
+		const claimResult = await claimCliCode(env.DB, code);
 
-		if (!claimResult.meta.changes) {
+		if (!claimResult.changes) {
 			return json({ error: 'Invalid or expired code' }, { status: 400 });
 		}
 
-		const row = await env.DB.prepare(
-			"SELECT id FROM cli_auth_codes WHERE code = ? AND status = 'processing'"
-		)
-			.bind(code)
-			.first<{ id: string }>();
+		const row = await getProcessingCliCode(env.DB, code);
 
 		if (!row) return json({ error: 'Invalid or expired code' }, { status: 400 });
 
 		await env.DB.batch([
-			env.DB.prepare(
-				`INSERT INTO api_tokens (id, user_id, token, name, expires_at)
-				VALUES (?, ?, ?, 'cli', datetime('now', '+90 days'))`
-			).bind(tokenId, user.id, tokenValue),
-			env.DB.prepare(
-				"UPDATE cli_auth_codes SET user_id = ?, token_id = ?, status = 'approved' WHERE id = ?"
-			).bind(user.id, tokenId, row.id)
+			prepareCreateApiToken(env.DB, tokenId, user.id, tokenValue),
+			prepareApproveCliCode(env.DB, user.id, tokenId, row.id)
 		]);
 	} catch (e) {
 		console.error('POST /api/auth/cli/approve error:', e);
