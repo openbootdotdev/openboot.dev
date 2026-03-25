@@ -19,3 +19,6 @@ migrations_dir = "migrations"
 
 [vars]
 APP_URL = "https://openboot.dev"
+
+[triggers]
+crons = ["0 9 * * 1"]  # every Monday 9am UTC — canary alert test

@@ -198,4 +198,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return securedResponse;
 };
 
+// Weekly canary: fires every Monday 9am UTC (see wrangler.toml).
+// Sends a test event to Sentry to verify the full alerting chain is working.
+export const scheduled: App.Scheduled = async ({ platform }) => {
+	const dsn = platform?.env?.SENTRY_DSN;
+	if (!dsn) return;
+	await captureToSentry(dsn, {
+		level: 'info',
+		message: 'Weekly canary — alerting system is working',
+	});
+	console.log('[canary] sent weekly test event to Sentry');
+};
+
 
