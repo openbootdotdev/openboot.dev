@@ -1,13 +1,7 @@
 import type { Handle } from '@sveltejs/kit';
-import { generateInstallScript, generatePrivateInstallScript } from '$lib/server/install-script';
 import { RESERVED_ALIASES } from '$lib/server/validation';
-import {
-	getConfigForHookAlias,
-	getConfigForInstall,
-	getConfigForHookSlug,
-	incrementInstallByAlias,
-	incrementInstallBySlug
-} from '$lib/server/db';
+import { getConfigForHookAlias, getConfigForInstall, getConfigForHookSlug } from '$lib/server/db';
+import { serveInstallByAlias, serveInstallBySlug } from '$lib/server/alias';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
@@ -65,34 +59,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (shortAliasMatch && !(RESERVED_ALIASES as readonly string[]).includes(shortAliasMatch[1])) {
 		const alias = shortAliasMatch[1];
 		const env = event.platform?.env;
-
 		if (env) {
 			const config = await getConfigForHookAlias(env.DB, alias);
-
 			if (config) {
 				const ua = event.request.headers.get('user-agent') || '';
 				const isCurl = /^(curl|wget)\//i.test(ua);
-				const accept = event.request.headers.get('accept') || '';
-				const isBrowser = accept.includes('text/html');
-
+				const isBrowser = (event.request.headers.get('accept') || '').includes('text/html');
 				if (isCurl || !isBrowser) {
-					if (config.visibility === 'private') {
-						const script = generatePrivateInstallScript(env.APP_URL, config.username, config.slug);
-						return withSecurityHeaders(new Response(script, {
-							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
-						}));
-					}
-
-					const script = generateInstallScript(config.username, config.slug);
-
-					incrementInstallByAlias(env.DB, alias);
-
-					return withSecurityHeaders(new Response(script, {
-						headers: {
-							'Content-Type': 'text/plain; charset=utf-8',
-							'Cache-Control': 'no-cache'
-						}
-					}));
+					return withSecurityHeaders(
+						serveInstallByAlias(env.APP_URL, env.DB, alias, config.username, config.slug, config.visibility)
+					);
 				} else if (isBrowser) {
 					event.locals.aliasConfig = { username: config.username, slug: config.slug };
 				}
@@ -104,64 +80,26 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (installShMatch) {
 		const env = event.platform?.env;
 		if (env) {
-			const username = installShMatch[1];
-			const slug = installShMatch[2];
-
+			const [, username, slug] = installShMatch;
 			const config = await getConfigForInstall(env.DB, username, slug);
-
 			if (config) {
-				if (config.visibility === 'private') {
-					const script = generatePrivateInstallScript(env.APP_URL, username, slug);
-					return withSecurityHeaders(new Response(script, {
-						headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
-					}));
-				}
-
-				const script = generateInstallScript(username, slug);
-
-				incrementInstallBySlug(env.DB, config.user_id, slug);
-
-				return withSecurityHeaders(new Response(script, {
-					headers: {
-						'Content-Type': 'text/plain; charset=utf-8',
-						'Cache-Control': 'no-cache'
-					}
-				}));
+				return withSecurityHeaders(
+					serveInstallBySlug(env.APP_URL, env.DB, config.user_id, username, slug, config.visibility)
+				);
 			}
 		}
 	}
 
 	const twoSegMatch = path.match(/^\/([a-z0-9_-]+)\/([a-z0-9_-]+)$/i);
-	if (twoSegMatch) {
-		const ua = event.request.headers.get('user-agent') || '';
-		const isCurl = /^(curl|wget)\//i.test(ua);
-		if (isCurl) {
-			const env = event.platform?.env;
-			if (env) {
-				const username = twoSegMatch[1];
-				const slug = twoSegMatch[2];
-
-				const config = await getConfigForHookSlug(env.DB, username, slug);
-
-				if (config) {
-					if (config.visibility === 'private') {
-						const script = generatePrivateInstallScript(env.APP_URL, username, slug);
-						return withSecurityHeaders(new Response(script, {
-							headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' }
-						}));
-					}
-
-					const script = generateInstallScript(username, slug);
-
-					incrementInstallBySlug(env.DB, config.user_id, slug);
-
-					return withSecurityHeaders(new Response(script, {
-						headers: {
-							'Content-Type': 'text/plain; charset=utf-8',
-							'Cache-Control': 'no-cache'
-						}
-					}));
-				}
+	if (twoSegMatch && /^(curl|wget)\//i.test(event.request.headers.get('user-agent') || '')) {
+		const env = event.platform?.env;
+		if (env) {
+			const [, username, slug] = twoSegMatch;
+			const config = await getConfigForHookSlug(env.DB, username, slug);
+			if (config) {
+				return withSecurityHeaders(
+					serveInstallBySlug(env.APP_URL, env.DB, config.user_id, username, slug, config.visibility)
+				);
 			}
 		}
 	}
