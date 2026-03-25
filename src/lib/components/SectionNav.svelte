@@ -8,7 +8,8 @@
 
 	let { sections }: { sections: Section[] } = $props();
 
-	let activeId = $state(sections[0]?.id ?? '');
+	const initialId = sections[0]?.id ?? '';
+	let activeId = $state(initialId);
 	let observer: IntersectionObserver | null = null;
 
 	onMount(() => {

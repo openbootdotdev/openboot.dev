@@ -15,8 +15,12 @@ declare global {
 				GOOGLE_CLIENT_SECRET: string;
 				JWT_SECRET: string;
 				APP_URL: string;
+				/** Optional. Webhook URL for health alerts (Discord/Slack/etc). */
+				ALERT_WEBHOOK_URL?: string;
 			};
 		}
+		// Cloudflare Workers Cron Trigger handler signature.
+		type Scheduled = (event: { platform: Platform | undefined }) => Promise<void>;
 	}
 }
 

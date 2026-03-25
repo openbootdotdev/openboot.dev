@@ -1,4 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
+import { runHealthChecks } from '$lib/server/monitor';
 import { RESERVED_ALIASES } from '$lib/server/validation';
 import { getConfigForHookAlias, getConfigForInstall, getConfigForHookSlug } from '$lib/server/db';
 import { serveInstallByAlias, serveInstallBySlug } from '$lib/server/alias';
@@ -135,3 +136,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return securedResponse;
 };
+
+// Cloudflare Workers Cron Trigger — runs on the schedule defined in wrangler.toml.
+// Checks critical production signals and sends an alert to ALERT_WEBHOOK_URL if any fail.
+export const scheduled: App.Scheduled = async ({ platform }) => {
+	await runHealthChecks({
+		APP_URL: platform?.env?.APP_URL ?? 'https://openboot.dev',
+		ALERT_WEBHOOK_URL: platform?.env?.ALERT_WEBHOOK_URL,
+	});
+};
+
