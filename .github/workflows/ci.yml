@@ -141,4 +141,4 @@ jobs:
         run: |
           pip install jsonschema
           git clone --depth 1 https://github.com/openbootdotdev/openboot-contract.git /tmp/contract
-          SERVER_URL=https://openboot.dev /tmp/contract/golden-path/test.sh
+          SERVER_URL=https://openboot.dev /tmp/contract/golden-path/contract-smoke.sh
