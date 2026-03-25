@@ -1,13 +1,12 @@
 /**
  * Production health monitoring for Cloudflare Workers cron trigger.
  *
- * Checks three critical signals on every run:
+ * Checks two critical signals on every run:
  *   1. /api/packages returns a non-empty array
- *   2. /api/health returns status "healthy"
- *   3. DB is reachable (via health endpoint)
+ *   2. /api/health returns status "healthy" (DB reachable)
  *
- * If any check fails, posts a JSON alert to ALERT_WEBHOOK_URL (if set).
- * Works with Discord, Slack, PagerDuty, or any webhook receiver.
+ * Results are logged to Workers dashboard. Runtime errors are captured
+ * via Sentry (configured in hooks.server.ts).
  */
 
 interface CheckResult {
@@ -18,7 +17,6 @@ interface CheckResult {
 
 interface MonitorEnv {
 	APP_URL: string;
-	ALERT_WEBHOOK_URL?: string;
 }
 
 async function checkPackages(appUrl: string): Promise<CheckResult> {
@@ -57,42 +55,21 @@ async function checkHealth(appUrl: string): Promise<CheckResult> {
 	}
 }
 
-async function sendAlert(webhookUrl: string, failures: CheckResult[]): Promise<void> {
-	const lines = failures.map((f) => `• **${f.name}**: ${f.detail}`).join('\n');
-	const payload = {
-		// Discord-compatible format; Slack ignores unknown fields
-		content: `🚨 **openboot.dev health alert** — ${failures.length} check(s) failed:\n${lines}`,
-		// Slack-compatible fallback
-		text: `openboot.dev health alert — ${failures.length} check(s) failed:\n${failures.map((f) => `• ${f.name}: ${f.detail}`).join('\n')}`,
-	};
-	await fetch(webhookUrl, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(payload),
-		signal: AbortSignal.timeout(10_000),
-	});
-}
-
 export async function runHealthChecks(env: MonitorEnv): Promise<void> {
 	const appUrl = env.APP_URL ?? 'https://openboot.dev';
 
 	const results = await Promise.all([checkPackages(appUrl), checkHealth(appUrl)]);
 
-	const failures = results.filter((r) => !r.ok);
-
-	if (failures.length > 0 && env.ALERT_WEBHOOK_URL) {
-		await sendAlert(env.ALERT_WEBHOOK_URL, failures);
-	}
-
-	// Always log — visible in Workers dashboard → Logs
 	for (const r of results) {
 		const icon = r.ok ? '✓' : '✗';
 		console.log(`[monitor] ${icon} ${r.name}: ${r.detail}`);
 	}
 
+	const failures = results.filter((r) => !r.ok);
 	if (failures.length > 0) {
-		// Non-fatal: don't throw, just log. Workers cron retries on exceptions
-		// which could flood alerts. Log and return instead.
-		console.error(`[monitor] ${failures.length} check(s) failed`);
+		// Throw so Sentry (via handleError / uncaught exception) captures the alert.
+		throw new Error(
+			`Health check failed: ${failures.map((f) => `${f.name}=${f.detail}`).join(', ')}`
+		);
 	}
 }

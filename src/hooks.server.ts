@@ -1,5 +1,44 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { runHealthChecks } from '$lib/server/monitor';
+
+// Parse DSN into the store endpoint and auth header Sentry expects.
+// DSN format: https://<key>@<host>/<project_id>
+function parseDsn(dsn: string): { url: string; key: string } | null {
+	try {
+		const u = new URL(dsn);
+		const key = u.username;
+		const projectId = u.pathname.replace('/', '');
+		const host = u.host;
+		return { url: `https://${host}/api/${projectId}/store/`, key };
+	} catch {
+		return null;
+	}
+}
+
+async function captureToSentry(
+	dsn: string,
+	payload: { message?: string; exception?: unknown; level: string; request?: unknown }
+): Promise<void> {
+	const parsed = parseDsn(dsn);
+	if (!parsed) return;
+	const event = {
+		timestamp: new Date().toISOString(),
+		platform: 'javascript',
+		level: payload.level,
+		...(payload.message ? { message: payload.message } : {}),
+		...(payload.exception ? { exception: payload.exception } : {}),
+		...(payload.request ? { request: payload.request } : {}),
+	};
+	await fetch(parsed.url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${parsed.key}, sentry_client=openboot/1.0`,
+		},
+		body: JSON.stringify(event),
+		signal: AbortSignal.timeout(5_000),
+	}).catch(() => {}); // fire-and-forget, never block the response
+}
 import { RESERVED_ALIASES } from '$lib/server/validation';
 import { getConfigForHookAlias, getConfigForInstall, getConfigForHookSlug } from '$lib/server/db';
 import { serveInstallByAlias, serveInstallBySlug } from '$lib/server/alias';
@@ -48,6 +87,19 @@ function isVersionOlderThan(version: string, minVersion: string): boolean {
 	const [bMaj = 0, bMin = 0, bPat = 0] = parse(minVersion);
 	return aMaj < bMaj || (aMaj === bMaj && (aMin < bMin || (aMin === bMin && aPat < bPat)));
 }
+
+export const handleError: HandleServerError = async ({ error, event }) => {
+	const dsn = event.platform?.env?.SENTRY_DSN;
+	if (dsn) {
+		await captureToSentry(dsn, {
+			level: 'error',
+			exception: {
+				values: [{ type: 'Error', value: error instanceof Error ? error.message : String(error) }],
+			},
+			request: { url: event.url.href, method: event.request.method },
+		});
+	}
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
@@ -106,6 +158,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
+
+	const dsn = event.platform?.env?.SENTRY_DSN;
+	if (response.status >= 500 && dsn) {
+		await captureToSentry(dsn, {
+			level: 'error',
+			message: `HTTP ${response.status} ${event.request.method} ${event.url.pathname}`,
+			request: { url: event.url.href, method: event.request.method },
+		});
+	}
+
 	const securedResponse = withSecurityHeaders(response);
 
 	// Version negotiation: if CLI sends X-OpenBoot-Version, check compatibility.
@@ -140,9 +202,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 // Cloudflare Workers Cron Trigger — runs on the schedule defined in wrangler.toml.
 // Checks critical production signals and sends an alert to ALERT_WEBHOOK_URL if any fail.
 export const scheduled: App.Scheduled = async ({ platform }) => {
-	await runHealthChecks({
-		APP_URL: platform?.env?.APP_URL ?? 'https://openboot.dev',
-		ALERT_WEBHOOK_URL: platform?.env?.ALERT_WEBHOOK_URL,
-	});
+	const dsn = platform?.env?.SENTRY_DSN;
+	try {
+		await runHealthChecks({
+			APP_URL: platform?.env?.APP_URL ?? 'https://openboot.dev',
+		});
+	} catch (err) {
+		console.error('[monitor] cron failed:', err);
+		if (dsn) {
+			await captureToSentry(dsn, {
+				level: 'error',
+				exception: {
+					values: [{ type: 'HealthCheckError', value: err instanceof Error ? err.message : String(err) }],
+				},
+			});
+		}
+	}
 };
 
