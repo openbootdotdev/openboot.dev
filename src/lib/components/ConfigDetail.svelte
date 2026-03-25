@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { getCatalogItem, CATALOG_CATEGORIES } from '$lib/macos-prefs-catalog';
+	import ShareModal from '$lib/components/ShareModal.svelte';
+	import MacOSPreferencesDisplay from '$lib/components/MacOSPreferencesDisplay.svelte';
 
 	let {
 		configUser,
@@ -14,7 +16,6 @@
 
 	let copied = $state(false);
 	let showShareModal = $state(false);
-	let shareCopied = $state(false);
 	let forking = $state(false);
 	let forkError = $state('');
 	let showAllApps = $state(false);
@@ -56,25 +57,7 @@
 	}
 
 	function openShareModal() {
-		shareCopied = false;
 		showShareModal = true;
-	}
-
-	function closeShareModal() {
-		showShareModal = false;
-	}
-
-	function shareCopyLink() {
-		navigator.clipboard.writeText(getShareUrl());
-		shareCopied = true;
-		setTimeout(() => shareCopied = false, 2000);
-	}
-
-	function shareOnTwitter() {
-		const text = `My dev stack: ${config.name} — set up in minutes with @openbootdotdev`;
-		const hashtags = 'OpenBoot,macOS,DevTools';
-		const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(getShareUrl())}&hashtags=${encodeURIComponent(hashtags)}`;
-		window.open(tweetUrl, '_blank', 'width=550,height=420');
 	}
 
 	async function forkConfig() {
@@ -469,37 +452,7 @@
 		{#if macosPrefs.length > 0}
 			<section class="section">
 				<h2 class="section-title">🍎 macOS Preferences</h2>
-				<div class="prefs-accordion">
-					{#each prefCategoryNames as cat}
-						{@const items = prefsByCategory[cat]}
-						<div class="prefs-acc-group">
-							<div class="prefs-acc-header">
-								<span class="prefs-acc-name">{cat}</span>
-								<span class="prefs-acc-count">{items.length}</span>
-							</div>
-							<div class="prefs-acc-body">
-								{#each items as { pref, catalogItem }}
-									<div class="prefs-kv-row">
-										<span class="prefs-kv-label">{catalogItem?.label ?? pref.key}</span>
-										<span class="prefs-kv-value">
-											{#if catalogItem?.options}
-												{@const opt = catalogItem.options.find((o: { value: string; label: string }) => o.value === pref.value)}
-												<span class="pref-option-val">{opt?.label ?? pref.value}</span>
-											{:else if (catalogItem?.type ?? pref.type) === 'bool'}
-												{@const boolOn = pref.value === 'true' || pref.value === '1'}
-												<span class="pref-bool {boolOn ? 'pref-bool-on' : 'pref-bool-off'}">
-													{boolOn ? 'ON' : 'OFF'}
-												</span>
-											{:else}
-												<span class="pref-raw-val">{pref.value}</span>
-											{/if}
-										</span>
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/each}
-				</div>
+				<MacOSPreferencesDisplay {prefsByCategory} {prefCategoryNames} />
 			</section>
 		{/if}
 
@@ -536,41 +489,7 @@
 	</main>
 </div>
 
-{#if showShareModal}
-	<div class="share-overlay" onclick={closeShareModal} onkeydown={(e) => e.key === 'Escape' && closeShareModal()} role="dialog" tabindex="0">
-		<div class="share-modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
-			<div class="share-modal-header">
-				<h3 class="share-modal-title">Share Configuration</h3>
-				<button class="share-close-btn" onclick={closeShareModal} aria-label="Close share modal">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-				</button>
-			</div>
-			<div class="share-modal-body">
-				<div class="share-url-display">
-					<code>{getShareUrl()}</code>
-				</div>
-
-				<div class="share-options">
-					<button class="share-option" onclick={shareCopyLink}>
-						<span class="share-option-icon">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-						</span>
-						<span class="share-option-label">{shareCopied ? 'Copied!' : 'Copy Link'}</span>
-					</button>
-
-					<button class="share-option" onclick={shareOnTwitter}>
-						<span class="share-option-icon">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-						</span>
-						<span class="share-option-label">Share on X</span>
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && showShareModal) closeShareModal(); }} />
+<ShareModal bind:show={showShareModal} shareUrl={getShareUrl()} configName={config.name} />
 
 <style>
 	* {
@@ -1179,104 +1098,6 @@
 		color: var(--text-primary);
 	}
 
-	.prefs-accordion {
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		overflow: hidden;
-	}
-
-	.prefs-acc-group {
-		border-bottom: 1px solid var(--border);
-	}
-
-	.prefs-acc-group:last-child {
-		border-bottom: none;
-	}
-
-	.prefs-acc-header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 16px;
-		background: var(--bg-tertiary);
-	}
-
-	.prefs-acc-name {
-		font-size: 0.75rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-muted);
-		flex: 1;
-	}
-
-	.prefs-acc-count {
-		font-size: 0.7rem;
-		color: var(--text-muted);
-	}
-
-	.prefs-acc-body {
-		display: grid;
-		grid-template-columns: 1fr;
-	}
-
-	@media (min-width: 640px) {
-		.prefs-acc-body {
-			grid-template-columns: 1fr 1fr;
-		}
-	}
-
-	.prefs-kv-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		padding: 8px 16px;
-		border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-	}
-
-	.prefs-kv-label {
-		font-size: 0.88rem;
-		color: var(--text-primary);
-		font-weight: 500;
-	}
-
-	.prefs-kv-value {
-		flex-shrink: 0;
-	}
-
-	.pref-bool {
-		display: inline-block;
-		padding: 3px 8px;
-		border-radius: 5px;
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-	}
-
-	.pref-bool-on {
-		background: rgba(34, 197, 94, 0.15);
-		color: var(--accent);
-		border: 1px solid rgba(34, 197, 94, 0.3);
-	}
-
-	.pref-bool-off {
-		background: var(--bg-secondary);
-		color: var(--text-muted);
-		border: 1px solid var(--border);
-	}
-
-	.pref-option-val,
-	.pref-raw-val {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.8rem;
-		color: var(--accent);
-		background: var(--bg-secondary);
-		padding: 3px 8px;
-		border-radius: 5px;
-		border: 1px solid var(--border);
-	}
-
 	.cta {
 		display: flex;
 		align-items: center;
@@ -1335,146 +1156,6 @@
 	.cta-btn:hover {
 		background: var(--accent-hover);
 		transform: translateY(-2px);
-	}
-
-	.share-overlay {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(4px);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 1000;
-		padding: 20px;
-		animation: fadeIn 0.2s;
-	}
-
-	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
-	}
-
-	.share-modal {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		width: 100%;
-		max-width: 480px;
-		overflow: hidden;
-		animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	@keyframes slideUp {
-		from {
-			opacity: 0;
-			transform: translateY(20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	.share-modal-header {
-		padding: 24px;
-		border-bottom: 1px solid var(--border);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.share-modal-title {
-		font-size: 1.3rem;
-		font-weight: 700;
-		margin: 0;
-		color: var(--text-primary);
-	}
-
-	.share-close-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		color: var(--text-muted);
-		padding: 4px;
-		border-radius: 6px;
-		transition: all 0.2s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.share-close-btn:hover {
-		color: var(--text-primary);
-		background: var(--bg-tertiary);
-	}
-
-	.share-modal-body {
-		padding: 24px;
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-	}
-
-	.share-url-display {
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		padding: 14px 18px;
-	}
-
-	.share-url-display code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
-		color: var(--accent);
-		word-break: break-all;
-	}
-
-	.share-options {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-
-	.share-option {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		padding: 16px 18px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		color: var(--text-primary);
-		font-size: 0.95rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.share-option:hover {
-		border-color: var(--accent);
-		background: var(--bg-secondary);
-		transform: translateX(4px);
-	}
-
-	.share-option-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 40px;
-		background: var(--bg-secondary);
-		border-radius: 8px;
-		color: var(--text-secondary);
-		flex-shrink: 0;
-	}
-
-	.share-option:hover .share-option-icon {
-		color: var(--accent);
-	}
-
-	.share-option-label {
-		flex: 1;
 	}
 
 	@media (max-width: 768px) {

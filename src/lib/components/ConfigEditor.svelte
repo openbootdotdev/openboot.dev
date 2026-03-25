@@ -13,6 +13,7 @@
 	} from '$lib/macos-prefs-catalog';
 	import { PRESET_PACKAGES } from '$lib/presets';
 	import ShellEditor from './ShellEditor.svelte';
+	import MacOSPreferencesEditor from './MacOSPreferencesEditor.svelte';
 
 	let { slug, skipAuth = false }: { slug?: string; skipAuth?: boolean } = $props();
 	const isNew = !slug;
@@ -58,10 +59,6 @@
 	}
 	let macosPrefs = $state<MacOSPref[]>([]);
 	let expandedPrefCats = $state<Set<string>>(new Set());
-	let showCustomPref = $state(false);
-	let prefInput = $state('');
-	let prefTypeInput = $state('');
-	let prefInputError = $state('');
 
 	const packages = $derived(
 		Array.from(selectedPackages.entries()).map(([name, type]) => ({
@@ -127,17 +124,6 @@
 			.filter(({ pref }) => !getCatalogItem(pref.domain, pref.key))
 	);
 
-	function togglePrefCat(cat: string) {
-		const next = new Set(expandedPrefCats);
-		if (next.has(cat)) next.delete(cat);
-		else next.add(cat);
-		expandedPrefCats = next;
-	}
-
-	function getAddedPrefIndex(item: MacOSPrefCatalogItem): number {
-		return macosPrefs.findIndex((p) => p.domain === item.domain && p.key === item.key);
-	}
-
 	function initExpandedCats() {
 		const cats = new Set<string>();
 		for (const pref of macosPrefs) {
@@ -176,75 +162,11 @@
 		packageDescs = newDescs;
 	}
 
-	function addPref() {
-		const raw = prefInput.trim();
-		const eqIdx = raw.indexOf('=');
-		if (eqIdx <= 0) {
-			prefInputError = 'Format: domain.key=value';
-			return;
-		}
-		const domainKey = raw.slice(0, eqIdx);
-		const value = raw.slice(eqIdx + 1);
-		if (!domainKey.includes('.') || !value) {
-			prefInputError = 'Format: domain.key=value';
-			return;
-		}
-		if (macosPrefs.some((p) => `${p.domain}.${p.key}` === domainKey)) {
-			prefInputError = 'Already added';
-			return;
-		}
-		const dotIdx = domainKey.lastIndexOf('.');
-		macosPrefs = [
-			...macosPrefs,
-			{
-				domain: domainKey.slice(0, dotIdx),
-				key: domainKey.slice(dotIdx + 1),
-				type: prefTypeInput,
-				value,
-				desc: '',
-			},
-		];
-		prefInput = '';
-		prefTypeInput = '';
-		prefInputError = '';
-	}
-
-	function removePref(index: number) {
-		macosPrefs = macosPrefs.filter((_, i) => i !== index);
-	}
-
 	function normalizePrefValue(type: string, value: string): string {
 		if (type === 'bool') {
 			return (value === '1' || value === 'true') ? 'true' : 'false';
 		}
 		return value;
-	}
-
-	function isPrefAdded(item: MacOSPrefCatalogItem): boolean {
-		return macosPrefs.some((p) => p.domain === item.domain && p.key === item.key);
-	}
-
-	function addPrefFromCatalog(item: MacOSPrefCatalogItem) {
-		if (isPrefAdded(item)) {
-			macosPrefs = macosPrefs.filter(
-				(p) => !(p.domain === item.domain && p.key === item.key)
-			);
-		} else {
-			macosPrefs = [
-				...macosPrefs,
-				{
-					domain: item.domain,
-					key: item.key,
-					type: item.type,
-					value: item.defaultValue,
-					desc: item.description,
-				},
-			];
-		}
-	}
-
-	function updatePrefValue(index: number, newValue: string) {
-		macosPrefs = macosPrefs.map((p, i) => (i === index ? { ...p, value: newValue } : p));
 	}
 
 	onMount(async () => {
