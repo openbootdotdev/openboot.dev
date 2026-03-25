@@ -1,5 +1,4 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { runHealthChecks } from '$lib/server/monitor';
 
 // Parse DSN into the store endpoint and auth header Sentry expects.
 // DSN format: https://<key>@<host>/<project_id>
@@ -199,24 +198,4 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return securedResponse;
 };
 
-// Cloudflare Workers Cron Trigger — runs on the schedule defined in wrangler.toml.
-// Checks critical production signals and sends an alert to ALERT_WEBHOOK_URL if any fail.
-export const scheduled: App.Scheduled = async ({ platform }) => {
-	const dsn = platform?.env?.SENTRY_DSN;
-	try {
-		await runHealthChecks({
-			APP_URL: platform?.env?.APP_URL ?? 'https://openboot.dev',
-		});
-	} catch (err) {
-		console.error('[monitor] cron failed:', err);
-		if (dsn) {
-			await captureToSentry(dsn, {
-				level: 'error',
-				exception: {
-					values: [{ type: 'HealthCheckError', value: err instanceof Error ? err.message : String(err) }],
-				},
-			});
-		}
-	}
-};
 

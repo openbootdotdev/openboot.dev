@@ -19,7 +19,3 @@ migrations_dir = "migrations"
 
 [vars]
 APP_URL = "https://openboot.dev"
-# ALERT_WEBHOOK_URL = "https://discord.com/api/webhooks/..."  # set in Cloudflare dashboard (secret)
-
-[triggers]
-crons = ["0 * * * *"]  # every hour
