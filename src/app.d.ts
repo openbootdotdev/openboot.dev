@@ -19,9 +19,7 @@ declare global {
 				SENTRY_DSN?: string;
 			};
 		}
-		// Cloudflare Workers Cron Trigger handler signature.
-		type Scheduled = (event: { platform: Platform | undefined }) => Promise<void>;
-	}
+}
 }
 
 export {};
