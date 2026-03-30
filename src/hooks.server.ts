@@ -87,7 +87,21 @@ function isVersionOlderThan(version: string, minVersion: string): boolean {
 	return aMaj < bMaj || (aMaj === bMaj && (aMin < bMin || (aMin === bMin && aPat < bPat)));
 }
 
+// Paths probed by automated scanners — not real app routes.
+const BOT_PATH_PATTERNS = [
+	/\.php$/i,        // PHP files (not a PHP app)
+	/\/wp-/i,         // WordPress paths
+	/\/xmlrpc/i,      // WordPress XML-RPC
+	/\/wlwmanifest/i, // Windows Live Writer manifest
+	/\/etc\//,        // System file probes
+];
+
+function isBotPath(pathname: string): boolean {
+	return BOT_PATH_PATTERNS.some((p) => p.test(pathname));
+}
+
 export const handleError: HandleServerError = async ({ error, event }) => {
+	if (isBotPath(event.url.pathname)) return;
 	const dsn = event.platform?.env?.SENTRY_DSN;
 	if (dsn) {
 		await captureToSentry(dsn, {
