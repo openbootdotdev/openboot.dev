@@ -89,11 +89,28 @@ function isVersionOlderThan(version: string, minVersion: string): boolean {
 
 // Paths probed by automated scanners — not real app routes.
 const BOT_PATH_PATTERNS = [
-	/\.php$/i,        // PHP files (not a PHP app)
-	/\/wp-/i,         // WordPress paths
-	/\/xmlrpc/i,      // WordPress XML-RPC
-	/\/wlwmanifest/i, // Windows Live Writer manifest
-	/\/etc\//,        // System file probes
+	/\.php$/i,           // PHP files (not a PHP app)
+	/\.asp(x?)$/i,       // ASP/ASPX files
+	/\/wp-/i,            // WordPress paths
+	/\/wordpress/i,      // WordPress
+	/\/xmlrpc/i,         // WordPress XML-RPC
+	/\/wlwmanifest/i,    // Windows Live Writer manifest
+	/\/etc\//,           // System file probes
+	/\/\.env/i,          // Environment file probes
+	/\/\.git/i,          // Git directory probes
+	/\/\.ssh/i,          // SSH directory probes
+	/\/cgi-bin/i,        // CGI probes
+	/\/phpmyadmin/i,     // phpMyAdmin probes
+	/\/pma\//i,          // phpMyAdmin shorthand
+	/\/admin\.php/i,     // Generic admin PHP probes
+	/\/login\.php/i,     // PHP login probes
+	/\/actuator/i,       // Spring Boot actuator probes
+	/\/\.well-known\/pki/i, // PKI validation probes (not ACME)
+	/\/backup/i,         // Backup file probes
+	/\/config\.(json|yml|yaml|xml)$/i, // Config file probes
+	/\/shell/i,          // Shell probes
+	/\/cmd/i,            // Command probes
+	/\/(dump|db)\./i,    // Database dump probes
 ];
 
 function isBotPath(pathname: string): boolean {
@@ -173,7 +190,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 
 	const dsn = event.platform?.env?.SENTRY_DSN;
-	if (response.status >= 500 && dsn) {
+	if (response.status >= 500 && dsn && !isBotPath(event.url.pathname)) {
 		await captureToSentry(dsn, {
 			level: 'error',
 			message: `HTTP ${response.status} ${event.request.method} ${event.url.pathname}`,
