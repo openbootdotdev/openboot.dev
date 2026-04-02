@@ -33,6 +33,23 @@
 	<meta property="og:url" content="https://openboot.dev/docs/{slug}" />
 	<meta property="og:type" content="article" />
 	<link rel="canonical" href="https://openboot.dev/docs/{slug}" />
+	<script type="application/ld+json">{JSON.stringify({
+		"@context": "https://schema.org",
+		"@type": "TechArticle",
+		"headline": `${meta?.title ?? 'Docs'} — OpenBoot Docs`,
+		"description": meta?.description || 'Documentation for OpenBoot — the open-source macOS development environment setup tool.',
+		"url": `https://openboot.dev/docs/${slug}`,
+		"isPartOf": {
+			"@type": "TechArticle",
+			"name": "OpenBoot Documentation",
+			"url": "https://openboot.dev/docs"
+		},
+		"publisher": {
+			"@type": "Organization",
+			"name": "OpenBoot",
+			"url": "https://openboot.dev"
+		}
+	})}</script>
 </svelte:head>
 
 <article class="prose">

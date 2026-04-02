@@ -21,6 +21,23 @@
 	<meta name="twitter:title" content="OpenBoot - Automate macOS dev environment setup" />
 	<meta name="twitter:description" content="CLI that installs Homebrew packages, apps, shell config, dotfiles, and macOS preferences in one run. Open source, zero telemetry." />
 	<meta name="twitter:image" content="https://openboot.dev/og-image.png" />
+	<script type="application/ld+json">{JSON.stringify({
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		"name": "OpenBoot",
+		"url": "https://openboot.dev",
+		"applicationCategory": "DeveloperApplication",
+		"operatingSystem": "macOS",
+		"description": "Set up your Mac dev environment in one command. Installs Homebrew packages, apps, shell config, dotfiles, and macOS preferences. Snapshot your setup and share it with your team.",
+		"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+		"license": "https://github.com/openbootdotdev/openboot/blob/main/LICENSE",
+		"codeRepository": "https://github.com/openbootdotdev/openboot",
+		"publisher": {
+			"@type": "Organization",
+			"name": "OpenBoot",
+			"url": "https://openboot.dev"
+		}
+	})}</script>
 </svelte:head>
 
 <div class="page-wrapper">
