@@ -108,7 +108,9 @@ function isMonitoredPath(pathname: string): boolean {
 	return MONITORED_PATH_PATTERNS.some((p) => p.test(pathname));
 }
 
-export const handleError: HandleServerError = async ({ error, event }) => {
+export const handleError: HandleServerError = async ({ error, event, status }) => {
+	// Only report real server errors (5xx). 4xx (including 404 from bot probes) are not alertable.
+	if (status < 500) return;
 	if (!isMonitoredPath(event.url.pathname)) return;
 	const dsn = event.platform?.env?.SENTRY_DSN;
 	if (dsn) {
