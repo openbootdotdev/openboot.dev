@@ -344,8 +344,37 @@ function executeQuery<T>(sql: string, bindings: any[], tables: Record<string, an
 		if (!tableMatch) return [] as T[];
 
 		const tableName = tableMatch[1];
-		const whereMatch = sql.match(/where\s+(\w+)\s*=\s*\?/i);
 
+		// NOT IN subquery (revision pruning pattern):
+		// DELETE FROM t WHERE filterField = ? AND idField NOT IN (SELECT idField FROM t WHERE filterField = ? ORDER BY orderField DESC LIMIT ?)
+		if (sqlLower.includes('not in')) {
+			const filterFieldMatch = sql.match(/where\s+(\w+)\s*=\s*\?/i);
+			const idFieldMatch = sql.match(/and\s+(\w+)\s+not\s+in/i);
+			const orderFieldMatch = sql.match(/order\s+by\s+(\w+)\s+desc/i);
+
+			if (filterFieldMatch && idFieldMatch && orderFieldMatch && bindings.length >= 3) {
+				const filterField = filterFieldMatch[1];
+				const idField = idFieldMatch[1];
+				const orderField = orderFieldMatch[1];
+				const filterValue = bindings[0];
+				const limit = Number(bindings[2]);
+
+				// Sort matching rows newest-first and keep top `limit` ids
+				const allForFilter = tables[tableName].filter((row: any) => row[filterField] === filterValue);
+				allForFilter.sort((a: any, b: any) => (b[orderField] > a[orderField] ? 1 : -1));
+				const keepIds = new Set(allForFilter.slice(0, limit).map((r: any) => r[idField]));
+
+				const before = tables[tableName].length;
+				tables[tableName] = tables[tableName].filter(
+					(row: any) => row[filterField] !== filterValue || keepIds.has(row[idField])
+				);
+				const deleted = before - tables[tableName].length;
+				return new Array(deleted).fill({}) as T[];
+			}
+		}
+
+		// Simple WHERE field = ? pattern
+		const whereMatch = sql.match(/where\s+(\w+)\s*=\s*\?/i);
 		if (whereMatch && bindings.length > 0) {
 			const fieldName = whereMatch[1];
 			const value = bindings[0];
