@@ -1,5 +1,76 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { ConfigRow } from './types';
+import type { ConfigRow, RevisionRow } from './types';
+
+// ─── Revisions ──────────────────────────────────────────────────────────────
+
+const MAX_REVISIONS_PER_CONFIG = 10;
+
+/**
+ * Save the current packages as a revision before overwriting.
+ * Enforces a cap of MAX_REVISIONS_PER_CONFIG per config by deleting the oldest.
+ */
+export async function saveRevision(
+	db: D1Database,
+	configId: string,
+	packages: string,
+	message: string | null
+): Promise<void> {
+	const id = `rev_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+
+	await db
+		.prepare(
+			`INSERT INTO config_revisions (id, config_id, packages, message) VALUES (?, ?, ?, ?)`
+		)
+		.bind(id, configId, packages, message ?? null)
+		.run();
+
+	// Prune oldest revisions beyond the cap (keep newest MAX_REVISIONS_PER_CONFIG)
+	await db
+		.prepare(
+			`DELETE FROM config_revisions
+			 WHERE config_id = ?
+			   AND id NOT IN (
+			     SELECT id FROM config_revisions
+			     WHERE config_id = ?
+			     ORDER BY created_at DESC
+			     LIMIT ?
+			   )`
+		)
+		.bind(configId, configId, MAX_REVISIONS_PER_CONFIG)
+		.run();
+}
+
+export async function listRevisions(
+	db: D1Database,
+	configId: string
+): Promise<(Pick<RevisionRow, 'id' | 'message' | 'created_at'> & { package_count: number })[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT id, message, created_at,
+			        json_array_length(packages) AS package_count
+			 FROM config_revisions
+			 WHERE config_id = ?
+			 ORDER BY created_at DESC`
+		)
+		.bind(configId)
+		.all<Pick<RevisionRow, 'id' | 'message' | 'created_at'> & { package_count: number }>();
+	return results;
+}
+
+export async function getRevision(
+	db: D1Database,
+	revisionId: string,
+	configId: string
+): Promise<Pick<RevisionRow, 'id' | 'packages' | 'message' | 'created_at'> | null> {
+	return db
+		.prepare(
+			`SELECT id, packages, message, created_at
+			 FROM config_revisions
+			 WHERE id = ? AND config_id = ?`
+		)
+		.bind(revisionId, configId)
+		.first<Pick<RevisionRow, 'id' | 'packages' | 'message' | 'created_at'>>();
+}
 
 // ─── Read ───────────────────────────────────────────────────────────────────
 
@@ -578,14 +649,61 @@ export async function updateConfigFromSnapshot(
 	slug: string,
 	snapshot: string,
 	packages: string,
-	visibility: string
+	visibility: string,
+	message: string | null = null
 ): Promise<void> {
+	// Save the current packages as a revision before overwriting.
+	const current = await db
+		.prepare('SELECT id, packages FROM configs WHERE user_id = ? AND slug = ?')
+		.bind(userId, slug)
+		.first<{ id: string; packages: string }>();
+
+	if (current?.packages) {
+		await saveRevision(db, current.id, current.packages, message);
+	}
+
 	await db
 		.prepare(
 			`UPDATE configs SET snapshot = ?, snapshot_at = datetime('now'), packages = ?, visibility = ?, updated_at = datetime('now') WHERE user_id = ? AND slug = ?`
 		)
 		.bind(snapshot, packages, visibility, userId, slug)
 		.run();
+}
+
+/**
+ * Restore a config's packages to a previous revision.
+ * Saves the current packages as a new revision (labeled "before restore") first.
+ * Only updates the packages field — snapshot is left unchanged.
+ * Returns null if the revision is not found.
+ */
+export async function restoreConfigToRevision(
+	db: D1Database,
+	configId: string,
+	revisionId: string
+): Promise<{ restored: true } | null> {
+	const revision = await db
+		.prepare(`SELECT id, packages FROM config_revisions WHERE id = ? AND config_id = ?`)
+		.bind(revisionId, configId)
+		.first<{ id: string; packages: string }>();
+
+	if (!revision) return null;
+
+	// Save current packages before overwriting.
+	const current = await db
+		.prepare(`SELECT packages FROM configs WHERE id = ?`)
+		.bind(configId)
+		.first<{ packages: string }>();
+
+	if (current?.packages) {
+		await saveRevision(db, configId, current.packages, `before restore to ${revisionId}`);
+	}
+
+	await db
+		.prepare(`UPDATE configs SET packages = ?, updated_at = datetime('now') WHERE id = ?`)
+		.bind(revision.packages, configId)
+		.run();
+
+	return { restored: true };
 }
 
 export interface CreateConfigFromSnapshotParams {

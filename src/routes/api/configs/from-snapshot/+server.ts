@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, snapshot, config_slug, visibility } = body;
+	const { name, description, snapshot, config_slug, visibility, message } = body;
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
 	if (typeof name !== 'string' || name.length > 100) return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
@@ -100,13 +100,16 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			return json({ error: 'Config not found' }, { status: 404 });
 		}
 
+		const cleanMessage = typeof message === 'string' && message.trim() ? message.trim().slice(0, 200) : null;
+
 		await updateConfigFromSnapshot(
 			env.DB,
 			user.id,
 			config_slug,
 			JSON.stringify(snapshot),
 			JSON.stringify(packages),
-			validVisibility
+			validVisibility,
+			cleanMessage
 		);
 
 		const updated = await getConfig(env.DB, user.id, config_slug);

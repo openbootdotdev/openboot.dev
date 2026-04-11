@@ -43,6 +43,14 @@ export interface ApiTokenRow {
 	last_used_at: string | null;
 }
 
+export interface RevisionRow {
+	id: string;
+	config_id: string;
+	packages: string; // JSON string stored in DB
+	message: string | null;
+	created_at: string;
+}
+
 export interface CliAuthCodeRow {
 	id: string;
 	code: string;

@@ -12,6 +12,7 @@ export type MockData = {
 	configs?: any[];
 	api_tokens?: any[];
 	cli_auth_codes?: any[];
+	config_revisions?: any[];
 };
 
 /**
@@ -22,7 +23,8 @@ export function createMockDB(data: MockData = {}): D1Database & { data: Record<s
 		users: data.users || [],
 		configs: data.configs || [],
 		api_tokens: data.api_tokens || [],
-		cli_auth_codes: data.cli_auth_codes || []
+		cli_auth_codes: data.cli_auth_codes || [],
+		config_revisions: data.config_revisions || []
 	};
 
 	return {

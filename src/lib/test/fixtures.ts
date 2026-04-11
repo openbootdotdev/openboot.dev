@@ -84,6 +84,28 @@ export const mockApprovedCliAuthCode = {
 	status: 'approved' as const
 };
 
+export const mockRevision = {
+	id: 'rev_abc1234567890123',
+	config_id: 'cfg_test123',
+	packages: JSON.stringify([
+		{ name: 'git', type: 'formula' },
+		{ name: 'docker', type: 'cask' }
+	]),
+	// package_count is pre-computed so the mock returns it for json_array_length() queries
+	package_count: 2,
+	message: 'before adding rust',
+	created_at: '2026-01-10 10:00:00'
+};
+
+export const mockRevisionOlder = {
+	id: 'rev_def4567890123456',
+	config_id: 'cfg_test123',
+	packages: JSON.stringify([{ name: 'git', type: 'formula' }]),
+	package_count: 1,
+	message: null,
+	created_at: '2026-01-05 09:00:00'
+};
+
 export const mockExpiredCliAuthCode = {
 	...mockCliAuthCode,
 	code: 'EXPIRED1',
