@@ -1,6 +1,6 @@
 ---
 title: CLI Commands
-description: Complete reference for all openboot commands — install, snapshot, login, doctor, update, and their flags.
+description: Complete reference for all openboot commands — install, snapshot, sync, push, pull, log, restore, list, edit, login, doctor, update, and their flags.
 group: Reference
 order: 9
 ---
@@ -145,6 +145,211 @@ A review editor appears before any changes are made, letting you deselect items 
 | `--json` | Output as JSON to stdout |
 | `--dry-run` | Preview without saving, uploading, or installing |
 | `--import <path>` | Restore from a local file or URL |
+
+---
+
+## Manage Your Remote Config
+
+These commands work with configs stored on openboot.dev. They follow a git-style mental model: `push` saves your state, `pull` applies the remote to your system, `log` shows history, `restore` rolls back.
+
+### `openboot push`
+
+Capture your current system state and upload it to openboot.dev. If a sync source is configured (from a previous `openboot install`), it updates that config silently. Otherwise, an interactive picker lets you choose an existing config to update or create a new one.
+
+```
+openboot push
+```
+
+Attach a message to the revision (shown in `openboot log`):
+
+```
+openboot push -m "before upgrading to Node 22"
+```
+
+Target a specific config by slug:
+
+```
+openboot push --slug my-config
+```
+
+#### Push Flags
+
+| Flag | Description |
+|------|-------------|
+| `--slug <slug>` | Push to a specific existing config |
+| `-m, --message <text>` | Revision message saved in history |
+
+---
+
+### `openboot pull`
+
+Fetch the latest version of your remote config and apply it to your local system. Equivalent to `git pull` — syncs the remote state down to your machine.
+
+```
+openboot pull
+```
+
+#### Pull Flags
+
+| Flag | Description |
+|------|-------------|
+| `--slug <slug>` | Pull from a specific config |
+| `--dry-run` | Preview changes without applying them |
+| `-y, --yes` | Auto-confirm all prompts |
+
+---
+
+### `openboot sync`
+
+Fetch the remote config and show what differs from your local system, then let you selectively apply changes. More granular than `pull` — you choose which packages to install or remove.
+
+```
+openboot sync
+```
+
+```
+openboot sync --yes        # apply all changes without prompting
+openboot sync --dry-run    # preview only
+```
+
+#### Sync Flags
+
+| Flag | Description |
+|------|-------------|
+| `--source <username/slug>` | Sync from a specific config |
+| `--dry-run` | Preview without applying |
+| `-y, --yes` | Auto-confirm all changes |
+| `--install-only` | Only install missing packages, never remove extras |
+
+---
+
+### `openboot diff`
+
+Show what differs between your local system and your remote config, without applying any changes.
+
+```
+openboot diff
+```
+
+---
+
+### `openboot list`
+
+Show all configs in your openboot.dev account. The config currently linked to this machine is marked with `→`.
+
+```
+openboot list
+```
+
+```
+=== Configs for fullstackjam ===
+
+→ jam-s-packages  Jam's packages  [public]
+  work-mac        Work Machine
+  minimal
+
+Install: openboot -u fullstackjam/<slug>  •  Edit: openboot edit --slug <slug>  •  Delete: openboot delete <slug>
+```
+
+---
+
+### `openboot edit`
+
+Pick a config from your account and open it in the browser for editing. Shows an interactive list of your configs — select one to open the edit page on openboot.dev.
+
+```
+openboot edit
+```
+
+Skip the picker and open a specific config directly:
+
+```
+openboot edit --slug my-config
+```
+
+#### Edit Flags
+
+| Flag | Description |
+|------|-------------|
+| `--slug <slug>` | Open a specific config (skips the picker) |
+
+---
+
+### `openboot log`
+
+Show the revision history for your config. Every `push` automatically saves the previous version as a revision.
+
+```
+openboot log
+```
+
+```
+=== Revision history: jam-s-packages ===
+
+  rev_abc123  2026-04-10 14:32  26 pkgs  before upgrading to Node 22
+  rev_def456  2026-04-08 09:15  24 pkgs
+  rev_ghi789  2026-04-01 11:00  20 pkgs
+
+Use 'openboot restore <revision-id>' to roll back to a previous state.
+```
+
+Up to 10 revisions are kept per config. Oldest are pruned automatically.
+
+#### Log Flags
+
+| Flag | Description |
+|------|-------------|
+| `--slug <slug>` | Show history for a specific config |
+
+---
+
+### `openboot restore <revision-id>`
+
+Roll back your config to a previous revision. The current config is automatically saved as a new revision first (so you can always undo). After updating the server config, the changes are applied to your local system via sync.
+
+```
+openboot restore rev_abc123
+```
+
+Preview what would change without applying:
+
+```
+openboot restore rev_abc123 --dry-run
+```
+
+Get revision IDs from `openboot log`.
+
+#### Restore Flags
+
+| Flag | Description |
+|------|-------------|
+| `--slug <slug>` | Restore a specific config |
+| `--dry-run` | Preview changes without applying them |
+| `-y, --yes` | Auto-confirm all prompts |
+
+---
+
+### `openboot delete <slug>`
+
+Delete a config from your openboot.dev account.
+
+```
+openboot delete my-config
+```
+
+Skip the confirmation prompt:
+
+```
+openboot delete my-config --force
+```
+
+#### Delete Flags
+
+| Flag | Description |
+|------|-------------|
+| `-f, --force` | Skip the confirmation prompt |
+
+---
 
 ## Authentication
 
