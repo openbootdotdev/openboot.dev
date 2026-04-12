@@ -23,6 +23,8 @@
 	let error = $state('');
 	let editingConfig = $state<any>(null);
 	let initialSnapshot = $state('');
+	let rawMode = $state(false);
+	let rawJson = $state('');
 
 	function captureSnapshot(): string {
 		return JSON.stringify({
@@ -282,34 +284,107 @@
 		}
 	});
 
+	function buildPayload() {
+		const existingSnapshot = editingConfig?.snapshot || null;
+		const updatedSnapshot =
+			existingSnapshot !== null || macosPrefs.length > 0
+				? { ...(existingSnapshot || {}), macos_prefs: macosPrefs }
+				: null;
+		return {
+			...formData,
+			alias: formData.alias.trim() || null,
+			packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({
+				name,
+				type,
+				desc: packageDescs.get(name) || '',
+			})),
+			snapshot: updatedSnapshot,
+		};
+	}
+
+	function applyParsed(parsed: any) {
+		formData = {
+			name: parsed.name || '',
+			description: parsed.description || '',
+			base_preset: parsed.base_preset || 'developer',
+			visibility: parsed.visibility || 'unlisted',
+			alias: parsed.alias || '',
+			custom_script: parsed.custom_script || '',
+			dotfiles_repo: parsed.dotfiles_repo || '',
+		};
+		const newMap = new Map<string, string>();
+		const newDescs = new Map<string, string>();
+		for (const pkg of parsed.packages || []) {
+			if (typeof pkg === 'string') {
+				newMap.set(pkg, 'formula');
+			} else {
+				newMap.set(pkg.name, pkg.type || 'formula');
+				if (pkg.desc) newDescs.set(pkg.name, pkg.desc);
+			}
+		}
+		selectedPackages = newMap;
+		packageDescs = newDescs;
+		macosPrefs = Array.isArray(parsed.snapshot?.macos_prefs)
+			? parsed.snapshot.macos_prefs.map((p: any) => {
+					const type = p.type || '';
+					return {
+						domain: p.domain || '',
+						key: p.key || '',
+						type,
+						value: normalizePrefValue(type, String(p.value ?? '')),
+						desc: p.desc || '',
+					};
+				})
+			: [];
+		initExpandedCats();
+	}
+
+	function enterRawMode() {
+		rawJson = JSON.stringify(buildPayload(), null, 2);
+		rawMode = true;
+		error = '';
+	}
+
+	function exitRawMode() {
+		try {
+			const parsed = JSON.parse(rawJson);
+			applyParsed(parsed);
+			rawMode = false;
+			error = '';
+		} catch {
+			error = 'Invalid JSON — fix before switching back';
+		}
+	}
+
 	async function save() {
-		if (!formData.name) {
-			error = 'Name is required';
-			return;
+		let payload: ReturnType<typeof buildPayload> | any;
+		if (rawMode) {
+			try {
+				payload = JSON.parse(rawJson);
+			} catch {
+				error = 'Invalid JSON';
+				return;
+			}
+			if (!payload.name) {
+				error = 'Name is required';
+				return;
+			}
+		} else {
+			if (!formData.name) {
+				error = 'Name is required';
+				return;
+			}
+			payload = buildPayload();
 		}
 		saving = true;
 		error = '';
 		const url = slug ? `/api/configs/${slug}` : '/api/configs';
 		const method = slug ? 'PUT' : 'POST';
 		try {
-			const existingSnapshot = editingConfig?.snapshot || null;
-			const updatedSnapshot =
-				existingSnapshot !== null || macosPrefs.length > 0
-					? { ...(existingSnapshot || {}), macos_prefs: macosPrefs }
-					: null;
 			const response = await fetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					...formData,
-					alias: formData.alias.trim() || null,
-					packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({
-						name,
-						type,
-						desc: packageDescs.get(name) || '',
-					})),
-					snapshot: updatedSnapshot,
-				}),
+				body: JSON.stringify(payload),
 			});
 			const text = await response.text();
 			let result;
@@ -342,7 +417,9 @@
 	</div>
 {:else}
 	<div class="editor">
-		<SectionNav {sections} />
+		{#if !rawMode}
+			<SectionNav {sections} />
+		{/if}
 
 		<header class="editor-header">
 			<button class="back-btn" onclick={() => goto('/dashboard')}>
@@ -352,9 +429,22 @@
 				Back
 			</button>
 			<div class="header-right">
-				<div class="dna-preview">
-					<PackageDna {packages} />
-				</div>
+				{#if !rawMode}
+					<div class="dna-preview">
+						<PackageDna {packages} />
+					</div>
+				{/if}
+				<button
+					class="raw-btn"
+					class:raw-btn-active={rawMode}
+					onclick={() => rawMode ? exitRawMode() : enterRawMode()}
+					title={rawMode ? 'Switch to visual editor' : 'Edit raw JSON'}
+				>
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+					</svg>
+					{rawMode ? 'Visual' : 'Raw'}
+				</button>
 				{#if error}
 					<span class="header-error">{error}</span>
 				{/if}
@@ -363,6 +453,19 @@
 				</button>
 			</div>
 		</header>
+
+		{#if rawMode}
+			<div class="raw-editor">
+				<div class="raw-hint">Edit the config JSON directly. Switch back to Visual to see your changes reflected in the form.</div>
+				<textarea
+					class="raw-textarea"
+					bind:value={rawJson}
+					spellcheck="false"
+					autocomplete="off"
+					autocapitalize="off"
+				></textarea>
+			</div>
+		{:else}
 
 		<div class="editor-body">
 			<!-- IDENTITY -->
@@ -466,6 +569,7 @@
 				</div>
 			</section>
 		</div>
+		{/if}
 	</div>
 {/if}
 
@@ -618,6 +722,65 @@
 	.save-btn-inactive {
 		background: var(--border);
 		color: var(--text-muted);
+	}
+
+	.raw-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 14px;
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-muted);
+		font-size: 0.82rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.raw-btn:hover {
+		border-color: var(--text-muted);
+		color: var(--text-primary);
+	}
+
+	.raw-btn-active {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.raw-editor {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding-bottom: 100px;
+	}
+
+	.raw-hint {
+		font-size: 0.80rem;
+		color: var(--text-muted);
+	}
+
+	.raw-textarea {
+		width: 100%;
+		min-height: 60vh;
+		padding: 16px;
+		background: var(--bg-secondary, #111);
+		color: var(--text-primary);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+		font-size: 0.82rem;
+		line-height: 1.6;
+		resize: vertical;
+		outline: none;
+		box-sizing: border-box;
+		transition: border-color 0.15s;
+	}
+
+	.raw-textarea:focus {
+		border-color: var(--accent);
 	}
 
 	/* Sections */
