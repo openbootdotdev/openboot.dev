@@ -1,24 +1,22 @@
 ---
 title: Environment Variables
-description: All environment variables for the install script and CLI — version pinning, install directory, Git identity, and more.
+description: All environment variables the install script and openboot CLI understand.
 group: Reference
 order: 12
 ---
 
 # Environment Variables
 
-All environment variables that control the install script and the `openboot` CLI.
+Every environment variable OpenBoot reads. Short list — v1.0 kept things minimal.
 
-## Install Script Variables
+## Install script (`install.sh`)
 
-These are used when running the `curl | bash` install command. The install script installs OpenBoot via Homebrew (`brew install openbootdotdev/tap/openboot`).
+Used when you run `curl -fsSL openboot.dev/install.sh | bash`. The script installs OpenBoot via Homebrew (`brew install openbootdotdev/tap/openboot`).
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENBOOT_VERSION` | Install a specific version instead of latest | Latest release |
+| `OPENBOOT_VERSION` | Install a specific version instead of latest | `latest` |
 | `OPENBOOT_DRY_RUN` | Set to `true` to preview without changes | — |
-
-### Examples
 
 Preview the install script without making changes:
 
@@ -26,46 +24,39 @@ Preview the install script without making changes:
 OPENBOOT_DRY_RUN=true curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-## CLI Variables
+## CLI (`openboot`)
 
-These are used by the `openboot` binary at runtime.
+Used by the `openboot` binary at runtime.
 
 | Variable | Description |
 |----------|-------------|
-| `OPENBOOT_GIT_NAME` | Git user name — **only read in `--silent` mode** (required if Git isn't configured) |
-| `OPENBOOT_GIT_EMAIL` | Git user email — **only read in `--silent` mode** (required if Git isn't configured) |
-| `OPENBOOT_PRESET` | Default preset to use (overridden by `--preset` flag) |
-| `OPENBOOT_USER` | Default remote config to use (overridden by `--user` flag) |
-| `OPENBOOT_DOTFILES` | Dotfiles repository URL (overridden by config's `dotfiles_repo`) |
-| `OPENBOOT_API_URL` | Override the API base URL (default: `https://openboot.dev`) |
-| `OPENBOOT_DISABLE_AUTOUPDATE` | Set to `1` to disable auto-update checks |
-
-### Examples
+| `OPENBOOT_GIT_NAME` | Git user name — **read only in `--silent` mode** (required if Git isn't already configured) |
+| `OPENBOOT_GIT_EMAIL` | Git user email — **read only in `--silent` mode** (required if Git isn't already configured) |
+| `OPENBOOT_PRESET` | Default preset. Overridden by `-p` / `--preset` |
+| `OPENBOOT_USER` | Default cloud config (alias or `user/slug`). Overridden by `-u` / `--user` |
 
 Silent install with Git identity:
 
 ```
 OPENBOOT_GIT_NAME="Your Name" OPENBOOT_GIT_EMAIL="you@example.com" \
-  openboot --preset developer --silent
+  openboot install --preset developer --silent
 ```
 
-Set a default preset so `openboot` always starts with it:
+Set a default preset so `openboot install` always starts with it:
 
 ```
 export OPENBOOT_PRESET=developer
-openboot  # launches TUI with developer preset pre-selected
+openboot install  # TUI opens with developer preset pre-selected
 ```
 
-## File Locations
+## File locations
 
-These aren't environment variables, but useful to know:
+Not environment variables, but useful to know.
 
-| Path | What's There |
+| Path | What's there |
 |------|-------------|
-| `~/.openboot/auth.json` | Auth token (after `openboot login` or snapshot upload) |
+| `~/.openboot/auth.json` | Auth token (after `openboot login` or publishing a snapshot) |
 | `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
-| `~/.openboot/config.json` | Auto-update settings |
-| `~/.openboot/install_state.json` | Tracks what was installed and when |
-| `~/.openboot/state.json` | UI reminder state |
-| `~/.openboot/update_state.json` | Auto-update check state |
+| `~/.openboot/install_state.json` | What was installed on this machine, and when |
+| `~/.openboot/sync_source.json` | The cloud config this machine is synced to |
 | `~/.dotfiles/` | Cloned dotfiles repo (when configured) |

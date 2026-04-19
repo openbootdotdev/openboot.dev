@@ -24,7 +24,7 @@ OpenBoot automates your entire Mac dev environment — Homebrew packages, GUI ap
 - [Dotfiles & Shell](/docs/dotfiles-shell): Automatic Oh-My-Zsh setup, dotfiles linking with GNU Stow, and developer-friendly macOS preferences.
 - [For You](/docs/personal): How OpenBoot saves you hours on new Mac setup, keeps your machines in sync, and replaces your memory as a package manager.
 - [For Teams](/docs/teams): Replace your 47-step setup doc with one command. Onboard new hires in minutes, keep everyone in sync.
-- [CLI Commands](/docs/cli-reference): Complete reference for all openboot commands — install, snapshot, login, doctor, update, and their flags.
+- [CLI Commands](/docs/cli-reference): Complete reference for the openboot CLI — install, snapshot, login, and their flags.
 - [Config Options](/docs/config-options): Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 23 macOS preferences whitelist.
 - [Environment Variables](/docs/env-vars): All environment variables for the install script and CLI — version pinning, install directory, Git identity, and more.
 - [FAQ](/docs/faq): Common questions about OpenBoot — pricing, safety, Homebrew vs installer, Linux support, uninstalling, and more.

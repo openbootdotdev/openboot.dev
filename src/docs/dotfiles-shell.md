@@ -26,7 +26,7 @@ After installation, restart your terminal or run `source ~/.zshrc` to pick up th
 If you manage your shell config yourself:
 
 ```
-openboot --shell skip
+openboot install --shell skip
 ```
 
 ## Dotfiles
@@ -50,8 +50,8 @@ Control how OpenBoot handles dotfiles with the `--dotfiles` flag:
 | `skip` | Don't touch dotfiles |
 
 ```
-openboot --dotfiles link
-openboot --dotfiles skip
+openboot install --dotfiles link
+openboot install --dotfiles skip
 ```
 
 ### Setting Up Your Dotfiles Repo
@@ -97,7 +97,7 @@ OpenBoot applies a curated set of developer-friendly macOS settings. These are a
 If you prefer your current settings:
 
 ```
-openboot --macos skip
+openboot install --macos skip
 ```
 
 See [Config Options](/docs/config-options) for the complete list of macOS preferences you can configure.
