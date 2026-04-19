@@ -28,14 +28,14 @@ CLI essentials. Fast and lightweight.
 **GUI apps:** Warp, Raycast, Maccy, Stats, Rectangle
 
 ```bash
-openboot --preset minimal
+openboot install -p minimal
 ```
 
 <details>
 <summary>Or use the one-line installer</summary>
 
 ```bash
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset minimal
+curl -fsSL https://openboot.dev/install.sh | bash -s -- install -p minimal
 ```
 </details>
 
@@ -49,14 +49,14 @@ Default preset. What most developers need without extra stuff you won't use.
 - **NPM:** typescript, tsx, eslint, prettier, nodemon
 
 ```bash
-openboot --preset developer
+openboot install -p developer
 ```
 
 <details>
 <summary>Or use the one-line installer</summary>
 
 ```bash
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset developer
+curl -fsSL https://openboot.dev/install.sh | bash -s -- install -p developer
 ```
 </details>
 
@@ -70,14 +70,14 @@ Complete dev environment. Languages, DevOps, databases, AI tools — all of it.
 - **NPM:** pm2, serve, vercel, wrangler
 
 ```bash
-openboot --preset full
+openboot install -p full
 ```
 
 <details>
 <summary>Or use the one-line installer</summary>
 
 ```bash
-curl -fsSL https://openboot.dev/install.sh | bash -s -- --preset full
+curl -fsSL https://openboot.dev/install.sh | bash -s -- install -p full
 ```
 </details>
 
@@ -97,13 +97,13 @@ Want `developer` with `kubectl` added? Pick `developer`, then toggle `kubectl` o
 For scripted installs, use `--silent` to install a preset exactly as defined:
 
 ```bash
-openboot --preset developer --silent
+openboot install -p developer --silent
 ```
 
 Preview what would be installed first with `--dry-run`:
 
 ```bash
-openboot --preset developer --dry-run
+openboot install -p developer --dry-run
 ```
 
 See [CLI Reference](/docs/cli-reference) for automation details.

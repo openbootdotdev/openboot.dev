@@ -322,7 +322,7 @@ If you already have Oh-My-Zsh installed, OpenBoot merges its plugin recommendati
 ### Skipping Shell Setup
 
 ```
-openboot --shell skip
+openboot install --shell skip
 ```
 
 ## Dotfiles
@@ -353,80 +353,106 @@ Settings include: show all file extensions, fast key repeat, Finder path bar, sh
 
 # CLI Commands
 
-All commands for the `openboot` CLI, organized by what you're trying to do.
+OpenBoot v1.0 has two real verbs: `install` adds things to your Mac, `snapshot` captures what's on it. Everything else is auth or bookkeeping.
 
-## Set Up an Environment
+Removed in v1.0 with no replacement: `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `doctor`, `update`, `list`, `edit`, `delete`. `install` is add-only and never uninstalls; use `brew uninstall` directly.
 
-### `openboot`
+## `openboot` / `openboot install`
 
-Launch the interactive TUI installer. Browse packages, toggle what you want, and install.
+`openboot` with no subcommand is identical to `openboot install`.
 
-### `openboot --preset <name>`
+With no `[source]` and no flags:
+- If this machine has a saved sync source, resume it: fetch the config, diff against local, ask to apply the additions.
+- Otherwise, launch the interactive TUI.
 
-Start with a preset's packages pre-selected. Available: `minimal`, `developer`, `full`.
+The positional `[source]` is identified by pattern: `./path` or `*.json` → local file; `user/slug` → cloud config; preset name → preset; otherwise → cloud alias. Explicit `--from`, `--user`, `--preset` override.
 
-### `openboot --user <username>/<slug>`
+Examples:
 
-Install from a custom config hosted on openboot.dev.
+```
+openboot install
+openboot install alice/dev-setup
+openboot install ./backup.json
+openboot install developer
+openboot install myalias
+openboot install --dry-run
+```
 
-### Install Flags
+### Install flags
 
 | Flag | Description |
 |------|-------------|
 | `-p, --preset <name>` | Use a preset: `minimal`, `developer`, `full` |
-| `-u, --user <username/slug>` | Install from a config hosted on openboot.dev |
-| `-s, --silent` | Non-interactive mode — no TUI, no prompts |
-| `--dry-run` | Preview what would be installed without installing |
-| `--resume` | Resume an interrupted installation |
-| `--packages-only` | Install packages only, skip shell/macOS/dotfiles config |
+| `-u, --user <alias or user/slug>` | Install from an openboot.dev config |
+| `--from <file>` | Install from a local config or snapshot JSON |
+| `-s, --silent` | Non-interactive mode (for CI/automation) |
+| `--dry-run` | Preview without installing |
+| `--packages-only` | Skip shell, macOS, dotfiles, post-install |
 | `--shell <mode>` | `install` or `skip` |
 | `--macos <mode>` | `configure` or `skip` |
 | `--dotfiles <mode>` | `clone`, `link`, or `skip` |
+| `--post-install <mode>` | `skip` to skip post-install scripts |
+| `--allow-post-install` | Allow post-install scripts in silent mode |
 | `--update` | Update Homebrew before installing |
-| `--rollback` | Restore backed-up config files |
+| `--verbose` | Debug logging to stderr |
 
-## Capture Your Environment
+## `openboot snapshot`
 
-### `openboot snapshot`
+Capture Homebrew packages, npm globals, macOS preferences, shell config (Oh-My-Zsh theme + plugins), git identity, and dev tool versions.
 
-Scan your Mac's current setup and upload or save it.
+Destination by flag or context:
 
-### Snapshot Flags
+```
+openboot snapshot              # TTY: interactive menu. Pipe: JSON to stdout.
+openboot snapshot --local      # save to ~/.openboot/snapshot.json
+openboot snapshot --publish    # upload to openboot.dev
+openboot snapshot --json       # JSON to stdout
+```
+
+`--publish` updates the sync source in place if one exists; otherwise prompts for name/visibility and creates a new config. Target a specific config with `--slug <slug>`.
+
+Restore:
+
+```
+openboot snapshot --import my-setup.json
+openboot snapshot --import https://example.com/snapshot.json
+openboot snapshot --import my-setup.json --dry-run
+```
+
+### Snapshot flags
 
 | Flag | Description |
 |------|-------------|
 | `--local` | Save to `~/.openboot/snapshot.json` |
-| `--json` | Output as JSON to stdout |
-| `--dry-run` | Preview without saving or uploading |
+| `--publish` | Upload to openboot.dev |
+| `--slug <slug>` | Target an existing config (with `--publish`) |
+| `--json` | Output JSON to stdout |
+| `--dry-run` | Preview without saving, uploading, or installing |
 | `--import <path>` | Restore from a local file or URL |
 
 ## Authentication
 
 ### `openboot login`
 
-Authenticate with openboot.dev via browser. Required for installing private configs and uploading snapshots.
+Authenticate with openboot.dev via browser. Required for installing private configs and publishing snapshots.
 
 ### `openboot logout`
 
 Remove the stored authentication token from this machine.
 
-## Maintain Your Environment
-
-### `openboot doctor`
-
-Run diagnostic checks — network, disk space, Homebrew health, Git config, shell setup.
-
-### `openboot update`
-
-Update Homebrew and upgrade all installed packages.
-
-### `openboot update --self`
-
-Update the OpenBoot binary to the latest version.
-
-### `openboot version`
+## `openboot version`
 
 Print the current OpenBoot version.
+
+## Upgrading
+
+OpenBoot is installed via Homebrew, so upgrade with Homebrew:
+
+```
+brew upgrade openboot
+```
+
+A lightweight auto-update check also runs when you invoke `install`.
 
 ---
 
@@ -489,36 +515,30 @@ Every OpenBoot config follows the same structure:
 
 ## Install Script Variables
 
+The install script installs OpenBoot via Homebrew (`brew install openbootdotdev/tap/openboot`).
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENBOOT_VERSION` | Install a specific version instead of latest | Latest release |
-| `OPENBOOT_INSTALL_DIR` | Where to put the binary | `~/.openboot/bin` |
 | `OPENBOOT_DRY_RUN` | Set to `true` to preview without changes | — |
-| `OPENBOOT_SKIP_CHECKSUM` | Set to `true` to skip SHA256 verification | — |
 
 ## CLI Variables
 
 | Variable | Description |
 |----------|-------------|
-| `OPENBOOT_GIT_NAME` | Git user name (only in `--silent` mode) |
-| `OPENBOOT_GIT_EMAIL` | Git user email (only in `--silent` mode) |
-| `OPENBOOT_PRESET` | Default preset to use |
-| `OPENBOOT_USER` | Default remote config to use |
-| `OPENBOOT_DOTFILES` | Dotfiles repository URL |
-| `OPENBOOT_API_URL` | Override the API base URL (default: `https://openboot.dev`) |
-| `OPENBOOT_DISABLE_AUTOUPDATE` | Set to `1` to disable auto-update checks |
+| `OPENBOOT_GIT_NAME` | Git user name (read only in `--silent` mode) |
+| `OPENBOOT_GIT_EMAIL` | Git user email (read only in `--silent` mode) |
+| `OPENBOOT_PRESET` | Default preset. Overridden by `-p` / `--preset` |
+| `OPENBOOT_USER` | Default cloud config. Overridden by `-u` / `--user` |
 
 ## File Locations
 
 | Path | What's There |
 |------|-------------|
-| `~/.openboot/bin/openboot` | The OpenBoot binary (one-line installer only) |
-| `~/.openboot/auth.json` | Auth token (after `openboot login`) |
+| `~/.openboot/auth.json` | Auth token (after `openboot login` or publishing a snapshot) |
 | `~/.openboot/snapshot.json` | Local snapshot (when using `--local`) |
-| `~/.openboot/config.json` | Auto-update settings |
 | `~/.openboot/install_state.json` | Tracks what was installed and when |
-| `~/.openboot/state.json` | UI reminder state |
-| `~/.openboot/update_state.json` | Auto-update check state |
+| `~/.openboot/sync_source.json` | The cloud config this machine is synced to |
 | `~/.dotfiles/` | Cloned dotfiles repo (when configured) |
 
 ---
@@ -539,7 +559,7 @@ Homebrew installs packages. OpenBoot sets up your **entire** environment — pac
 
 ## Is the one-line installer safe?
 
-The install script is open source, hosted on Cloudflare Workers over HTTPS, with zero telemetry. Binary is downloaded from GitHub Releases with SHA256 checksum verification.
+The install script is open source, hosted on Cloudflare Workers over HTTPS, with zero telemetry. OpenBoot is installed via Homebrew (`brew install openbootdotdev/tap/openboot`), which handles integrity verification.
 
 ## What if I already have Homebrew?
 
@@ -551,13 +571,15 @@ Yes. No account needed for presets, TUI, or local snapshots. Account needed only
 
 ## How do I update OpenBoot?
 
-Homebrew: `brew upgrade openboot`. One-line installer: `openboot update --self`.
+`brew upgrade openboot`. OpenBoot also does a lightweight auto-update check on `install`. The old `openboot update --self` command was removed in v1.0.
 
 ## How do I uninstall OpenBoot?
 
-1. Remove binary: `brew uninstall openboot` or `rm -f ~/.openboot/bin/openboot`
+1. Remove binary: `brew uninstall openboot && brew untap openbootdotdev/tap`
 2. Remove data: `rm -rf ~/.openboot`
 3. Clean up shell config (optional): remove `# OpenBoot additions` block from `~/.zshrc`
+
+OpenBoot doesn't uninstall packages it installed — that's by design. Use `brew uninstall <package>` directly.
 
 ## Does it work on Linux?
 
