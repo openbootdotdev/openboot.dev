@@ -35,7 +35,7 @@
 		});
 	}
 
-	const hasChanges = $derived(isNew || initialSnapshot === '' || captureSnapshot() !== initialSnapshot);
+	const hasChanges = $derived(isNew || initialSnapshot === '' || rawMode || captureSnapshot() !== initialSnapshot);
 	let showScriptModal = $state(false);
 	let scriptDraft = $state('');
 
