@@ -137,7 +137,7 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('OpenBoot Installer');
 		expect(script).toContain('Config: @testuser/my-config');
 		expect(script).toContain('api.github.com/repos/${OPENBOOT_REPO}/releases/latest');
-		expect(script).toContain('--user "testuser/my-config"');
+		expect(script).toContain('openboot install "testuser/my-config"');
 	});
 
 	it('should include Xcode CLT installation', () => {
@@ -194,6 +194,6 @@ describe('generateInstallScript', () => {
 	it('should pass through additional arguments to openboot', () => {
 		const script = generateInstallScript('testuser', 'my-config');
 
-		expect(script).toContain('openboot --user "testuser/my-config" "$@"');
+		expect(script).toContain('openboot install "testuser/my-config" "$@"');
 	});
 });

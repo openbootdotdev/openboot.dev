@@ -10,7 +10,6 @@ order: 9
 OpenBoot v1.0 has two real verbs: **`install`** adds things to your Mac, **`snapshot`** captures what's on it. Everything else is auth or bookkeeping.
 
 ```
-openboot                  # install (resume or interactive)
 openboot install [source] # install from preset, file, or cloud config
 openboot snapshot         # capture your environment
 openboot login / logout   # openboot.dev auth
@@ -19,9 +18,9 @@ openboot version          # print version
 
 > **v1.0 removed these commands:** `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `doctor`, `update`, `list`, `edit`, `delete`. OpenBoot no longer uninstalls packages or tracks revision history — `install` is add-only, and `snapshot --publish` overwrites. Manage configs on the [dashboard](/dashboard). See the project [CHANGELOG](https://github.com/openbootdotdev/openboot/blob/main/CHANGELOG.md) for migration.
 
-## `openboot` / `openboot install`
+## `openboot install`
 
-Install and configure your Mac. `openboot` with no subcommand is identical to `openboot install`.
+Install and configure your Mac.
 
 ```
 openboot install [source]

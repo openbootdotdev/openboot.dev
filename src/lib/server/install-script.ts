@@ -251,7 +251,7 @@ install_openboot "\$os" "\$arch"
 echo ""
 echo "Starting OpenBoot setup with config: @${safeUsername}/${safeSlug}"
 echo ""
-openboot --user "${safeUsername}/${safeSlug}" "\$@"
+openboot install "${safeUsername}/${safeSlug}" "\$@"
 
 echo ""
 echo "Installation complete!"
