@@ -136,7 +136,7 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('#!/bin/bash');
 		expect(script).toContain('OpenBoot Installer');
 		expect(script).toContain('Config: @testuser/my-config');
-		expect(script).toContain('brew install ${TAP_NAME}/openboot');
+		expect(script).toContain('api.github.com/repos/${OPENBOOT_REPO}/releases/latest');
 		expect(script).toContain('--user "testuser/my-config"');
 	});
 
@@ -182,13 +182,13 @@ describe('generateInstallScript', () => {
 		expect(script).not.toContain('my config!');
 	});
 
-	it('should install openboot via Homebrew tap', () => {
+	it('should install openboot via GitHub releases', () => {
 		const script = generateInstallScript('testuser', 'my-config');
 
-		expect(script).toContain('TAP_NAME="openbootdotdev/tap"');
-		expect(script).toContain('brew install ${TAP_NAME}/openboot');
-		expect(script).toContain('brew list openboot');
-		expect(script).toContain('Reinstall? (y/N)');
+		expect(script).toContain('OPENBOOT_REPO="openbootdotdev/openboot"');
+		expect(script).toContain('api.github.com/repos/${OPENBOOT_REPO}/releases/latest');
+		expect(script).toContain('install_openboot()');
+		expect(script).toContain('github.com/${OPENBOOT_REPO}/releases/download/${latest_version}/openboot-');
 	});
 
 	it('should pass through additional arguments to openboot', () => {
