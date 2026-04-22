@@ -105,7 +105,7 @@ export function generateInstallScript(
 	return `#!/bin/bash
 set -euo pipefail
 
-TAP_NAME="openbootdotdev/tap"
+OPENBOOT_REPO="openbootdotdev/openboot"
 
 main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
@@ -205,6 +205,38 @@ install_homebrew() {
   echo ""
 }
 
+install_openboot() {
+  local os_name="\$1"
+  local arch_name="\$2"
+
+  echo "Fetching latest OpenBoot version..."
+  local latest_version
+  latest_version=\$(curl -fsSL "https://api.github.com/repos/\${OPENBOOT_REPO}/releases/latest" \\
+    | grep '"tag_name"' | grep -o 'v[0-9][0-9.]*')
+
+  if [[ -z "\$latest_version" ]]; then
+    echo "Error: Could not fetch latest OpenBoot version" >&2
+    exit 1
+  fi
+
+  local binary_url="https://github.com/\${OPENBOOT_REPO}/releases/download/\${latest_version}/openboot-\${os_name}-\${arch_name}"
+
+  echo "Installing OpenBoot \${latest_version}..."
+  echo ""
+
+  curl -fsSL "\$binary_url" -o /tmp/openboot-install
+  chmod +x /tmp/openboot-install
+
+  if [[ -w "/usr/local/bin" ]]; then
+    mv /tmp/openboot-install /usr/local/bin/openboot
+  else
+    sudo mv /tmp/openboot-install /usr/local/bin/openboot
+  fi
+
+  echo ""
+  echo "OpenBoot \${latest_version} installed!"
+}
+
 local os arch
 os=\$(detect_os)
 arch=\$(detect_arch)
@@ -214,30 +246,7 @@ echo ""
 
 install_xcode_clt
 install_homebrew
-
-if brew list openboot &>/dev/null 2>&1; then
-  echo "OpenBoot is already installed via Homebrew."
-  echo ""
-  read -p "Reinstall? (y/N) " -n 1 -r
-  echo
-
-  if [[ \$REPLY =~ ^[Yy]\$ ]]; then
-    echo "Reinstalling OpenBoot..."
-    brew reinstall \${TAP_NAME}/openboot
-    echo ""
-    echo "OpenBoot reinstalled!"
-  else
-    echo "Using existing installation."
-  fi
-else
-  echo "Installing OpenBoot via Homebrew..."
-  echo ""
-
-  brew install \${TAP_NAME}/openboot
-
-  echo ""
-  echo "OpenBoot installed!"
-fi
+install_openboot "\$os" "\$arch"
 
 echo ""
 echo "Starting OpenBoot setup with config: @${safeUsername}/${safeSlug}"
