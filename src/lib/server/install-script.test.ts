@@ -136,7 +136,7 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('#!/bin/bash');
 		expect(script).toContain('OpenBoot Installer');
 		expect(script).toContain('Config: @testuser/my-config');
-		expect(script).toContain('api.github.com/repos/${OPENBOOT_REPO}/releases/latest');
+		expect(script).toContain('OPENBOOT_TAP="openbootdotdev/tap"');
 		expect(script).toContain('openboot install "testuser/my-config"');
 	});
 
@@ -156,12 +156,11 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('Homebrew/install/HEAD/install.sh');
 	});
 
-	it('should handle ARM64 architecture', () => {
+	it('should handle ARM64 by using brew shellenv after install', () => {
 		const script = generateInstallScript('testuser', 'my-config');
 
-		expect(script).toContain('detect_arch()');
 		expect(script).toContain('/opt/homebrew/bin/brew');
-		expect(script).toContain('arm64)');
+		expect(script).toContain('shellenv');
 	});
 
 	it('should not include custom script or dotfiles sections', () => {
@@ -182,13 +181,13 @@ describe('generateInstallScript', () => {
 		expect(script).not.toContain('my config!');
 	});
 
-	it('should install openboot via GitHub releases', () => {
+	it('should install openboot via Homebrew tap', () => {
 		const script = generateInstallScript('testuser', 'my-config');
 
-		expect(script).toContain('OPENBOOT_REPO="openbootdotdev/openboot"');
-		expect(script).toContain('api.github.com/repos/${OPENBOOT_REPO}/releases/latest');
+		expect(script).toContain('OPENBOOT_TAP="openbootdotdev/tap"');
 		expect(script).toContain('install_openboot()');
-		expect(script).toContain('github.com/${OPENBOOT_REPO}/releases/download/${latest_version}/openboot-');
+		expect(script).toContain('brew install ${OPENBOOT_TAP}/openboot');
+		expect(script).toContain('brew list ${OPENBOOT_TAP}/openboot');
 	});
 
 	it('should pass through additional arguments to openboot', () => {
@@ -197,12 +196,10 @@ describe('generateInstallScript', () => {
 		expect(script).toContain('openboot install "testuser/my-config" "$@"');
 	});
 
-	it('should use /opt/homebrew/bin on arm64 and mkdir -p if dir is missing', () => {
+	it('should not use direct binary download that conflicts with brew link', () => {
 		const script = generateInstallScript('testuser', 'my-config');
 
-		expect(script).toContain('/opt/homebrew/bin');
-		expect(script).toContain('mkdir -p');
-		// must not assume /usr/local/bin always exists
-		expect(script).not.toMatch(/sudo mv \/tmp\/openboot-install \/usr\/local\/bin\/openboot/);
+		expect(script).not.toContain('/tmp/openboot-install');
+		expect(script).not.toContain('releases/download');
 	});
 });

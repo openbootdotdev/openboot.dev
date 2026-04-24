@@ -105,7 +105,7 @@ export function generateInstallScript(
 	return `#!/bin/bash
 set -euo pipefail
 
-OPENBOOT_REPO="openbootdotdev/openboot"
+OPENBOOT_TAP="openbootdotdev/tap"
 
 main() {
 # When run via "curl | bash", stdin is the script content, not the terminal.
@@ -129,17 +129,6 @@ detect_os() {
   case "\$os" in
     darwin) echo "darwin" ;;
     *)      echo "Error: OpenBoot only supports macOS" >&2; exit 1 ;;
-  esac
-}
-
-detect_arch() {
-  local arch
-  arch=\$(uname -m)
-  case "\$arch" in
-    x86_64)  echo "amd64" ;;
-    arm64)   echo "arm64" ;;
-    aarch64) echo "arm64" ;;
-    *)       echo "unsupported: \$arch" >&2; exit 1 ;;
   esac
 }
 
@@ -170,35 +159,29 @@ install_homebrew() {
     return 0
   fi
 
+  # brew may be installed but missing from PATH (fresh shell without ~/.zprofile sourced)
+  local brew_bin=""
+  if [[ -x "/opt/homebrew/bin/brew" ]]; then
+    brew_bin="/opt/homebrew/bin/brew"
+  elif [[ -x "/usr/local/bin/brew" ]]; then
+    brew_bin="/usr/local/bin/brew"
+  fi
+
+  if [[ -n "\$brew_bin" ]]; then
+    eval "\$("\$brew_bin" shellenv)"
+    return 0
+  fi
+
   echo "Installing Homebrew..."
   echo ""
 
   /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  local arch
-  arch=\$(uname -m)
-  case "\$arch" in
-    arm64)
-      if [[ -x "/opt/homebrew/bin/brew" ]]; then
-        export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH"
-        export HOMEBREW_PREFIX="/opt/homebrew"
-        export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
-        export HOMEBREW_REPOSITORY="/opt/homebrew"
-      fi
-      ;;
-    x86_64)
-      if [[ -x "/usr/local/bin/brew" ]]; then
-        export PATH="/usr/local/bin:/usr/local/sbin:\$PATH"
-        export HOMEBREW_PREFIX="/usr/local"
-        export HOMEBREW_CELLAR="/usr/local/Cellar"
-        export HOMEBREW_REPOSITORY="/usr/local/Homebrew"
-      fi
-      ;;
-    *)
-      echo "Error: Unsupported architecture: \$arch" >&2
-      exit 1
-      ;;
-  esac
+  if [[ -x "/opt/homebrew/bin/brew" ]]; then
+    eval "\$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x "/usr/local/bin/brew" ]]; then
+    eval "\$(/usr/local/bin/brew shellenv)"
+  fi
 
   echo ""
   echo "Homebrew installed!"
@@ -206,58 +189,22 @@ install_homebrew() {
 }
 
 install_openboot() {
-  local os_name="\$1"
-  local arch_name="\$2"
-
-  echo "Fetching latest OpenBoot version..."
-  local latest_version
-  latest_version=\$(curl -fsSL "https://api.github.com/repos/\${OPENBOOT_REPO}/releases/latest" \\
-    | grep '"tag_name"' | grep -o 'v[0-9][0-9.]*')
-
-  if [[ -z "\$latest_version" ]]; then
-    echo "Error: Could not fetch latest OpenBoot version" >&2
-    exit 1
-  fi
-
-  local binary_url="https://github.com/\${OPENBOOT_REPO}/releases/download/\${latest_version}/openboot-\${os_name}-\${arch_name}"
-
-  echo "Installing OpenBoot \${latest_version}..."
-  echo ""
-
-  curl -fsSL "\$binary_url" -o /tmp/openboot-install
-  chmod +x /tmp/openboot-install
-
-  local install_dir
-  if [[ "\$arch_name" == "arm64" ]] && [[ -d "/opt/homebrew/bin" ]]; then
-    install_dir="/opt/homebrew/bin"
+  if brew list \${OPENBOOT_TAP}/openboot &>/dev/null 2>&1; then
+    echo "OpenBoot is already installed."
   else
-    install_dir="/usr/local/bin"
+    echo "Installing OpenBoot via Homebrew..."
+    echo ""
+    brew install \${OPENBOOT_TAP}/openboot
+    echo ""
+    echo "OpenBoot installed!"
   fi
-
-  if [[ ! -d "\$install_dir" ]]; then
-    sudo mkdir -p "\$install_dir"
-  fi
-
-  if [[ -w "\$install_dir" ]]; then
-    mv /tmp/openboot-install "\$install_dir/openboot"
-  else
-    sudo mv /tmp/openboot-install "\$install_dir/openboot"
-  fi
-
-  echo ""
-  echo "OpenBoot \${latest_version} installed!"
 }
 
-local os arch
-os=\$(detect_os)
-arch=\$(detect_arch)
-
-echo "Detected: \${os}/\${arch}"
-echo ""
+detect_os
 
 install_xcode_clt
 install_homebrew
-install_openboot "\$os" "\$arch"
+install_openboot
 
 echo ""
 echo "Starting OpenBoot setup with config: @${safeUsername}/${safeSlug}"
