@@ -196,4 +196,13 @@ describe('generateInstallScript', () => {
 
 		expect(script).toContain('openboot install "testuser/my-config" "$@"');
 	});
+
+	it('should use /opt/homebrew/bin on arm64 and mkdir -p if dir is missing', () => {
+		const script = generateInstallScript('testuser', 'my-config');
+
+		expect(script).toContain('/opt/homebrew/bin');
+		expect(script).toContain('mkdir -p');
+		// must not assume /usr/local/bin always exists
+		expect(script).not.toMatch(/sudo mv \/tmp\/openboot-install \/usr\/local\/bin\/openboot/);
+	});
 });

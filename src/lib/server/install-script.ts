@@ -227,10 +227,21 @@ install_openboot() {
   curl -fsSL "\$binary_url" -o /tmp/openboot-install
   chmod +x /tmp/openboot-install
 
-  if [[ -w "/usr/local/bin" ]]; then
-    mv /tmp/openboot-install /usr/local/bin/openboot
+  local install_dir
+  if [[ "\$arch_name" == "arm64" ]] && [[ -d "/opt/homebrew/bin" ]]; then
+    install_dir="/opt/homebrew/bin"
   else
-    sudo mv /tmp/openboot-install /usr/local/bin/openboot
+    install_dir="/usr/local/bin"
+  fi
+
+  if [[ ! -d "\$install_dir" ]]; then
+    sudo mkdir -p "\$install_dir"
+  fi
+
+  if [[ -w "\$install_dir" ]]; then
+    mv /tmp/openboot-install "\$install_dir/openboot"
+  else
+    sudo mv /tmp/openboot-install "\$install_dir/openboot"
   fi
 
   echo ""
