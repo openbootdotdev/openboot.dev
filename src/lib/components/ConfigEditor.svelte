@@ -52,6 +52,10 @@
 	let selectedPackages = $state(new Map<string, string>());
 	let packageDescs = $state(new Map<string, string>());
 
+	function pkgKey(name: string, type: string): string {
+		return `${type}:${name}`;
+	}
+
 	interface MacOSPref {
 		domain: string;
 		key: string;
@@ -63,11 +67,10 @@
 	let expandedPrefCats = $state<Set<string>>(new Set());
 
 	const packages = $derived(
-		Array.from(selectedPackages.entries()).map(([name, type]) => ({
-			name,
-			type,
-			desc: packageDescs.get(name) || '',
-		}))
+		Array.from(selectedPackages.entries()).map(([key, type]) => {
+			const name = key.slice(type.length + 1);
+			return { name, type, desc: packageDescs.get(key) || '' };
+		})
 	);
 
 	const sections = [
@@ -139,9 +142,9 @@
 		const p = PRESET_PACKAGES[preset];
 		if (!p) return;
 		const newMap = new Map<string, string>();
-		for (const pkg of p.cli) newMap.set(pkg, 'formula');
-		for (const pkg of p.cask) newMap.set(pkg, 'cask');
-		if (p.npm) for (const pkg of p.npm) newMap.set(pkg, 'npm');
+		for (const pkg of p.cli) newMap.set(pkgKey(pkg, 'formula'), 'formula');
+		for (const pkg of p.cask) newMap.set(pkgKey(pkg, 'cask'), 'cask');
+		if (p.npm) for (const pkg of p.npm) newMap.set(pkgKey(pkg, 'npm'), 'npm');
 		selectedPackages = newMap;
 	}
 
@@ -151,14 +154,15 @@
 	}
 
 	function togglePackage(name: string, type: string, desc: string = '') {
+		const key = pkgKey(name, type);
 		const newMap = new Map(selectedPackages);
 		const newDescs = new Map(packageDescs);
-		if (newMap.has(name)) {
-			newMap.delete(name);
-			newDescs.delete(name);
+		if (newMap.has(key)) {
+			newMap.delete(key);
+			newDescs.delete(key);
 		} else {
-			newMap.set(name, type);
-			if (desc) newDescs.set(name, desc);
+			newMap.set(key, type);
+			if (desc) newDescs.set(key, desc);
 		}
 		selectedPackages = newMap;
 		packageDescs = newDescs;
@@ -200,10 +204,12 @@
 						const descs = new Map<string, string>();
 						for (const pkg of data.packages) {
 							if (typeof pkg === 'string') {
-								map.set(pkg, 'formula');
+								map.set(pkgKey(pkg, 'formula'), 'formula');
 							} else {
-								map.set(pkg.name, pkg.type || 'formula');
-								if (pkg.desc) descs.set(pkg.name, pkg.desc);
+								const t = pkg.type || 'formula';
+								const k = pkgKey(pkg.name, t);
+								map.set(k, t);
+								if (pkg.desc) descs.set(k, pkg.desc);
 							}
 						}
 						selectedPackages = map;
@@ -265,10 +271,12 @@
 					const newDescs = new Map<string, string>();
 					for (const pkg of savedPkgs) {
 						if (typeof pkg === 'string') {
-							newMap.set(pkg, 'formula');
+							newMap.set(pkgKey(pkg, 'formula'), 'formula');
 						} else {
-							newMap.set(pkg.name, pkg.type || 'formula');
-							if (pkg.desc) newDescs.set(pkg.name, pkg.desc);
+							const t = pkg.type || 'formula';
+							const k = pkgKey(pkg.name, t);
+							newMap.set(k, t);
+							if (pkg.desc) newDescs.set(k, pkg.desc);
 						}
 					}
 					selectedPackages = newMap;
@@ -293,11 +301,10 @@
 		return {
 			...formData,
 			alias: formData.alias.trim() || null,
-			packages: Array.from(selectedPackages.entries()).map(([name, type]) => ({
-				name,
-				type,
-				desc: packageDescs.get(name) || '',
-			})),
+			packages: Array.from(selectedPackages.entries()).map(([key, type]) => {
+				const name = key.slice(type.length + 1);
+				return { name, type, desc: packageDescs.get(key) || '' };
+			}),
 			snapshot: updatedSnapshot,
 		};
 	}
@@ -316,10 +323,12 @@
 		const newDescs = new Map<string, string>();
 		for (const pkg of parsed.packages || []) {
 			if (typeof pkg === 'string') {
-				newMap.set(pkg, 'formula');
+				newMap.set(pkgKey(pkg, 'formula'), 'formula');
 			} else {
-				newMap.set(pkg.name, pkg.type || 'formula');
-				if (pkg.desc) newDescs.set(pkg.name, pkg.desc);
+				const t = pkg.type || 'formula';
+				const k = pkgKey(pkg.name, t);
+				newMap.set(k, t);
+				if (pkg.desc) newDescs.set(k, pkg.desc);
 			}
 		}
 		selectedPackages = newMap;

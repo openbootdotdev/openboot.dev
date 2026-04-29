@@ -21,6 +21,10 @@
 		onPresetChange: (preset: string) => void;
 	} = $props();
 
+	function pkgKey(name: string, type: string): string {
+		return `${type}:${name}`;
+	}
+
 	let searchQuery = $state('');
 	let searchResults = $state<SearchResult[]>([]);
 	let searchLoading = $state(false);
@@ -89,11 +93,12 @@
 		const cli: string[] = [];
 		const npm: string[] = [];
 		const taps: string[] = [];
-		for (const [pkg, type] of selectedPackages) {
-			if (type === 'cask') apps.push(pkg);
-			else if (type === 'npm') npm.push(pkg);
-			else if (type === 'tap') taps.push(pkg);
-			else cli.push(pkg);
+		for (const [key, type] of selectedPackages) {
+			const name = key.slice(type.length + 1);
+			if (type === 'cask') apps.push(name);
+			else if (type === 'npm') npm.push(name);
+			else if (type === 'tap') taps.push(name);
+			else cli.push(name);
 		}
 		return { apps, cli, npm, taps };
 	});
@@ -128,8 +133,9 @@
 			}
 			const caskSet = new Set<string>(data.casks || []);
 			for (const pkg of data.packages) {
-				if (!selectedPackages.has(pkg)) {
-					togglePackage(pkg, caskSet.has(pkg) ? 'cask' : 'formula');
+				const type = caskSet.has(pkg) ? 'cask' : 'formula';
+				if (!selectedPackages.has(pkgKey(pkg, type))) {
+					togglePackage(pkg, type);
 				}
 			}
 			showImport = false;
@@ -185,14 +191,14 @@
 				<button
 					type="button"
 					class="result-item"
-					class:selected={selectedPackages.has(result.name)}
+					class:selected={selectedPackages.has(pkgKey(result.name, result.type))}
 					onclick={() => togglePackage(result.name, result.type, result.desc)}
 				>
 					<span
 						class="result-check"
-						class:checked={selectedPackages.has(result.name)}
+						class:checked={selectedPackages.has(pkgKey(result.name, result.type))}
 					>
-						{selectedPackages.has(result.name) ? '✓' : ''}
+						{selectedPackages.has(pkgKey(result.name, result.type)) ? '✓' : ''}
 					</span>
 					<div class="result-info">
 						<div class="result-top">
