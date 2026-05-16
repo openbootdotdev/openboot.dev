@@ -1,43 +1,4 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-
-// Parse DSN into the store endpoint and auth header Sentry expects.
-// DSN format: https://<key>@<host>/<project_id>
-function parseDsn(dsn: string): { url: string; key: string } | null {
-	try {
-		const u = new URL(dsn);
-		const key = u.username;
-		const projectId = u.pathname.replace('/', '');
-		const host = u.host;
-		return { url: `https://${host}/api/${projectId}/store/`, key };
-	} catch {
-		return null;
-	}
-}
-
-async function captureToSentry(
-	dsn: string,
-	payload: { message?: string; exception?: unknown; level: string; request?: unknown }
-): Promise<void> {
-	const parsed = parseDsn(dsn);
-	if (!parsed) return;
-	const event = {
-		timestamp: new Date().toISOString(),
-		platform: 'javascript',
-		level: payload.level,
-		...(payload.message ? { message: payload.message } : {}),
-		...(payload.exception ? { exception: payload.exception } : {}),
-		...(payload.request ? { request: payload.request } : {}),
-	};
-	await fetch(parsed.url, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${parsed.key}, sentry_client=openboot/1.0`,
-		},
-		body: JSON.stringify(event),
-		signal: AbortSignal.timeout(5_000),
-	}).catch(() => {}); // fire-and-forget, never block the response
-}
+import type { Handle } from '@sveltejs/kit';
 import { RESERVED_ALIASES } from '$lib/server/validation';
 import { getConfigForHookAlias, getConfigForInstall, getConfigForHookSlug } from '$lib/server/db';
 import { serveInstallByAlias, serveInstallBySlug } from '$lib/server/alias';
@@ -86,43 +47,6 @@ function isVersionOlderThan(version: string, minVersion: string): boolean {
 	const [bMaj = 0, bMin = 0, bPat = 0] = parse(minVersion);
 	return aMaj < bMaj || (aMaj === bMaj && (aMin < bMin || (aMin === bMin && aPat < bPat)));
 }
-
-// Only report errors from real app routes — everything else (scanner probes,
-// unknown paths) is ignored. Allowlist beats blocklist: no more whack-a-mole.
-const MONITORED_PATH_PATTERNS = [
-	/^\/$/,                                        // homepage
-	/^\/api\//,                                    // all API endpoints
-	/^\/dashboard/,                                // dashboard + edit pages
-	/^\/docs/,                                     // docs
-	/^\/cli-auth/,                                 // CLI auth page
-	/^\/login/,                                    // login page
-	/^\/explore/,                                  // explore page
-	/^\/preview/,                                  // preview page
-	/^\/install/,                                  // install route
-	/^\/sitemap\.xml$/,                            // sitemap
-	/^\/[a-z0-9][a-z0-9-]{0,38}$/i,               // short alias (e.g. /dev)
-	/^\/[a-z0-9_-]+\/[a-z0-9_-]+/i,               // /:username/:slug and sub-routes
-];
-
-function isMonitoredPath(pathname: string): boolean {
-	return MONITORED_PATH_PATTERNS.some((p) => p.test(pathname));
-}
-
-export const handleError: HandleServerError = async ({ error, event, status }) => {
-	// Only report real server errors (5xx). 4xx (including 404 from bot probes) are not alertable.
-	if (status < 500) return;
-	if (!isMonitoredPath(event.url.pathname)) return;
-	const dsn = event.platform?.env?.SENTRY_DSN;
-	if (dsn) {
-		await captureToSentry(dsn, {
-			level: 'error',
-			exception: {
-				values: [{ type: 'Error', value: error instanceof Error ? error.message : String(error) }],
-			},
-			request: { url: event.url.href, method: event.request.method },
-		});
-	}
-};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
@@ -181,16 +105,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
-
-	const dsn = event.platform?.env?.SENTRY_DSN;
-	if (response.status >= 500 && dsn && isMonitoredPath(event.url.pathname)) {
-		await captureToSentry(dsn, {
-			level: 'error',
-			message: `HTTP ${response.status} ${event.request.method} ${event.url.pathname}`,
-			request: { url: event.url.href, method: event.request.method },
-		});
-	}
-
 	const securedResponse = withSecurityHeaders(response);
 
 	// Version negotiation: if CLI sends X-OpenBoot-Version, check compatibility.
@@ -221,17 +135,3 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return securedResponse;
 };
-
-// Weekly canary: fires every Monday 9am UTC (see wrangler.toml).
-// Sends a test event to Sentry to verify the full alerting chain is working.
-export const scheduled: App.Scheduled = async ({ platform }) => {
-	const dsn = platform?.env?.SENTRY_DSN;
-	if (!dsn) return;
-	await captureToSentry(dsn, {
-		level: 'info',
-		message: 'Weekly canary — alerting system is working',
-	});
-	console.log('[canary] sent weekly test event to Sentry');
-};
-
-
