@@ -15,7 +15,7 @@
 		"test:run": "vitest run && vitest run --config vitest.workers.config.ts",
 		"test:happy-dom": "vitest run",
 		"test:workers": "vitest run --config vitest.workers.config.ts",
-		"test:coverage": "vitest run --coverage && vitest run --config vitest.workers.config.ts --coverage",
+		"test:coverage": "vitest run --coverage && vitest run --config vitest.workers.config.ts",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write .",
