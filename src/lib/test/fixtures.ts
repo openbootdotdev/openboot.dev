@@ -1,5 +1,10 @@
 /**
- * Test fixtures - mock data for testing
+ * Test fixtures — mock row data for seeding the test D1.
+ *
+ * NOTE: some fields here (e.g. `mockUser.provider`, `mockRevision.package_count`)
+ * don't exist in the real schema and must be stripped before insertion via the
+ * `strip()` helper in `$lib/test/seed`. These are legacy artifacts from the old
+ * SQL-parsing mock DB that we keep so call sites read naturally.
  */
 
 export const mockUser = {
@@ -64,24 +69,7 @@ export const mockExpiredApiToken = {
 	...mockApiToken,
 	id: 'tok_expired',
 	token: 'obt_expired1234567890abcdefghijklmnopqr',
-	expires_at: '2025-01-01T00:00:00Z' // Expired
-};
-
-export const mockCliAuthCode = {
-	code: 'ABCD1234',
-	user_id: null,
-	token: null,
-	status: 'pending' as const,
-	expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
-	created_at: new Date().toISOString()
-};
-
-export const mockApprovedCliAuthCode = {
-	...mockCliAuthCode,
-	code: 'APPROVED1',
-	user_id: 'user_test123',
-	token: 'obt_cli_approved_token_123456789abcdefgh',
-	status: 'approved' as const
+	expires_at: '2025-01-01T00:00:00Z'
 };
 
 export const mockRevision = {
@@ -91,7 +79,6 @@ export const mockRevision = {
 		{ name: 'git', type: 'formula' },
 		{ name: 'docker', type: 'cask' }
 	]),
-	// package_count is pre-computed so the mock returns it for json_array_length() queries
 	package_count: 2,
 	message: 'before adding rust',
 	created_at: '2026-01-10 10:00:00'
@@ -105,116 +92,3 @@ export const mockRevisionOlder = {
 	message: null,
 	created_at: '2026-01-05 09:00:00'
 };
-
-export const mockExpiredCliAuthCode = {
-	...mockCliAuthCode,
-	code: 'EXPIRED1',
-	status: 'expired' as const,
-	expires_at: '2025-01-01T00:00:00Z'
-};
-
-/**
- * Helper to create a mock Cookies object
- */
-export function createMockCookies(cookies: Record<string, string> = {}): any {
-	return {
-		get: (name: string) => cookies[name],
-		set: (name: string, value: string) => {
-			cookies[name] = value;
-		},
-		delete: (name: string) => {
-			delete cookies[name];
-		},
-		getAll: () => Object.entries(cookies).map(([name, value]) => ({ name, value }))
-	};
-}
-
-/**
- * Helper to create a mock Request object
- */
-export function createMockRequest(options: {
-	method?: string;
-	url?: string;
-	headers?: Record<string, string>;
-	body?: any;
-	cookies?: Record<string, string>;
-	invalidJSON?: boolean;
-	clientIp?: string;
-}): Request {
-	const {
-		method = 'GET',
-		url = 'http://localhost:5173',
-		headers = {},
-		body = null,
-		cookies = {},
-		invalidJSON = false,
-		clientIp
-	} = options;
-
-	const headersInit = new Headers(headers);
-
-	if (clientIp && !headersInit.has('cf-connecting-ip')) {
-		headersInit.set('cf-connecting-ip', clientIp);
-	}
-
-	if (Object.keys(cookies).length > 0) {
-		const cookieString = Object.entries(cookies)
-			.map(([key, value]) => `${key}=${value}`)
-			.join('; ');
-		headersInit.set('cookie', cookieString);
-	}
-
-	const init: RequestInit = {
-		method,
-		headers: headersInit
-	};
-
-	if (body && method !== 'GET' && method !== 'HEAD') {
-		if (invalidJSON) {
-			init.body = body;
-		} else {
-			init.body = typeof body === 'string' ? body : JSON.stringify(body);
-		}
-		if (!headersInit.has('content-type')) {
-			headersInit.set('content-type', 'application/json');
-		}
-	}
-
-	return new Request(url, init);
-}
-
-/**
- * Helper to create mock platform env
- */
-export function createMockPlatform(db?: any): App.Platform {
-	return {
-		env: {
-			DB: db || null,
-			JWT_SECRET: 'test-jwt-secret-key-32-chars-long',
-			GITHUB_CLIENT_ID: 'test-github-client-id',
-			GITHUB_CLIENT_SECRET: 'test-github-client-secret',
-			GOOGLE_CLIENT_ID: 'test-google-client-id',
-			GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
-			APP_URL: 'http://localhost:5173'
-		}
-	} as App.Platform;
-}
-
-/**
- * Helper to create a mock SvelteKit RequestEvent for testing route handlers.
- * Returns `any` to avoid strict route-id type constraints in tests.
- */
-export function createMockRequestEvent(db: any, overrides: Record<string, any> = {}): any {
-	return {
-		platform: createMockPlatform(db),
-		url: new URL('http://localhost:5173'),
-		route: { id: '' },
-		locals: {},
-		isDataRequest: false,
-		isSubRequest: false,
-		cookies: createMockCookies(),
-		getClientAddress: () => '127.0.0.1',
-		fetch: globalThis.fetch,
-		...overrides
-	};
-}

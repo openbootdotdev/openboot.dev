@@ -1,324 +1,186 @@
 /**
- * Tests for install script endpoint
- * Critical: Private config access control via Bearer tokens
+ * Tests for install script endpoint.
+ * Runs inside Workers runtime with real D1 (via vitest-pool-workers).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GET as _GET } from './+server';
-const GET = _GET as (event: any) => Promise<Response>;
-import { createMockDB } from '$lib/test/db-mock';
-import {
-	mockUser,
-	mockPublicConfig,
-	mockPrivateConfig,
-	mockApiToken,
-	mockExpiredApiToken,
-	createMockRequest,
-	createMockPlatform
-} from '$lib/test/fixtures';
-import { createBearerToken } from '$lib/test/helpers';
+import { env } from 'cloudflare:test';
+import { GET } from './+server';
+import { resetDb, seed, strip } from '$lib/test/seed';
+import { call } from '$lib/test/call';
+import { mockUser, mockPublicConfig, mockPrivateConfig, mockApiToken, mockExpiredApiToken } from '$lib/test/fixtures';
 
-describe('[username]/[slug]/install GET - Visibility Auth', () => {
-	const baseUrl = 'http://localhost:5173/testuser/my-config/install';
+const db = env.DB;
+const baseUrl = 'http://localhost:5173/testuser/my-config/install';
+const userRow = () => strip(mockUser, 'provider', 'provider_id');
 
-	describe('Public configs', () => {
-		it('should return install script without auth', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPublicConfig]
-			});
+const opts = (overrides: Record<string, unknown> = {}) => ({
+	url: baseUrl,
+	route: { id: '/[username]/[slug]/install' },
+	params: { username: 'testuser', slug: 'my-config' },
+	...overrides
+});
 
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
+beforeEach(async () => {
+	await resetDb(db);
+});
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+describe('public configs', () => {
+	it('returns install script without auth', async () => {
+		await seed(db, { users: [userRow()], configs: [mockPublicConfig] });
 
-			expect(response.status).toBe(200);
-			expect(response.headers.get('content-type')).toContain('text/plain');
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'public-config' } }));
 
-			const text = await response.text();
-			expect(text).toContain('#!/bin/bash');
-			expect(text).toContain('openboot');
-		});
+		expect(response.status).toBe(200);
+		expect(response.headers.get('content-type')).toContain('text/plain');
+		const text = await response.text();
+		expect(text).toContain('#!/bin/bash');
+		expect(text).toContain('openboot');
+	});
+});
+
+describe('private configs — auth required', () => {
+	it('rejects private config without auth header', async () => {
+		await seed(db, { users: [userRow()], configs: [mockPrivateConfig] });
+
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'private-config' } }));
+
+		expect(response.status).toBe(403);
+		const text = await response.text();
+		expect(text).toContain('Config is private');
 	});
 
-	describe('Private configs - Auth required', () => {
-		it('should reject private config without auth header', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig]
-			});
+	it('rejects private config with empty Bearer token', async () => {
+		await seed(db, { users: [userRow()], configs: [mockPrivateConfig] });
 
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
+		const response = await call(
+			GET,
+			opts({
 				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-			const text = await response.text();
-			expect(text).toContain('Config is private');
-		});
-
-		it('should reject private config with empty Bearer token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
 				headers: { authorization: 'Bearer ' }
-			});
-			const platform = createMockPlatform(db);
+			})
+		);
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should reject private config with invalid token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken('obt_invalid_token_123') }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should reject private config with expired token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockExpiredApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(mockExpiredApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should reject private config with token from different user', async () => {
-			const otherUser = { ...mockUser, id: 'user_other', username: 'otheruser' };
-			const otherToken = { ...mockApiToken, id: 'tok_other', user_id: 'user_other' };
-
-			const db = createMockDB({
-				users: [mockUser, otherUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [otherToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(otherToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should return install script with valid owner token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-
-			const text = await response.text();
-			expect(text).toContain('#!/bin/bash');
-			expect(text).toContain('openboot');
-		});
-
-		it('should handle Bearer token with mixed case', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: `bearer ${mockApiToken.token}` } // lowercase
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-		});
+		expect(response.status).toBe(403);
 	});
 
-	describe('404 cases', () => {
-		it('should return 404 for non-existent user', async () => {
-			const db = createMockDB({ users: [], configs: [] });
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'nonexistent', slug: 'config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(404);
-			const text = await response.text();
-			expect(text).toContain('User not found');
+	it('rejects private config with invalid token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should return 404 for non-existent config', async () => {
-			const db = createMockDB({ users: [mockUser], configs: [] });
+		const response = await call(
+			GET,
+			opts({
+				params: { username: 'testuser', slug: 'private-config' },
+				token: 'obt_invalid_token_123'
+			})
+		);
 
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
+		expect(response.status).toBe(403);
+	});
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'nonexistent' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/install' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(404);
-			const text = await response.text();
-			expect(text).toContain('Config not found');
+	it('rejects private config with expired token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockExpiredApiToken]
 		});
+
+		const response = await call(
+			GET,
+			opts({
+				params: { username: 'testuser', slug: 'private-config' },
+				token: mockExpiredApiToken.token
+			})
+		);
+
+		expect(response.status).toBe(403);
+	});
+
+	it('rejects private config with token from different user', async () => {
+		const otherUser = { ...userRow(), id: 'user_other', username: 'otheruser' };
+		const otherToken = {
+			...mockApiToken,
+			id: 'tok_other',
+			user_id: 'user_other',
+			token: 'obt_other_token_xxxxxxxxxxxxxxxxxxxx'
+		};
+		await seed(db, {
+			users: [userRow(), otherUser],
+			configs: [mockPrivateConfig],
+			api_tokens: [otherToken]
+		});
+
+		const response = await call(
+			GET,
+			opts({
+				params: { username: 'testuser', slug: 'private-config' },
+				token: otherToken.token
+			})
+		);
+
+		expect(response.status).toBe(403);
+	});
+
+	it('returns install script with valid owner token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await call(
+			GET,
+			opts({
+				params: { username: 'testuser', slug: 'private-config' },
+				token: mockApiToken.token
+			})
+		);
+
+		expect(response.status).toBe(200);
+		const text = await response.text();
+		expect(text).toContain('#!/bin/bash');
+		expect(text).toContain('openboot');
+	});
+
+	it('handles Bearer token with mixed case', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await call(
+			GET,
+			opts({
+				params: { username: 'testuser', slug: 'private-config' },
+				headers: { authorization: `bearer ${mockApiToken.token}` }
+			})
+		);
+
+		expect(response.status).toBe(200);
+	});
+});
+
+describe('404 cases', () => {
+	it('returns 404 for non-existent user', async () => {
+		const response = await call(GET, opts({ params: { username: 'nonexistent', slug: 'config' } }));
+
+		expect(response.status).toBe(404);
+		const text = await response.text();
+		expect(text).toContain('User not found');
+	});
+
+	it('returns 404 for non-existent config', async () => {
+		await seed(db, { users: [userRow()] });
+
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'nonexistent' } }));
+
+		expect(response.status).toBe(404);
+		const text = await response.text();
+		expect(text).toContain('Config not found');
 	});
 });

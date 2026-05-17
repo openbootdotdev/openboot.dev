@@ -1,930 +1,426 @@
 /**
- * Tests for config JSON endpoint
- * Critical: Private config access control via Bearer tokens
+ * Tests for config JSON endpoint.
+ * Runs inside Workers runtime with real D1 (via vitest-pool-workers).
  */
 
-import { describe, it, expect } from 'vitest';
-import { GET as _GET } from './+server';
-const GET = _GET as (event: any) => Promise<Response>;
-import { createMockDB } from '$lib/test/db-mock';
-import {
-	mockUser,
-	mockPublicConfig,
-	mockPrivateConfig,
-	mockApiToken,
-	mockExpiredApiToken,
-	createMockRequest,
-	createMockPlatform
-} from '$lib/test/fixtures';
-import { createBearerToken, getJSON } from '$lib/test/helpers';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { env } from 'cloudflare:test';
+import { GET } from './+server';
+import { resetDb, seed, strip } from '$lib/test/seed';
+import { call } from '$lib/test/call';
+import { mockUser, mockPublicConfig, mockPrivateConfig, mockApiToken, mockExpiredApiToken } from '$lib/test/fixtures';
 
-describe('[username]/[slug]/config GET - Visibility Auth', () => {
-	const baseUrl = 'http://localhost:5173/testuser/my-config/config';
+const db = env.DB;
+const baseUrl = 'http://localhost:5173/testuser/my-config/config';
+const userRow = () => strip(mockUser, 'provider', 'provider_id');
 
-	describe('Public configs', () => {
-		it('should return config JSON without auth', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPublicConfig]
-			});
+const opts = (overrides: Record<string, unknown> = {}) => ({
+	url: baseUrl,
+	route: { id: '/[username]/[slug]/config' },
+	params: { username: 'testuser', slug: 'my-config' },
+	...overrides
+});
 
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
+const seedPublic = (config: Record<string, unknown>) => seed(db, { users: [userRow()], configs: [config] });
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+beforeEach(async () => {
+	await resetDb(db);
+});
 
-			expect(response.status).toBe(200);
-			expect(response.headers.get('content-type')).toContain('application/json');
+describe('public configs', () => {
+	it('returns config JSON without auth', async () => {
+		await seedPublic(mockPublicConfig);
 
-			const json = await getJSON(response);
-			expect(json.username).toBe('testuser');
-			expect(json.slug).toBe('public-config');
-			expect(json.name).toBe('Public Config');
-			expect(json.preset).toBe('developer');
-			expect(json.packages).toBeDefined();
-		});
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'public-config' } }));
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get('content-type')).toContain('application/json');
+		const json = (await response.json()) as Record<string, any>;
+		expect(json.username).toBe('testuser');
+		expect(json.slug).toBe('public-config');
+		expect(json.name).toBe('Public Config');
+		expect(json.preset).toBe('developer');
+		expect(json.packages).toBeDefined();
+	});
+});
+
+describe('private configs — auth required', () => {
+	it('rejects private config without auth header', async () => {
+		await seedPublic(mockPrivateConfig);
+
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'private-config' } }));
+
+		expect(response.status).toBe(403);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Config is private');
 	});
 
-	describe('Private configs - Auth required', () => {
-		it('should reject private config without auth header', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Config is private');
+	it('rejects private config with invalid token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should reject private config with invalid token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockApiToken]
-			});
+		const response = await call(
+			GET,
+			opts({ params: { username: 'testuser', slug: 'private-config' }, token: 'obt_invalid_token_123' })
+		);
 
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken('obt_invalid_token_123') }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should reject private config with expired token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockExpiredApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(mockExpiredApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
-		});
-
-		it('should return config JSON with valid owner token', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [mockApiToken]
-			});
-
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-
-			const json = await getJSON(response);
-			expect(json.username).toBe('testuser');
-			expect(json.slug).toBe('private-config');
-			expect(json.name).toBe('Private Config');
-			expect(json.preset).toBe('developer');
-			expect(json.packages).toBeDefined();
-			expect(json.casks).toBeDefined();
-			expect(json.taps).toBeDefined();
-			expect(json.npm).toBeDefined();
-		});
+		expect(response.status).toBe(403);
 	});
 
-	describe('Data parsing', () => {
-		it('should parse packages correctly', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify([
-					{ name: 'git', type: 'formula', desc: 'Version control' },
-					{ name: 'visual-studio-code', type: 'cask', desc: 'Editor' },
-					{ name: 'typescript', type: 'npm', desc: 'TypeScript' }
-				])
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.packages).toContainEqual(expect.objectContaining({ name: 'git' }));
-			expect(json.packages.map((p: any) => p.name)).not.toContain('visual-studio-code');
-			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'visual-studio-code' }));
-			expect(json.npm).toContainEqual(expect.objectContaining({ name: 'typescript' }));
+	it('rejects private config with expired token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockExpiredApiToken]
 		});
 
-		it('should parse snapshot for taps and casks', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: {
-						taps: ['homebrew/cask-fonts'],
-						casks: ['font-fira-code']
-					}
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.taps).toContain('homebrew/cask-fonts');
-		});
-
-		it('should not include shell in API response', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					shell: {
-						oh_my_zsh: true,
-						theme: 'powerlevel10k',
-						plugins: ['git', 'zsh-autosuggestions']
-					}
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.shell).toBeUndefined();
-		});
-
-		it('should parse macos_prefs from snapshot', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					macos_prefs: [
-						{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', value: 'true', desc: 'Show file extensions' },
-						{ domain: 'com.apple.dock', key: 'autohide', value: 'true', desc: 'Auto-hide dock' }
-					]
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.macos_prefs).toHaveLength(2);
-			expect(json.macos_prefs[0].domain).toBe('NSGlobalDomain');
-			expect(json.macos_prefs[1].key).toBe('autohide');
-		});
-
-		it('should preserve host="currentHost" for ByHost prefs and omit it when empty', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					macos_prefs: [
-						// ByHost pref — must round-trip `host` so the CLI uses `defaults -currentHost`.
-						{ domain: 'com.apple.controlcenter', key: 'Sound', type: 'int', value: '18', desc: 'Sound dropdown', host: 'currentHost' },
-						// Main-domain pref — no `host` field in input, must not gain one in output.
-						{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', type: 'bool', value: 'true', desc: 'Show extensions' }
-					]
-				})
-			};
-
-			const db = createMockDB({ users: [mockUser], configs: [config] });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request: createMockRequest({ url: baseUrl }),
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.macos_prefs).toHaveLength(2);
-			expect(json.macos_prefs[0].host).toBe('currentHost');
-			expect(json.macos_prefs[1]).not.toHaveProperty('host');
-		});
-
-		it('should filter out invalid macos_prefs entries', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					macos_prefs: [
-						{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', value: 'true', desc: 'Valid' },
-						{ domain: 'bad', key: 123 },
-						null,
-						'not-an-object'
-					]
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.macos_prefs).toHaveLength(1);
-			expect(json.macos_prefs[0].domain).toBe('NSGlobalDomain');
-		});
-
-		it('should return null macos_prefs when empty array', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] },
-					macos_prefs: []
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.macos_prefs).toBeNull();
-		});
-
-		it('should handle invalid snapshot JSON gracefully', async () => {
-			const config = {
-				...mockPublicConfig,
-				snapshot: '{invalid json'
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.shell).toBeUndefined();
-			expect(json.macos_prefs).toBeNull();
-		});
-
-		it('should handle string packages (legacy format)', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify(['git', 'curl', 'wget']),
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: ['curl'] }
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.packages.map((p: any) => p.name)).toEqual(['git', 'wget']);
-			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'curl' }));
-		});
-
-		it('should extract taps from fully-qualified package names', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify([
-					{ name: 'homebrew/cask-fonts/font-fira-code', type: 'formula', desc: 'Font' }
-				])
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.taps).toContain('homebrew/cask-fonts');
-		});
-
-		it('should parse custom_script into post_install lines', async () => {
-			const config = {
-				...mockPublicConfig,
-				custom_script: 'echo "line1"\n\necho "line2"\n  \necho "line3"'
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.post_install).toEqual(['echo "line1"', 'echo "line2"', 'echo "line3"']);
-		});
-
-		it('should return empty post_install when no custom_script', async () => {
-			const config = {
-				...mockPublicConfig,
-				custom_script: null
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.post_install).toEqual([]);
-		});
-
-		it('should return empty dotfiles_repo when not set', async () => {
-			const config = {
-				...mockPublicConfig,
-				dotfiles_repo: null
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.dotfiles_repo).toBe('');
-		});
-
-		it('should handle typed objects with desc (from-snapshot format)', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify([
-					{ name: 'git', type: 'formula', desc: 'Version control' },
-					{ name: 'docker', type: 'cask', desc: 'Containers' },
-					{ name: 'typescript', type: 'npm', desc: 'Typed JS' },
-					{ name: 'homebrew/cask-fonts', type: 'tap' }
-				])
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			// Formulae: git + tap entry
-			expect(json.packages).toContainEqual({ name: 'git', desc: 'Version control' });
-			expect(json.packages).toContainEqual(expect.objectContaining({ name: 'homebrew/cask-fonts' }));
-			expect(json.casks).toContainEqual({ name: 'docker', desc: 'Containers' });
-			expect(json.npm).toContainEqual({ name: 'typescript', desc: 'Typed JS' });
-		});
-
-		it('should handle typed objects without desc (fills from metadata)', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify([
-					{ name: 'curl', type: 'formula' },
-					{ name: 'warp', type: 'cask' }
-				])
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			// curl is in package-metadata.ts, so desc should be filled
-			const curlPkg = json.packages.find((p: any) => p.name === 'curl');
-			expect(curlPkg).toBeDefined();
-			expect(curlPkg.desc).toBeTruthy();
-			expect(curlPkg.desc).not.toBe('curl'); // should be a real description
-		});
-
-		it('should handle mixed format (strings + typed objects)', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: JSON.stringify([
-					'git',
-					{ name: 'docker', type: 'cask' },
-					'wget'
-				]),
-				snapshot: JSON.stringify({
-					packages: { taps: [], casks: [] }
-				})
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			// Strings become formulae, typed objects route by type
-			expect(json.packages.map((p: any) => p.name)).toContain('git');
-			expect(json.packages.map((p: any) => p.name)).toContain('wget');
-			expect(json.casks).toContainEqual(expect.objectContaining({ name: 'docker' }));
-			// All entries are objects with name and desc
-			for (const pkg of [...json.packages, ...json.casks]) {
-				expect(pkg).toHaveProperty('name');
-				expect(pkg).toHaveProperty('desc');
-			}
-		});
-
-		it('should handle empty packages', async () => {
-			const config = {
-				...mockPublicConfig,
-				packages: '[]'
-			};
-
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [config]
-			});
-
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			const json = await getJSON(response);
-			expect(json.packages).toEqual([]);
-			expect(json.casks).toEqual([]);
-			expect(json.npm).toEqual([]);
-			expect(json.taps).toEqual([]);
-		});
+		const response = await call(
+			GET,
+			opts({ params: { username: 'testuser', slug: 'private-config' }, token: mockExpiredApiToken.token })
+		);
+
+		expect(response.status).toBe(403);
 	});
 
-	describe('Error handling', () => {
-		it('should return 500 when platform env missing', async () => {
-			const request = createMockRequest({ url: baseUrl });
-			const platform = { env: undefined } as any;
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'public-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(500);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Platform env not available');
+	it('returns config JSON with valid owner token', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPrivateConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should return 404 when user not found', async () => {
-			const db = createMockDB({ users: [], configs: [] });
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
+		const response = await call(
+			GET,
+			opts({ params: { username: 'testuser', slug: 'private-config' }, token: mockApiToken.token })
+		);
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'nonexistent', slug: 'config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as Record<string, any>;
+		expect(json.username).toBe('testuser');
+		expect(json.slug).toBe('private-config');
+		expect(json.name).toBe('Private Config');
+		expect(json.preset).toBe('developer');
+		expect(json.packages).toBeDefined();
+		expect(json.casks).toBeDefined();
+		expect(json.taps).toBeDefined();
+		expect(json.npm).toBeDefined();
+	});
 
-			expect(response.status).toBe(404);
-			const json = await getJSON(response);
-			expect(json.error).toContain('User not found');
+	it('rejects private config with token belonging to different user', async () => {
+		const otherUser = { ...userRow(), id: 'other_user_id', username: 'otheruser' };
+		const otherToken = {
+			...mockApiToken,
+			id: 'tok_other',
+			user_id: 'other_user_id',
+			token: 'obt_otheruser1234567890abcdefghijklmnop'
+		};
+		await seed(db, {
+			users: [userRow(), otherUser],
+			configs: [mockPrivateConfig],
+			api_tokens: [otherToken]
 		});
 
-		it('should return 404 when config not found', async () => {
-			const db = createMockDB({ users: [mockUser], configs: [] });
-			const request = createMockRequest({ url: baseUrl });
-			const platform = createMockPlatform(db);
+		const response = await call(
+			GET,
+			opts({ params: { username: 'testuser', slug: 'private-config' }, token: otherToken.token })
+		);
 
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'nonexistent' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(403);
+	});
+});
 
-			expect(response.status).toBe(404);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Config not found');
+describe('data parsing', () => {
+	const publicOpts = opts({ params: { username: 'testuser', slug: 'public-config' } });
+	const callPublic = () => call(GET, publicOpts);
+
+	it('routes packages by type (formula/cask/npm)', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify([
+				{ name: 'git', type: 'formula', desc: 'Version control' },
+				{ name: 'visual-studio-code', type: 'cask', desc: 'Editor' },
+				{ name: 'typescript', type: 'npm', desc: 'TypeScript' }
+			])
 		});
 
-		it('should reject private config with token belonging to different user', async () => {
-			const otherUserToken = {
-				...mockApiToken,
-				id: 'tok_other',
-				user_id: 'other_user_id',
-				token: 'obt_otheruser1234567890abcdefghijklmnop'
-			};
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockPrivateConfig],
-				api_tokens: [otherUserToken]
-			});
+		const json = (await (await callPublic()).json()) as {
+			packages: { name: string }[];
+			casks: { name: string }[];
+			npm: { name: string }[];
+		};
+		expect(json.packages).toContainEqual(expect.objectContaining({ name: 'git' }));
+		expect(json.packages.map((p) => p.name)).not.toContain('visual-studio-code');
+		expect(json.casks).toContainEqual(expect.objectContaining({ name: 'visual-studio-code' }));
+		expect(json.npm).toContainEqual(expect.objectContaining({ name: 'typescript' }));
+	});
 
-			const request = createMockRequest({
-				url: baseUrl,
-				headers: { authorization: createBearerToken(otherUserToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { username: 'testuser', slug: 'private-config' },
-				url: new URL(baseUrl),
-				route: { id: '/[username]/[slug]/config' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: {} as any,
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(403);
+	it('parses snapshot for taps and casks', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: ['homebrew/cask-fonts'], casks: ['font-fira-code'] }
+			})
 		});
+
+		const json = (await (await callPublic()).json()) as { taps: string[] };
+		expect(json.taps).toContain('homebrew/cask-fonts');
+	});
+
+	it('does not include shell in API response', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: [], casks: [] },
+				shell: { oh_my_zsh: true, theme: 'powerlevel10k', plugins: ['git', 'zsh-autosuggestions'] }
+			})
+		});
+
+		const json = (await (await callPublic()).json()) as { shell?: unknown };
+		expect(json.shell).toBeUndefined();
+	});
+
+	it('parses macos_prefs from snapshot', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: [], casks: [] },
+				macos_prefs: [
+					{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', value: 'true', desc: 'Show extensions' },
+					{ domain: 'com.apple.dock', key: 'autohide', value: 'true', desc: 'Auto-hide dock' }
+				]
+			})
+		});
+
+		const json = (await (await callPublic()).json()) as { macos_prefs: { domain: string; key: string }[] };
+		expect(json.macos_prefs).toHaveLength(2);
+		expect(json.macos_prefs[0].domain).toBe('NSGlobalDomain');
+		expect(json.macos_prefs[1].key).toBe('autohide');
+	});
+
+	it('preserves host="currentHost" and omits it when empty', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: [], casks: [] },
+				macos_prefs: [
+					{ domain: 'com.apple.controlcenter', key: 'Sound', type: 'int', value: '18', desc: 'd', host: 'currentHost' },
+					{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', type: 'bool', value: 'true', desc: 'd' }
+				]
+			})
+		});
+
+		const json = (await (await callPublic()).json()) as { macos_prefs: { host?: string }[] };
+		expect(json.macos_prefs).toHaveLength(2);
+		expect(json.macos_prefs[0].host).toBe('currentHost');
+		expect(json.macos_prefs[1]).not.toHaveProperty('host');
+	});
+
+	it('filters out invalid macos_prefs entries', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: [], casks: [] },
+				macos_prefs: [
+					{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', value: 'true', desc: 'Valid' },
+					{ domain: 'bad', key: 123 },
+					null,
+					'not-an-object'
+				]
+			})
+		});
+
+		const json = (await (await callPublic()).json()) as { macos_prefs: { domain: string }[] };
+		expect(json.macos_prefs).toHaveLength(1);
+		expect(json.macos_prefs[0].domain).toBe('NSGlobalDomain');
+	});
+
+	it('returns null macos_prefs when empty array', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			snapshot: JSON.stringify({
+				packages: { taps: [], casks: [] },
+				macos_prefs: []
+			})
+		});
+
+		const json = (await (await callPublic()).json()) as { macos_prefs: unknown };
+		expect(json.macos_prefs).toBeNull();
+	});
+
+	it('handles invalid snapshot JSON gracefully', async () => {
+		await seedPublic({ ...mockPublicConfig, snapshot: '{invalid json' });
+
+		const response = await callPublic();
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { shell?: unknown; macos_prefs: unknown };
+		expect(json.shell).toBeUndefined();
+		expect(json.macos_prefs).toBeNull();
+	});
+
+	it('handles string packages (legacy format)', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify(['git', 'curl', 'wget']),
+			snapshot: JSON.stringify({ packages: { taps: [], casks: ['curl'] } })
+		});
+
+		const json = (await (await callPublic()).json()) as {
+			packages: { name: string }[];
+			casks: { name: string }[];
+		};
+		expect(json.packages.map((p) => p.name)).toEqual(['git', 'wget']);
+		expect(json.casks).toContainEqual(expect.objectContaining({ name: 'curl' }));
+	});
+
+	it('extracts taps from fully-qualified package names', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify([{ name: 'homebrew/cask-fonts/font-fira-code', type: 'formula', desc: 'Font' }])
+		});
+
+		const json = (await (await callPublic()).json()) as { taps: string[] };
+		expect(json.taps).toContain('homebrew/cask-fonts');
+	});
+
+	it('parses custom_script into post_install lines', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			custom_script: 'echo "line1"\n\necho "line2"\n  \necho "line3"'
+		});
+
+		const json = (await (await callPublic()).json()) as { post_install: string[] };
+		expect(json.post_install).toEqual(['echo "line1"', 'echo "line2"', 'echo "line3"']);
+	});
+
+	it('returns empty post_install when no custom_script', async () => {
+		await seedPublic({ ...mockPublicConfig, custom_script: null });
+
+		const json = (await (await callPublic()).json()) as { post_install: unknown[] };
+		expect(json.post_install).toEqual([]);
+	});
+
+	it('returns empty dotfiles_repo when not set', async () => {
+		await seedPublic({ ...mockPublicConfig, dotfiles_repo: null });
+
+		const json = (await (await callPublic()).json()) as { dotfiles_repo: string };
+		expect(json.dotfiles_repo).toBe('');
+	});
+
+	it('handles typed objects with desc (from-snapshot format)', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify([
+				{ name: 'git', type: 'formula', desc: 'Version control' },
+				{ name: 'docker', type: 'cask', desc: 'Containers' },
+				{ name: 'typescript', type: 'npm', desc: 'Typed JS' },
+				{ name: 'homebrew/cask-fonts', type: 'tap' }
+			])
+		});
+
+		const json = (await (await callPublic()).json()) as {
+			packages: { name: string; desc?: string }[];
+			casks: { name: string; desc: string }[];
+			npm: { name: string; desc: string }[];
+		};
+		expect(json.packages).toContainEqual({ name: 'git', desc: 'Version control' });
+		expect(json.packages).toContainEqual(expect.objectContaining({ name: 'homebrew/cask-fonts' }));
+		expect(json.casks).toContainEqual({ name: 'docker', desc: 'Containers' });
+		expect(json.npm).toContainEqual({ name: 'typescript', desc: 'Typed JS' });
+	});
+
+	it('handles typed objects without desc (fills from metadata)', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify([
+				{ name: 'curl', type: 'formula' },
+				{ name: 'warp', type: 'cask' }
+			])
+		});
+
+		const json = (await (await callPublic()).json()) as {
+			packages: { name: string; desc: string }[];
+		};
+		const curlPkg = json.packages.find((p) => p.name === 'curl');
+		expect(curlPkg).toBeDefined();
+		expect(curlPkg!.desc).toBeTruthy();
+		expect(curlPkg!.desc).not.toBe('curl');
+	});
+
+	it('handles mixed format (strings + typed objects)', async () => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify(['git', { name: 'docker', type: 'cask' }, 'wget']),
+			snapshot: JSON.stringify({ packages: { taps: [], casks: [] } })
+		});
+
+		const json = (await (await callPublic()).json()) as {
+			packages: { name: string; desc: string }[];
+			casks: { name: string; desc: string }[];
+		};
+		expect(json.packages.map((p) => p.name)).toContain('git');
+		expect(json.packages.map((p) => p.name)).toContain('wget');
+		expect(json.casks).toContainEqual(expect.objectContaining({ name: 'docker' }));
+		for (const pkg of [...json.packages, ...json.casks]) {
+			expect(pkg).toHaveProperty('name');
+			expect(pkg).toHaveProperty('desc');
+		}
+	});
+
+	it('handles empty packages', async () => {
+		await seedPublic({ ...mockPublicConfig, packages: '[]' });
+
+		const json = (await (await callPublic()).json()) as {
+			packages: unknown[];
+			casks: unknown[];
+			npm: unknown[];
+			taps: unknown[];
+		};
+		expect(json.packages).toEqual([]);
+		expect(json.casks).toEqual([]);
+		expect(json.npm).toEqual([]);
+		expect(json.taps).toEqual([]);
+	});
+});
+
+describe('error handling', () => {
+	it('returns 500 when platform env missing', async () => {
+		const response = await GET({
+			request: new Request(baseUrl),
+			platform: { env: undefined },
+			url: new URL(baseUrl),
+			route: { id: '/[username]/[slug]/config' },
+			params: { username: 'testuser', slug: 'public-config' },
+			locals: {},
+			isDataRequest: false,
+			isSubRequest: false,
+			cookies: { get: () => undefined, set: () => {}, delete: () => {}, getAll: () => [], serialize: () => '' },
+			getClientAddress: () => '',
+			fetch: globalThis.fetch
+		} as any);
+
+		expect(response.status).toBe(500);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Platform env not available');
+	});
+
+	it('returns 404 when user not found', async () => {
+		const response = await call(GET, opts({ params: { username: 'nonexistent', slug: 'config' } }));
+
+		expect(response.status).toBe(404);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('User not found');
+	});
+
+	it('returns 404 when config not found', async () => {
+		await seed(db, { users: [userRow()] });
+
+		const response = await call(GET, opts({ params: { username: 'testuser', slug: 'nonexistent' } }));
+
+		expect(response.status).toBe(404);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Config not found');
 	});
 });
