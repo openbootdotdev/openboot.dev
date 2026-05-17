@@ -3,6 +3,7 @@
 Web dashboard and install API for [OpenBoot](https://github.com/openbootdotdev/openboot).
 
 [![CI](https://github.com/openbootdotdev/openboot.dev/actions/workflows/ci.yml/badge.svg)](https://github.com/openbootdotdev/openboot.dev/actions/workflows/ci.yml)
+[![CD](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml)
 
 **Live at [openboot.dev](https://openboot.dev)**
 
@@ -41,7 +42,7 @@ GOOGLE_CLIENT_SECRET=...
 
 ## Deployment
 
-Push to `main` runs CI (type check + tests + build) and, on success, auto-deploys to [openboot.dev](https://openboot.dev). PRs run CI only. The deploy job lives in `.github/workflows/ci.yml`; see [docs/HARNESS.md](./docs/HARNESS.md) for the full pipeline.
+Push to `main` runs CI (`ci.yml`: type check + tests + build + contract validation). On success, CD (`deploy.yml`) fires via `workflow_run` and ships to [openboot.dev](https://openboot.dev) (D1 migrations + wrangler deploy + health check + smoke test). PRs run CI only. See [docs/HARNESS.md](./docs/HARNESS.md) for the full pipeline.
 
 Secrets needed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 

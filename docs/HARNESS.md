@@ -47,9 +47,9 @@ Three regulation categories:
 | Behav. | `svelte-check` (TypeScript across `.ts` and `.svelte`) | `npm run check` / `.claude/hooks/stop.sh` / CI | `tsconfig.json` |
 | Behav. | `vitest run` (unit + smoke) | `npm test` / pre-push / CI | `vitest.config.ts` |
 | Behav. | `vitest --coverage` → Codecov (informational) | CI | `.github/workflows/ci.yml` |
-| Behav. | Contract schema validation against `openboot-contract` | CI `check` job + post-deploy | `.github/workflows/ci.yml` |
-| Behav. | Post-deploy health check (`/api/health`) | CI `deploy` job | `.github/workflows/ci.yml` |
-| Behav. | Post-deploy smoke test + contract round-trip | CI `deploy` job | `scripts/smoke-test-api.sh` |
+| Behav. | Contract schema validation against `openboot-contract` | CI `check` job + post-deploy | `.github/workflows/ci.yml`, `.github/workflows/deploy.yml` |
+| Behav. | Post-deploy health check (`/api/health`) | CD `deploy` job | `.github/workflows/deploy.yml` |
+| Behav. | Post-deploy smoke test + contract round-trip | CD `deploy` job | `scripts/smoke-test-api.sh` |
 | Feedfwd. | Agent conventions | every AI turn | `CLAUDE.md`, `AGENTS.md` |
 | Feedfwd. | Session-start hook (warm `svelte-kit sync`) | every Claude session | `.claude/hooks/session-start.sh` |
 | Feedfwd. | `ship-pr` skill — push → CI → review → triage → squash → cleanup; **no `--auto`** | model-loaded | `.claude/skills/ship-pr/SKILL.md` |
@@ -106,8 +106,9 @@ ideally one rule per PR so the diff is reviewable:
   up violations directly when a new rule is added.
 - **No agent-driven changes to `main` without human review.** All AI
   changes go through PR review and the existing CI matrix.
-- **No auto-release / tag automation.** Push to `main` auto-deploys; there
-  is no separate release cadence to automate.
+- **No auto-release / tag automation.** Push to `main` triggers `ci.yml`;
+  on success `deploy.yml` fires via `workflow_run` and ships to production.
+  There is no separate release cadence to automate.
 - **No "stale baseline" sensor.** N/A while there are no baselines.
 
 ## How agents should think about this file
