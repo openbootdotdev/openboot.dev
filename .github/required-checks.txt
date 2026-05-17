@@ -1,0 +1,15 @@
+# Source of truth for branch-protection required status checks.
+# Each line is a job `name:` from .github/workflows/*.yml that must pass
+# before a PR can merge. The `required-checks alignment (drift)` job in
+# harness.yml fails if a line here does not map to a real workflow job
+# (catches the silent block where protection waits for a renamed/removed
+# check forever).
+#
+# To enforce on the GitHub side, mirror this list via:
+#   gh api -X PUT repos/<owner>/<repo>/branches/main/protection ...
+# (see docs/MERGE_POLICY.md if/when added).
+#
+# Lines starting with # and blank lines are ignored.
+
+check
+validate-commits

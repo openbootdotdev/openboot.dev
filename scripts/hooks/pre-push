@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# pre-push: run `npm run validate` (lint + check + test + build) before
+# pushing. Typical runtime: ~30s warm. CI runs the same plus contract
+# validation + deploy.
+#
+# To skip once:   git push --no-verify
+# To uninstall:   rm .git/hooks/pre-push
+
+set -e
+
+# If every ref being pushed is a deletion, nothing to validate.
+have_change=0
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+	if [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+		have_change=1
+	fi
+done
+
+if [ "$have_change" -eq 0 ]; then
+	exit 0
+fi
+
+echo "→ npm run validate"
+npm run validate
+
+exit 0

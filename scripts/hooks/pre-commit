@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# pre-commit: keep commits from introducing obvious regressions.
+# Fast (<3s warm): eslint on the staged diff + prettier --check on the
+# staged set. No tests here — pre-push handles those.
+#
+# To skip once:   git commit --no-verify
+# To uninstall:   rm .git/hooks/pre-commit
+
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|js|svelte|json|md)$' || true)
+if [ -z "$staged" ]; then
+	exit 0
+fi
+
+# Subset that ESLint actually lints.
+lintable=$(printf '%s\n' "$staged" | grep -E '\.(ts|js|svelte)$' || true)
+if [ -n "$lintable" ]; then
+	echo "→ eslint (staged)"
+	# shellcheck disable=SC2086
+	npx eslint $lintable
+fi
+
+echo "→ prettier --check (staged)"
+# shellcheck disable=SC2086
+npx prettier --check $staged
+
+exit 0

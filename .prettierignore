@@ -1,0 +1,11 @@
+.svelte-kit
+.wrangler
+build
+coverage
+node_modules
+static
+dist
+package-lock.json
+*.md
+src/docs/**
+migrations/**

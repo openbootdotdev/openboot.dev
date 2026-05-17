@@ -1,0 +1,104 @@
+name: Harness
+
+# Drift sensors that run alongside the main CI workflow but never block a
+# merge. These are the "continuous drift" controls from Fowler's harness
+# engineering article — they observe maintainability decay (vulnerable
+# deps, dead code, stale required-checks list) without forcing a refactor
+# on every PR. Failures surface as informational annotations on the PR
+# and, on main, get promoted to tracking issues by drift-to-issue.yml.
+#
+# Each job sets continue-on-error: true. To promote any sensor to a
+# required check, remove that flag and add the job name to
+# .github/required-checks.txt + the live branch protection rules.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly run on main so drift in dependencies surfaces even without
+    # PR activity (npm audit advisories land independently of code).
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    name: npm audit (drift)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm audit --audit-level=high
+        # Fails on a high-or-critical advisory. Production-only because we
+        # don't act on devDep advisories (no runtime exposure).
+        run: npm audit --omit=dev --audit-level=high
+
+  knip:
+    name: knip dead-code (drift)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Run knip
+        # `npx knip` exits non-zero on any unused export, file, or dep.
+        # Pulls the binary on-demand; no devDependency added.
+        run: npx --yes knip@5
+
+  required-checks-alignment:
+    name: required-checks alignment (drift)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PyYAML
+        run: pip install --quiet --user pyyaml
+      - name: Compare .github/required-checks.txt vs workflow job names
+        # `.github/required-checks.txt` is the in-repo source of truth for
+        # branch protection's required_status_checks.contexts. This sensor
+        # verifies every line there maps to an actual job `name:` across
+        # the workflows — catches the case where a workflow is renamed and
+        # branch protection silently blocks PRs waiting for a check that
+        # will never report.
+        run: |
+          set -euo pipefail
+
+          required=$(grep -vE '^[[:space:]]*(#|$)' .github/required-checks.txt | sort -u)
+
+          jobs=$(python3 <<'PY'
+          import pathlib, yaml
+          seen = set()
+          for path in sorted(pathlib.Path('.github/workflows').glob('*.yml')):
+              wf = yaml.safe_load(path.read_text())
+              if not isinstance(wf, dict) or not isinstance(wf.get('jobs'), dict):
+                  continue
+              for job_id, job in wf['jobs'].items():
+                  name = job.get('name', job_id) if isinstance(job, dict) else job_id
+                  seen.add(name)
+          for n in sorted(seen):
+              print(n)
+          PY
+          )
+
+          missing=$(comm -23 <(echo "$required") <(echo "$jobs"))
+          if [ -n "$missing" ]; then
+            echo "::warning::.github/required-checks.txt lists checks that no workflow job produces:"
+            echo "$missing" | sed 's/^/  - /'
+            echo ""
+            echo "Either remove these from required-checks.txt (and update branch protection"
+            echo "via gh api -X PUT .../protection) or add matching jobs to .github/workflows/."
+            exit 1
+          fi
+
+          printf '✓ All %d required checks map to workflow jobs.\n' "$(echo "$required" | wc -l | tr -d ' ')"
