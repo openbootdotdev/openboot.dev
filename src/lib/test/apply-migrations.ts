@@ -1,4 +1,5 @@
-import { applyD1Migrations, env } from 'cloudflare:test';
+import { applyD1Migrations, env, type D1Migration } from 'cloudflare:test';
+import type { D1Database } from '@cloudflare/workers-types';
 
 declare module 'cloudflare:test' {
 	interface ProvidedEnv {

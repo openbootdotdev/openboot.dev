@@ -13,7 +13,7 @@ const db = env.DB;
 
 // Strip mock-only fields (e.g. package_count) from revision fixtures —
 // the real schema doesn't have them; json_array_length() computes them.
-function asRevisionRow(r: typeof mockRevision) {
+function asRevisionRow(r: typeof mockRevision | typeof mockRevisionOlder) {
 	const { package_count: _omit, ...rest } = r;
 	return rest;
 }
@@ -65,7 +65,7 @@ describe('saveRevision', () => {
 			.prepare('SELECT id FROM config_revisions WHERE config_id = ?')
 			.bind(mockConfig.id)
 			.all<{ id: string }>();
-		expect(new Set(results.map((r) => r.id)).size).toBe(2);
+		expect(new Set(results.map((r: { id: string }) => r.id)).size).toBe(2);
 	});
 
 	it('keeps at most 10 revisions per config (prunes oldest)', async () => {

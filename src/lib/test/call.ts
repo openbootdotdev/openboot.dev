@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test';
 
-type Handler = (event: any) => Promise<Response>;
+type Handler = (event: any) => Response | Promise<Response>;
 
 type CallOpts = {
 	url: string;
@@ -10,13 +10,15 @@ type CallOpts = {
 	body?: unknown | string;
 	cookies?: Record<string, string>;
 	route?: { id: string };
+	clientAddress?: string;
+	params?: Record<string, string>;
 };
 
 /**
  * Minimal RequestEvent builder for invoking SvelteKit `+server.ts` handlers
  * directly inside the Workers runtime, with `env` from `cloudflare:test`.
  */
-export async function call(handler: Handler, opts: CallOpts): Promise<Response> {
+export function call(handler: Handler, opts: CallOpts): Promise<Response> {
 	const headers: Record<string, string> = { ...(opts.headers ?? {}) };
 	if (opts.token) headers['authorization'] = `Bearer ${opts.token}`;
 	if (opts.body !== undefined && typeof opts.body !== 'string' && !headers['content-type']) {
@@ -40,16 +42,19 @@ export async function call(handler: Handler, opts: CallOpts): Promise<Response> 
 		serialize: () => ''
 	};
 
-	return handler({
-		request,
-		platform: { env },
-		url: new URL(opts.url),
-		route: opts.route ?? { id: '' },
-		locals: {},
-		isDataRequest: false,
-		isSubRequest: false,
-		cookies,
-		getClientAddress: () => '127.0.0.1',
-		fetch: globalThis.fetch
-	});
+	return Promise.resolve(
+		handler({
+			request,
+			platform: { env },
+			url: new URL(opts.url),
+			route: opts.route ?? { id: '' },
+			params: opts.params ?? {},
+			locals: {},
+			isDataRequest: false,
+			isSubRequest: false,
+			cookies,
+			getClientAddress: () => opts.clientAddress ?? '127.0.0.1',
+			fetch: globalThis.fetch
+		})
+	);
 }

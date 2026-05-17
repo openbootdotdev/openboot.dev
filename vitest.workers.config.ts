@@ -29,9 +29,17 @@ export default defineConfig({
 	test: {
 		include: [
 			'src/routes/api/health/**/*.test.ts',
+			'src/lib/server/auth.test.ts',
 			'src/lib/server/db/configs.test.ts',
 			'src/routes/api/configs/server.test.ts',
-			'src/routes/api/auth/cli/poll/server.test.ts'
+			'src/routes/api/configs/[slug]/server.test.ts',
+			'src/routes/api/configs/[slug]/revisions/server.test.ts',
+			'src/routes/api/auth/cli/poll/server.test.ts',
+			'src/routes/api/auth/cli/start/server.test.ts',
+			'src/routes/api/auth/cli/approve/server.test.ts',
+			'src/routes/[username]/[slug]/install/server.test.ts',
+			'src/routes/[username]/[slug]/config/server.test.ts',
+			'src/smoke-tests/**/*.test.ts'
 		],
 		setupFiles: ['./src/lib/test/apply-migrations.ts'],
 		pool: cloudflarePool(workersOptions)

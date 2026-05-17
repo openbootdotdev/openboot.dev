@@ -7,14 +7,21 @@ export default defineConfig({
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		exclude: [
 			'src/routes/api/health/**/*.test.ts',
+			'src/lib/server/auth.test.ts',
 			'src/lib/server/db/configs.test.ts',
 			'src/routes/api/configs/server.test.ts',
+			'src/routes/api/configs/[slug]/server.test.ts',
+			'src/routes/api/configs/[slug]/revisions/server.test.ts',
 			'src/routes/api/auth/cli/poll/server.test.ts',
+			'src/routes/api/auth/cli/start/server.test.ts',
+			'src/routes/api/auth/cli/approve/server.test.ts',
+			'src/routes/[username]/[slug]/install/server.test.ts',
+			'src/routes/[username]/[slug]/config/server.test.ts',
+			'src/smoke-tests/**/*.test.ts',
 			'node_modules/**'
 		],
 		globals: true,
 		environment: 'happy-dom',
-		setupFiles: ['./src/lib/test/setup.ts'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json', 'html'],

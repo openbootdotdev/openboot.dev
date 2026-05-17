@@ -1,856 +1,372 @@
 /**
- * Tests for /api/configs/[slug] GET/PUT/DELETE endpoints
- * Critical: Auth validation, visibility field validation, config updates
+ * Tests for /api/configs/[slug] GET/PUT/DELETE endpoints.
+ * Runs inside Workers runtime with real D1 (via vitest-pool-workers).
  */
 
-import { describe, it, expect } from 'vitest';
-import { GET as _GET, PUT as _PUT, DELETE as _DELETE } from './+server';
-const GET = _GET as (event: any) => Promise<Response>;
-const PUT = _PUT as (event: any) => Promise<Response>;
-const DELETE = _DELETE as (event: any) => Promise<Response>;
-import { createMockDB } from '$lib/test/db-mock';
-import {
-	mockUser,
-	mockConfig,
-	mockPublicConfig,
-	mockPrivateConfig,
-	mockApiToken,
-	createMockRequest,
-	createMockPlatform,
-	createMockCookies
-} from '$lib/test/fixtures';
-import { createBearerToken, getJSON } from '$lib/test/helpers';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { env } from 'cloudflare:test';
+import { GET, PUT, DELETE } from './+server';
+import { resetDb, seed, strip } from '$lib/test/seed';
+import { call } from '$lib/test/call';
+import { mockUser, mockConfig, mockPublicConfig, mockApiToken } from '$lib/test/fixtures';
 
-describe('/api/configs/[slug] GET/PUT/DELETE', () => {
-	const baseUrl = 'http://localhost:5173/api/configs/my-config';
+const db = env.DB;
+const baseUrl = 'http://localhost:5173/api/configs/my-config';
+const userRow = () => strip(mockUser, 'provider', 'provider_id');
 
-	describe('GET - Retrieve single config', () => {
-		it('should reject request without auth', async () => {
-			const db = createMockDB({ users: [mockUser], configs: [mockConfig] });
-			const request = createMockRequest({ url: baseUrl, method: 'GET' });
-			const platform = createMockPlatform(db);
+const callOpts = (overrides: Record<string, unknown> = {}) => ({
+	url: baseUrl,
+	route: { id: '/api/configs/[slug]' },
+	params: { slug: 'my-config' },
+	...overrides
+});
 
-			const response = await GET({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+beforeEach(async () => {
+	await resetDb(db);
+});
 
-			expect(response.status).toBe(401);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Unauthorized');
-		});
+describe('GET /api/configs/[slug]', () => {
+	it('rejects request without auth', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig] });
 
-		it('should return 404 for non-existent config', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'GET',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
+		const response = await call(GET, callOpts());
 
-			const response = await GET({
-				request,
-				platform,
-				params: { slug: 'nonexistent' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(404);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Config not found');
-		});
-
-		it('should return config with all fields', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'GET',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.config.id).toBe('cfg_test123');
-			expect(json.config.slug).toBe('my-config');
-			expect(json.config.name).toBe('My Test Config');
-			expect(json.config.visibility).toBe('unlisted');
-			expect(json.install_url).toBeDefined();
-		});
-
-		it('should return install_url with alias when present', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'GET',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.install_url).toContain('myconfig');
-		});
-
-		it('should parse packages correctly', async () => {
-			const configWithPackages = {
-				...mockConfig,
-				packages: JSON.stringify([
-					{ name: 'git', type: 'formula' },
-					{ name: 'visual-studio-code', type: 'cask' }
-				])
-			};
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [configWithPackages],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'GET',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await GET({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.config.packages).toHaveLength(2);
-			expect(json.config.packages[0].name).toBe('git');
-			expect(json.config.packages[1].type).toBe('cask');
-		});
+		expect(response.status).toBe(401);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Unauthorized');
 	});
 
-	describe('PUT - Update config', () => {
-		it('should reject request without auth', async () => {
-			const db = createMockDB({ users: [mockUser], configs: [mockConfig] });
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				body: { name: 'Updated' }
-			});
-			const platform = createMockPlatform(db);
+	it('returns 404 for non-existent config', async () => {
+		await seed(db, { users: [userRow()], api_tokens: [mockApiToken] });
 
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		const response = await call(GET, callOpts({ token: mockApiToken.token, params: { slug: 'nonexistent' } }));
 
-			expect(response.status).toBe(401);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Unauthorized');
+		expect(response.status).toBe(404);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Config not found');
+	});
+
+	it('returns config with all fields', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should reject invalid JSON body', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = new Request(baseUrl, {
+		const response = await call(GET, callOpts({ token: mockApiToken.token }));
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as {
+			config: { id: string; slug: string; name: string; visibility: string };
+			install_url: string;
+		};
+		expect(json.config.id).toBe('cfg_test123');
+		expect(json.config.slug).toBe('my-config');
+		expect(json.config.name).toBe('My Test Config');
+		expect(json.config.visibility).toBe('unlisted');
+		expect(json.install_url).toBeDefined();
+	});
+
+	it('returns install_url with alias when present', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await call(GET, callOpts({ token: mockApiToken.token }));
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { install_url: string };
+		expect(json.install_url).toContain('myconfig');
+	});
+
+	it('parses packages correctly', async () => {
+		const configWithPackages = {
+			...mockConfig,
+			packages: JSON.stringify([
+				{ name: 'git', type: 'formula' },
+				{ name: 'visual-studio-code', type: 'cask' }
+			])
+		};
+		await seed(db, {
+			users: [userRow()],
+			configs: [configWithPackages],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await call(GET, callOpts({ token: mockApiToken.token }));
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as {
+			config: { packages: { name: string; type: string }[] };
+		};
+		expect(json.config.packages).toHaveLength(2);
+		expect(json.config.packages[0].name).toBe('git');
+		expect(json.config.packages[1].type).toBe('cask');
+	});
+});
+
+describe('PUT /api/configs/[slug]', () => {
+	const authedPut = (body: unknown, overrides: Record<string, unknown> = {}) =>
+		call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body, ...overrides }));
+
+	it('rejects request without auth', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig] });
+
+		const response = await call(PUT, callOpts({ method: 'PUT', body: { name: 'Updated' } }));
+
+		expect(response.status).toBe(401);
+	});
+
+	it('rejects invalid JSON body', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await call(
+			PUT,
+			callOpts({
 				method: 'PUT',
-				headers: {
-					'Authorization': createBearerToken(mockApiToken.token),
-					'Content-Type': 'application/json'
-				},
+				token: mockApiToken.token,
+				headers: { 'content-type': 'application/json' },
 				body: 'invalid json {'
-			});
-			const platform = createMockPlatform(db);
+			})
+		);
 
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(400);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Invalid request body');
+	});
 
+	it('returns 404 for non-existent config', async () => {
+		await seed(db, { users: [userRow()], api_tokens: [mockApiToken] });
+
+		const response = await authedPut({ name: 'Updated' }, { params: { slug: 'nonexistent' } });
+
+		expect(response.status).toBe(404);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('Config not found');
+	});
+
+	describe('visibility validation', () => {
+		beforeEach(async () => {
+			await seed(db, {
+				users: [userRow()],
+				configs: [mockConfig],
+				api_tokens: [mockApiToken]
+			});
+		});
+
+		for (const visibility of ['public', 'private'] as const) {
+			it(`updates config with visibility=${visibility}`, async () => {
+				const response = await authedPut({ visibility });
+				expect(response.status).toBe(200);
+				const json = (await response.json()) as { success: boolean };
+				expect(json.success).toBe(true);
+			});
+		}
+
+		it('rejects invalid visibility value', async () => {
+			const response = await authedPut({ visibility: 'invalid' });
 			expect(response.status).toBe(400);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Invalid request body');
+			const json = (await response.json()) as { error: string };
+			expect(json.error).toContain('Invalid visibility');
+			expect(json.error).toContain('public, unlisted, or private');
 		});
 
-		it('should return 404 for non-existent config', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { name: 'Updated' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'nonexistent' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(404);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Config not found');
+		it('rejects visibility=secret', async () => {
+			const response = await authedPut({ visibility: 'secret' });
+			expect(response.status).toBe(400);
 		});
 
-		describe('Visibility validation on PUT', () => {
-			it('should update config with visibility=public', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { visibility: 'public' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'my-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(200);
-				const json = await getJSON(response);
-				expect(json.success).toBe(true);
-			});
-
-			it('should update config with visibility=private', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { visibility: 'private' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'my-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(200);
-				const json = await getJSON(response);
-				expect(json.success).toBe(true);
-			});
-
-			it('should update config with visibility=unlisted', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockPublicConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { visibility: 'unlisted' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'public-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(200);
-				const json = await getJSON(response);
-				expect(json.success).toBe(true);
-			});
-
-			it('should reject invalid visibility value on PUT', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { visibility: 'invalid' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'my-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(400);
-				const json = await getJSON(response);
-				expect(json.error).toContain('Invalid visibility');
-				expect(json.error).toContain('public, unlisted, or private');
-			});
-
-			it('should reject visibility=secret on PUT', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { visibility: 'secret' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'my-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(400);
-				const json = await getJSON(response);
-				expect(json.error).toContain('Invalid visibility');
-			});
-
-			it('should allow undefined visibility (no change)', async () => {
-				const db = createMockDB({
-					users: [mockUser],
-					configs: [mockConfig],
-					api_tokens: [mockApiToken]
-				});
-				const request = createMockRequest({
-					url: baseUrl,
-					method: 'PUT',
-					headers: { authorization: createBearerToken(mockApiToken.token) },
-					body: { name: 'Updated Name' }
-				});
-				const platform = createMockPlatform(db);
-
-				const response = await PUT({
-					request,
-					platform,
-					params: { slug: 'my-config' },
-					url: new URL(baseUrl),
-					route: { id: '/api/configs/[slug]' },
-					locals: {},
-					isDataRequest: false,
-					isSubRequest: false,
-					cookies: createMockCookies(),
-					getClientAddress: () => '',
-					fetch: globalThis.fetch
-				});
-
-				expect(response.status).toBe(200);
-				const json = await getJSON(response);
-				expect(json.success).toBe(true);
-			});
-		});
-
-		it('should update config name and slug', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { name: 'Renamed Config' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
+		it('allows undefined visibility (no change)', async () => {
+			const response = await authedPut({ name: 'Updated Name' });
 			expect(response.status).toBe(200);
-			const json = await getJSON(response);
+			const json = (await response.json()) as { success: boolean };
 			expect(json.success).toBe(true);
-			expect(json.slug).toBe('renamed-config');
-		});
-
-		it('should reject duplicate name (slug conflict)', async () => {
-			const config2 = { ...mockConfig, id: 'cfg_2', slug: 'other-config', name: 'Other Config' };
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig, config2],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { name: 'Other Config' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(409);
-			const json = await getJSON(response);
-			expect(json.error).toContain('already exists');
-		});
-
-		it('should update alias', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { alias: 'newalias' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.alias).toBe('newalias');
-		});
-
-		it('should clear alias when set to empty string', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { alias: '' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.alias).toBeNull();
-		});
-
-		it('should reject duplicate alias', async () => {
-			const config2 = { ...mockConfig, id: 'cfg_2', slug: 'other-config', alias: 'taken' };
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig, config2],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { alias: 'taken' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(409);
-			const json = await getJSON(response);
-			expect(json.error).toContain('already taken');
-		});
-
-		it('should update description', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: { description: 'New description' }
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.success).toBe(true);
-		});
-
-		it('should update multiple fields at once', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'PUT',
-				headers: { authorization: createBearerToken(mockApiToken.token) },
-				body: {
-					name: 'Multi Update',
-					description: 'Updated description',
-					visibility: 'public',
-					alias: 'multiupdate'
-				}
-			});
-			const platform = createMockPlatform(db);
-
-			const response = await PUT({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.success).toBe(true);
-			expect(json.slug).toBe('multi-update');
-			expect(json.alias).toBe('multiupdate');
 		});
 	});
 
-	describe('DELETE - Remove config', () => {
-		it('should reject request without auth', async () => {
-			const db = createMockDB({ users: [mockUser], configs: [mockConfig] });
-			const request = createMockRequest({ url: baseUrl, method: 'DELETE' });
-			const platform = createMockPlatform(db);
-
-			const response = await DELETE({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
-
-			expect(response.status).toBe(401);
-			const json = await getJSON(response);
-			expect(json.error).toContain('Unauthorized');
+	it('updates visibility=unlisted on a public config', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockPublicConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should delete config successfully', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'DELETE',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
+		const response = await authedPut({ visibility: 'unlisted' }, { params: { slug: 'public-config' } });
 
-			const response = await DELETE({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { success: boolean };
+		expect(json.success).toBe(true);
+	});
 
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.success).toBe(true);
+	it('updates config name and slug', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should silently succeed for non-existent config', async () => {
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'DELETE',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
+		const response = await authedPut({ name: 'Renamed Config' });
 
-			const response = await DELETE({
-				request,
-				platform,
-				params: { slug: 'nonexistent' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { success: boolean; slug: string };
+		expect(json.success).toBe(true);
+		expect(json.slug).toBe('renamed-config');
+	});
 
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.success).toBe(true);
+	it('rejects duplicate name (slug conflict)', async () => {
+		const config2 = {
+			...mockConfig,
+			id: 'cfg_2',
+			slug: 'other-config',
+			name: 'Other Config',
+			alias: null
+		};
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig, config2],
+			api_tokens: [mockApiToken]
 		});
 
-		it('should delete only the specified config', async () => {
-			const config2 = { ...mockConfig, id: 'cfg_2', slug: 'other-config' };
-			const db = createMockDB({
-				users: [mockUser],
-				configs: [mockConfig, config2],
-				api_tokens: [mockApiToken]
-			});
-			const request = createMockRequest({
-				url: baseUrl,
-				method: 'DELETE',
-				headers: { authorization: createBearerToken(mockApiToken.token) }
-			});
-			const platform = createMockPlatform(db);
+		const response = await authedPut({ name: 'Other Config' });
 
-			const response = await DELETE({
-				request,
-				platform,
-				params: { slug: 'my-config' },
-				url: new URL(baseUrl),
-				route: { id: '/api/configs/[slug]' },
-				locals: {},
-				isDataRequest: false,
-				isSubRequest: false,
-				cookies: createMockCookies(),
-				getClientAddress: () => '',
-				fetch: globalThis.fetch
-			});
+		expect(response.status).toBe(409);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('already exists');
+	});
 
-			expect(response.status).toBe(200);
-			const json = await getJSON(response);
-			expect(json.success).toBe(true);
+	it('updates alias', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
 		});
+
+		const response = await authedPut({ alias: 'newalias' });
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { alias: string };
+		expect(json.alias).toBe('newalias');
+	});
+
+	it('clears alias when set to empty string', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedPut({ alias: '' });
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { alias: string | null };
+		expect(json.alias).toBeNull();
+	});
+
+	it('rejects duplicate alias', async () => {
+		const config2 = { ...mockConfig, id: 'cfg_2', slug: 'other-config', alias: 'taken' };
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig, config2],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedPut({ alias: 'taken' });
+
+		expect(response.status).toBe(409);
+		const json = (await response.json()) as { error: string };
+		expect(json.error).toContain('already taken');
+	});
+
+	it('updates description', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedPut({ description: 'New description' });
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { success: boolean };
+		expect(json.success).toBe(true);
+	});
+
+	it('updates multiple fields at once', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedPut({
+			name: 'Multi Update',
+			description: 'Updated description',
+			visibility: 'public',
+			alias: 'multiupdate'
+		});
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { success: boolean; slug: string; alias: string };
+		expect(json.success).toBe(true);
+		expect(json.slug).toBe('multi-update');
+		expect(json.alias).toBe('multiupdate');
+	});
+});
+
+describe('DELETE /api/configs/[slug]', () => {
+	const authedDelete = (overrides: Record<string, unknown> = {}) =>
+		call(DELETE, callOpts({ method: 'DELETE', token: mockApiToken.token, ...overrides }));
+
+	it('rejects request without auth', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig] });
+
+		const response = await call(DELETE, callOpts({ method: 'DELETE' }));
+
+		expect(response.status).toBe(401);
+	});
+
+	it('deletes config successfully', async () => {
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedDelete();
+
+		expect(response.status).toBe(200);
+		const remaining = await db.prepare('SELECT id FROM configs WHERE id = ?').bind(mockConfig.id).first();
+		expect(remaining).toBeNull();
+	});
+
+	it('silently succeeds for non-existent config', async () => {
+		await seed(db, { users: [userRow()], api_tokens: [mockApiToken] });
+
+		const response = await authedDelete({ params: { slug: 'nonexistent' } });
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as { success: boolean };
+		expect(json.success).toBe(true);
+	});
+
+	it('deletes only the specified config', async () => {
+		const config2 = { ...mockConfig, id: 'cfg_2', slug: 'other-config', alias: null };
+		await seed(db, {
+			users: [userRow()],
+			configs: [mockConfig, config2],
+			api_tokens: [mockApiToken]
+		});
+
+		const response = await authedDelete();
+
+		expect(response.status).toBe(200);
+		const survivor = await db.prepare('SELECT id FROM configs WHERE id = ?').bind('cfg_2').first();
+		expect(survivor).not.toBeNull();
 	});
 });

@@ -1,29 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createMockDB } from '$lib/test/db-mock';
-import { createMockPlatform, createMockRequest, mockUser, mockConfig } from '$lib/test/fixtures';
+import { env } from 'cloudflare:test';
+import { resetDb, seed, strip } from '$lib/test/seed';
+import { call } from '$lib/test/call';
+import { mockUser, mockConfig } from '$lib/test/fixtures';
 
 import { GET as GetHealth } from '../routes/api/health/+server';
 import { GET as GetPublicConfigs } from '../routes/api/configs/public/+server';
 import { GET as GetConfigJSON } from '../routes/[username]/[slug]/config/+server';
 import { GET as GetInstallScript } from '../routes/[username]/[slug]/install/+server';
 
-describe('Smoke Tests - Critical User Journeys', () => {
-	let db: any;
-	let platform: any;
+const db = env.DB;
+const userRow = () => strip(mockUser, 'provider', 'provider_id');
 
-	beforeEach(() => {
-		db = createMockDB();
-		platform = createMockPlatform(db);
-		
-		db.data.users.push(mockUser);
-		db.data.configs.push(mockConfig);
-	});
+beforeEach(async () => {
+	await resetDb(db);
+	await seed(db, { users: [userRow()], configs: [mockConfig] });
+});
 
-	describe('Health Check', () => {
+describe('Smoke — Critical user journeys', () => {
+	describe('Health check', () => {
 		it('verifies system is operational', async () => {
-			const response = await GetHealth({ platform } as any);
-			const data = await response.json();
-			
+			const response = await GetHealth({ platform: { env } } as any);
+			const data = (await response.json()) as { status: string; checks: any; version: string };
+
 			expect(data.status).toBeDefined();
 			expect(data.checks).toBeDefined();
 			expect(data.checks.api).toBe('ok');
@@ -31,147 +30,108 @@ describe('Smoke Tests - Critical User Journeys', () => {
 		});
 	});
 
-	describe('Config Discovery - Browse public configs', () => {
+	describe('Config discovery — browse public configs', () => {
 		it('allows users to discover public configs', async () => {
-			const request = createMockRequest({ method: 'GET', url: '/api/configs/public' });
-			const url = new URL('https://openboot.dev/api/configs/public');
-			
-			const response = await GetPublicConfigs({ 
-				platform, 
-				request,
-				url
-			} as any);
-			
-			const data = await response.json();
-			
+			const response = await call(GetPublicConfigs, {
+				url: 'https://openboot.dev/api/configs/public'
+			});
+
 			expect(response.status).toBe(200);
-			expect(data.configs).toBeDefined();
+			const data = (await response.json()) as { configs: unknown[]; total: number };
 			expect(Array.isArray(data.configs)).toBe(true);
 			expect(data.total).toBeGreaterThanOrEqual(0);
 		});
 	});
 
-	describe('Config Installation Flow', () => {
+	describe('Config installation flow', () => {
 		it('serves install script for curl users', async () => {
-			const params = { username: 'testuser', slug: 'my-config' };
-			const request = createMockRequest({ method: 'GET', url: '/testuser/my-config/install' });
-			
-			const response = await GetInstallScript({ 
-				platform, 
-				params,
-				request
-			} as any);
-			
+			const response = await call(GetInstallScript, {
+				url: 'http://localhost/testuser/my-config/install',
+				params: { username: 'testuser', slug: 'my-config' }
+			});
+
 			expect(response.status).toBe(200);
 			expect(response.headers.get('Content-Type')).toContain('text/plain');
-			
 			const script = await response.text();
 			expect(script).toContain('#!/bin/bash');
 			expect(script).toContain('OpenBoot');
 		});
 
 		it('provides config JSON for CLI', async () => {
-			const params = { username: 'testuser', slug: 'my-config' };
-			const request = createMockRequest({ method: 'GET', url: '/testuser/my-config/config' });
-			
-			const response = await GetConfigJSON({ 
-				platform, 
-				params,
-				request
-			} as any);
-			
-			const data = await response.json();
-			
+			const response = await call(GetConfigJSON, {
+				url: 'http://localhost/testuser/my-config/config',
+				params: { username: 'testuser', slug: 'my-config' }
+			});
+
 			expect(response.status).toBe(200);
+			const data = (await response.json()) as {
+				username: string;
+				slug: string;
+				packages: unknown[];
+			};
 			expect(data.username).toBe('testuser');
 			expect(data.slug).toBe('my-config');
-			expect(data.packages).toBeDefined();
 			expect(Array.isArray(data.packages)).toBe(true);
 		});
 	});
 
-	describe('Data Integrity', () => {
+	describe('Data integrity', () => {
 		it('verifies config query filtering works', async () => {
-			db.data.configs[0].visibility = 'public';
-			db.data.configs[0].featured = 1;
-			
-			const request = createMockRequest({ method: 'GET', url: '/api/configs/public?username=testuser' });
-			const url = new URL('https://openboot.dev/api/configs/public?username=testuser');
-			
-			const response = await GetPublicConfigs({ 
-				platform, 
-				request,
-				url
-			} as any);
-			
-			const data = await response.json();
-			
+			await db.prepare(`UPDATE configs SET visibility = 'public', featured = 1 WHERE id = ?`).bind(mockConfig.id).run();
+
+			const response = await call(GetPublicConfigs, {
+				url: 'https://openboot.dev/api/configs/public?username=testuser'
+			});
+
 			expect(response.status).toBe(200);
-			expect(data.configs).toBeDefined();
+			const data = (await response.json()) as { configs: unknown[] };
 			expect(Array.isArray(data.configs)).toBe(true);
 		});
 
 		it('verifies package data integrity', async () => {
-			const params = { username: 'testuser', slug: 'my-config' };
-			const request = createMockRequest({ method: 'GET', url: '/testuser/my-config/config' });
-			
-			const response = await GetConfigJSON({ 
-				platform, 
-				params,
-				request
-			} as any);
-			
-			const data = await response.json();
-			
+			const response = await call(GetConfigJSON, {
+				url: 'http://localhost/testuser/my-config/config',
+				params: { username: 'testuser', slug: 'my-config' }
+			});
+
 			expect(response.status).toBe(200);
-			expect(data.packages).toBeDefined();
-			
+			const data = (await response.json()) as {
+				packages: { name: string; desc: string }[];
+				casks: unknown[];
+				taps: unknown[];
+			};
+			expect(Array.isArray(data.packages)).toBe(true);
 			if (data.packages.length > 0) {
-				expect(Array.isArray(data.packages)).toBe(true);
 				expect(data.packages[0]).toHaveProperty('name');
 				expect(data.packages[0]).toHaveProperty('desc');
 			}
-			
-			expect(data.casks).toBeDefined();
 			expect(Array.isArray(data.casks)).toBe(true);
-			
-			expect(data.taps).toBeDefined();
 			expect(Array.isArray(data.taps)).toBe(true);
 		});
 	});
 
-	describe('Error Handling', () => {
+	describe('Error handling', () => {
 		it('handles non-existent configs gracefully', async () => {
-			const params = { username: 'nonexistent', slug: 'missing' };
-			const request = createMockRequest({ method: 'GET', url: '/nonexistent/missing/config' });
-			
-			const response = await GetConfigJSON({ 
-				platform, 
-				params,
-				request
-			} as any);
-			
-			const data = await response.json();
-			
+			const response = await call(GetConfigJSON, {
+				url: 'http://localhost/nonexistent/missing/config',
+				params: { username: 'nonexistent', slug: 'missing' }
+			});
+
 			expect(response.status).toBe(404);
+			const data = (await response.json()) as { error: string };
 			expect(data.error).toBeDefined();
 		});
 
 		it('handles private configs correctly', async () => {
-			db.data.configs[0].visibility = 'private';
-			
-			const params = { username: 'testuser', slug: 'my-config' };
-			const request = createMockRequest({ method: 'GET', url: '/testuser/my-config/config' });
-			
-			const response = await GetConfigJSON({ 
-				platform, 
-				params,
-				request
-			} as any);
-			
-			const data = await response.json();
-			
+			await db.prepare(`UPDATE configs SET visibility = 'private' WHERE id = ?`).bind(mockConfig.id).run();
+
+			const response = await call(GetConfigJSON, {
+				url: 'http://localhost/testuser/my-config/config',
+				params: { username: 'testuser', slug: 'my-config' }
+			});
+
 			expect(response.status).toBe(403);
+			const data = (await response.json()) as { error: string };
 			expect(data.error).toContain('private');
 		});
 	});
