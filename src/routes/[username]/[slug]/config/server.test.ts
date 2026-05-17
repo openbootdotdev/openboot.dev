@@ -343,6 +343,43 @@ describe('[username]/[slug]/config GET - Visibility Auth', () => {
 			expect(json.macos_prefs[1].key).toBe('autohide');
 		});
 
+		it('should preserve host="currentHost" for ByHost prefs and omit it when empty', async () => {
+			const config = {
+				...mockPublicConfig,
+				snapshot: JSON.stringify({
+					packages: { taps: [], casks: [] },
+					macos_prefs: [
+						// ByHost pref — must round-trip `host` so the CLI uses `defaults -currentHost`.
+						{ domain: 'com.apple.controlcenter', key: 'Sound', type: 'int', value: '18', desc: 'Sound dropdown', host: 'currentHost' },
+						// Main-domain pref — no `host` field in input, must not gain one in output.
+						{ domain: 'NSGlobalDomain', key: 'AppleShowAllExtensions', type: 'bool', value: 'true', desc: 'Show extensions' }
+					]
+				})
+			};
+
+			const db = createMockDB({ users: [mockUser], configs: [config] });
+			const platform = createMockPlatform(db);
+
+			const response = await GET({
+				request: createMockRequest({ url: baseUrl }),
+				platform,
+				params: { username: 'testuser', slug: 'public-config' },
+				url: new URL(baseUrl),
+				route: { id: '/[username]/[slug]/config' },
+				locals: {},
+				isDataRequest: false,
+				isSubRequest: false,
+				cookies: {} as any,
+				getClientAddress: () => '',
+				fetch: globalThis.fetch
+			});
+
+			const json = await getJSON(response);
+			expect(json.macos_prefs).toHaveLength(2);
+			expect(json.macos_prefs[0].host).toBe('currentHost');
+			expect(json.macos_prefs[1]).not.toHaveProperty('host');
+		});
+
 		it('should filter out invalid macos_prefs entries', async () => {
 			const config = {
 				...mockPublicConfig,

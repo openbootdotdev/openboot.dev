@@ -54,7 +54,8 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		return p;
 	});
 
-	let macosPrefs: { domain: string; key: string; type?: string; value: string; desc?: string }[] | null = null;
+	type MacOSPrefOut = { domain: string; key: string; type?: string; value: string; desc?: string; host?: string };
+	let macosPrefs: MacOSPrefOut[] | null = null;
 	if (parsedSnapshot) {
 		const rawPrefs = (parsedSnapshot as any).macos_prefs;
 		if (Array.isArray(rawPrefs) && rawPrefs.length > 0) {
@@ -67,13 +68,19 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 						typeof (p as Record<string, unknown>).key === 'string' &&
 						typeof (p as Record<string, unknown>).value === 'string'
 				)
-				.map((p: Record<string, unknown>) => ({
-					domain: p.domain as string,
-					key: p.key as string,
-					type: typeof p.type === 'string' ? p.type : '',
-					value: p.value as string,
-					desc: typeof p.desc === 'string' ? p.desc : ''
-				}));
+				.map((p: Record<string, unknown>) => {
+					const out: MacOSPrefOut = {
+						domain: p.domain as string,
+						key: p.key as string,
+						type: typeof p.type === 'string' ? p.type : '',
+						value: p.value as string,
+						desc: typeof p.desc === 'string' ? p.desc : ''
+					};
+					// `host` selects the ByHost scope (defaults -currentHost). Mirrors Go `omitempty`:
+					// only emit when non-empty so payloads stay clean for the common main-domain case.
+					if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+					return out;
+				});
 			if (filtered.length > 0) macosPrefs = filtered;
 		}
 	}

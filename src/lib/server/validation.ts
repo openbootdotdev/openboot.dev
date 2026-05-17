@@ -102,13 +102,16 @@ export function validateMacOSPrefs(prefs: unknown): ValidationResult {
 	if (prefs.length > 100) return { valid: false, error: 'Maximum 100 macOS preferences allowed' };
 
 	const validTypes = new Set(['', 'string', 'int', 'bool', 'float']);
+	// `host` selects the defaults scope: "" = main domain, "currentHost" = ByHost (defaults -currentHost).
+	// Required for keys stored under ~/Library/Preferences/ByHost (e.g. Control Center menu-bar dropdowns).
+	const validHosts = new Set(['', 'currentHost']);
 
 	for (let i = 0; i < prefs.length; i++) {
 		const p = prefs[i];
 		if (typeof p !== 'object' || p === null) {
 			return { valid: false, error: `macos_prefs[${i}] must be an object` };
 		}
-		const { domain, key, value, type } = p as Record<string, unknown>;
+		const { domain, key, value, type, host } = p as Record<string, unknown>;
 		if (!domain || typeof domain !== 'string') {
 			return { valid: false, error: `macos_prefs[${i}] missing required field: domain` };
 		}
@@ -120,6 +123,9 @@ export function validateMacOSPrefs(prefs: unknown): ValidationResult {
 		}
 		if (type !== undefined && (typeof type !== 'string' || !validTypes.has(type as string))) {
 			return { valid: false, error: `macos_prefs[${i}] invalid type "${type}" (allowed: string, int, bool, float)` };
+		}
+		if (host !== undefined && (typeof host !== 'string' || !validHosts.has(host as string))) {
+			return { valid: false, error: `macos_prefs[${i}] invalid host "${host}" (allowed: "", "currentHost")` };
 		}
 	}
 

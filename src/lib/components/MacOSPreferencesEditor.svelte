@@ -7,6 +7,7 @@
 		type: string;
 		value: string;
 		desc: string;
+		host?: string;
 	}
 
 	let {

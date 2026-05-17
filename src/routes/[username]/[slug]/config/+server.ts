@@ -35,7 +35,8 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 
 	const tapsSet = new Set<string>();
 	const snapshotCasks = new Set<string>();
-	let macosPrefs: { domain: string; key: string; type: string; value: string; desc: string }[] | null = null;
+	type MacOSPrefOut = { domain: string; key: string; type: string; value: string; desc: string; host?: string };
+	let macosPrefs: MacOSPrefOut[] | null = null;
 
 	if (config.snapshot) {
 		try {
@@ -48,19 +49,25 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 			}
 			if (Array.isArray(snapshot.macos_prefs) && snapshot.macos_prefs.length > 0) {
 				const filtered = snapshot.macos_prefs.filter(
-					(p: unknown): p is { domain: string; key: string; type: string; value: string; desc: string } =>
+					(p: unknown): p is Record<string, unknown> =>
 						typeof p === 'object' &&
 						p !== null &&
 						typeof (p as Record<string, unknown>).domain === 'string' &&
 						typeof (p as Record<string, unknown>).key === 'string' &&
 						typeof (p as Record<string, unknown>).value === 'string'
-				).map((p: Record<string, unknown>) => ({
-					domain: p.domain as string,
-					key: p.key as string,
-					type: typeof p.type === 'string' ? p.type : '',
-					value: p.value as string,
-					desc: typeof p.desc === 'string' ? p.desc : ''
-				}));
+				).map((p: Record<string, unknown>) => {
+					const out: MacOSPrefOut = {
+						domain: p.domain as string,
+						key: p.key as string,
+						type: typeof p.type === 'string' ? p.type : '',
+						value: p.value as string,
+						desc: typeof p.desc === 'string' ? p.desc : ''
+					};
+					// `host` selects the ByHost scope (defaults -currentHost). Mirrors Go `omitempty`:
+					// only emit when non-empty so payloads stay clean for the common main-domain case.
+					if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+					return out;
+				});
 				if (filtered.length > 0) macosPrefs = filtered;
 			}
 		} catch (err) {

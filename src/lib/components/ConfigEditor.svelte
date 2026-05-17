@@ -62,6 +62,7 @@
 		type: string;
 		value: string;
 		desc: string;
+		host?: string;
 	}
 	let macosPrefs = $state<MacOSPref[]>([]);
 	let expandedPrefCats = $state<Set<string>>(new Set());
@@ -220,13 +221,15 @@
 					if (data.snapshot?.macos_prefs) {
 						macosPrefs = data.snapshot.macos_prefs.map((p: any) => {
 							const type = p.type || '';
-							return {
+							const out: MacOSPref = {
 								domain: p.domain || '',
 								key: p.key || '',
 								type,
 								value: normalizePrefValue(type, String(p.value ?? '')),
 								desc: p.desc || '',
 							};
+							if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+							return out;
 						});
 					}
 					initExpandedCats();
@@ -255,13 +258,15 @@
 				macosPrefs = Array.isArray(config.snapshot?.macos_prefs)
 					? config.snapshot.macos_prefs.map((p: any) => {
 							const type = p.type || '';
-							return {
+							const out: MacOSPref = {
 								domain: p.domain || '',
 								key: p.key || '',
 								type,
 								value: normalizePrefValue(type, String(p.value ?? '')),
 								desc: p.desc || '',
 							};
+							if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+							return out;
 						})
 					: [];
 				initExpandedCats();
@@ -336,13 +341,15 @@
 		macosPrefs = Array.isArray(parsed.snapshot?.macos_prefs)
 			? parsed.snapshot.macos_prefs.map((p: any) => {
 					const type = p.type || '';
-					return {
+					const out: MacOSPref = {
 						domain: p.domain || '',
 						key: p.key || '',
 						type,
 						value: normalizePrefValue(type, String(p.value ?? '')),
 						desc: p.desc || '',
 					};
+					if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+					return out;
 				})
 			: [];
 		initExpandedCats();
