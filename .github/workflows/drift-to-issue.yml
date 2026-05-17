@@ -22,7 +22,10 @@ permissions:
 
 jobs:
   open-or-update-issue:
-    if: github.event.workflow_run.conclusion == 'failure'
+    # No workflow-level conclusion check: Harness jobs use
+    # `continue-on-error: true`, which means the workflow itself concludes
+    # `success` even when individual sensors fail. We inspect job-level
+    # conclusions inside the Python loop below — jobs that pass are a no-op.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

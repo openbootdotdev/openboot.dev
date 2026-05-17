@@ -1,0 +1,15 @@
+{
+	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"entry": ["src/lib/components/SearchModal.svelte!"],
+	"ignoreDependencies": ["@cloudflare/workers-types"],
+	"rules": {
+		"exports": "off",
+		"types": "off",
+		"nsExports": "off",
+		"nsTypes": "off",
+		"enumMembers": "off",
+		"classMembers": "off",
+		"duplicates": "off",
+		"binaries": "off"
+	}
+}
