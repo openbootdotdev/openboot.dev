@@ -58,7 +58,7 @@ Which preset to start from. The preset's packages are included unless individual
 - **Type:** string
 - **Options:** `"minimal"`, `"developer"`, `"full"`
 - **Required:** no
-- **Default:** none (empty config)
+- **Default:** `"developer"`
 
 ### `packages`
 
@@ -71,12 +71,15 @@ The tools and apps to install. Stored as an array of package objects, each with 
 
 Each entry is an object: `{ "name": "package-name", "type": "formula" | "cask" | "npm" | "tap" }`. Names must match Homebrew or npm package names exactly. Taps are added before formulae and casks are installed.
 
+**Limits:** max 500 packages per config; name max 200 characters (alphanumeric, `.`, `_`, `-`, `@`, `/`).
+
 ### `custom_script`
 
 Shell commands that run after all packages are installed. Use this for project-specific setup like cloning repos, generating SSH keys, or configuring services.
 
 - **Type:** string (newline-separated commands)
 - **Required:** no
+- **Max length:** 10,000 characters
 - **Runs as:** `bash` (errors are logged but don't stop the install)
 
 ```
@@ -89,8 +92,10 @@ ssh-keygen -t ed25519 -C "dev@yourcompany.com" -f ~/.ssh/id_ed25519 -N ""
 
 Git URL to a dotfiles repository. OpenBoot clones it to `~/.dotfiles` and optionally symlinks with [GNU Stow](https://www.gnu.org/software/stow/).
 
-- **Type:** string (Git URL)
+- **Type:** string (HTTPS Git URL)
 - **Required:** no
+- **Max length:** 500 characters
+- **Must:** start with `https://`. `ssh://` and `git@` URLs are rejected.
 - **Example:** `"https://github.com/yourname/dotfiles.git"`
 
 See [Dotfiles & Shell](/docs/dotfiles-shell) for setup details.
@@ -103,6 +108,8 @@ Snapshot data attached to this config (auto-populated when creating from `openbo
 - **Required:** no
 - **Usually:** managed automatically, not edited by hand
 
+Each entry in `snapshot.macos_prefs[]` has the shape `{ domain, key, value, type?, host? }`. `host` selects the `defaults` scope: `""` (default) writes to the main domain, `"currentHost"` writes via `defaults -currentHost` (required for keys under `~/Library/Preferences/ByHost/`).
+
 ### `alias`
 
 Short URL alias for easy sharing. If set, this alias becomes the primary way to install the config — for example, `openboot install my-setup` instead of `openboot install username/slug`. The alias also works as a short URL: `openboot.dev/my-setup`.
@@ -111,7 +118,10 @@ When a user runs `openboot install <word>`, the CLI checks aliases first before 
 
 - **Type:** string
 - **Required:** no
+- **Length:** 2–20 characters (after cleaning)
+- **Allowed characters:** lowercase letters, digits, hyphens. Other characters are stripped automatically.
 - **Must be:** unique across all configs
+- **Reserved:** `api`, `install`, `dashboard`, `login`, `docs`, `cli-auth`, `explore`
 
 ### `visibility`
 

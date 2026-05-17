@@ -97,7 +97,7 @@ The URL never changes. When the stack changes, update the config in the [Dashboa
 
 Want to show your tech stack to candidates? Add the config URL to your README or job posts. They see exactly what they'd be working with.
 
-Set visibility to **unlisted** (URL works, but not listed publicly) or **private** (requires authentication) depending on your needs. See [Custom Configs](/docs/custom-configs) for details.
+For team-shared configs, use **unlisted** — the URL works for anyone who has it, but the config doesn't appear in public listings. **Private** is owner-only (other authenticated users get a 403), so it's not a fit for teams. See [Custom Configs](/docs/custom-configs) for details.
 
 ## Multiple teams, one system
 

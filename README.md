@@ -2,7 +2,7 @@
 
 Web dashboard and install API for [OpenBoot](https://github.com/openbootdotdev/openboot).
 
-[![Deploy](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/openbootdotdev/openboot.dev/actions/workflows/deploy.yml)
+[![CI](https://github.com/openbootdotdev/openboot.dev/actions/workflows/ci.yml/badge.svg)](https://github.com/openbootdotdev/openboot.dev/actions/workflows/ci.yml)
 
 **Live at [openboot.dev](https://openboot.dev)**
 
@@ -41,21 +41,7 @@ GOOGLE_CLIENT_SECRET=...
 
 ## Deployment
 
-**Tag-based releases** — production deploys only happen when you create a version tag:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-This triggers:
-1. Tests + build
-2. Database migrations
-3. Deployment to openboot.dev
-
-Push to `main` only runs CI (tests + build), no deployment.
-
-See [RELEASE.md](./RELEASE.md) for full release process.
+Push to `main` runs CI (type check + tests + build) and, on success, auto-deploys to [openboot.dev](https://openboot.dev). PRs run CI only. The deploy job lives in `.github/workflows/ci.yml`; see [docs/HARNESS.md](./docs/HARNESS.md) for the full pipeline.
 
 Secrets needed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
@@ -82,7 +68,7 @@ Secrets needed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
 ## Database
 
-D1 (SQLite). Two tables: `users` and `configs`. See `migrations/` for schema. Key fields:
+D1 (SQLite). Tables: `users`, `configs`, `config_revisions`, `api_tokens`, `cli_auth_codes`. See `migrations/` for schema. Key fields on `configs`:
 
 - `configs.packages` — JSON array of {name, type, desc}
 - `configs.snapshot` — JSON object from CLI `openboot snapshot`

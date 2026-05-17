@@ -30,7 +30,6 @@ OpenBoot handles everything, then drops you into a TUI. You pick the `developer`
 ✓ visual-studio-code · arc · orbstack
 ✓ Oh-My-Zsh configured (git, zsh-autosuggestions, zsh-syntax-highlighting)
 ✓ macOS preferences applied (Fast Key Repeat, Finder Path Bar, Show Hidden Files)
-✓ Dotfiles cloned and linked
 ✨ Setup complete. Restart your terminal.
 ```
 
