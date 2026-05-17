@@ -110,7 +110,7 @@ openboot snapshot --import https://example.com/snapshot.json
 openboot snapshot --import my-setup.json --dry-run
 ```
 
-Before installing, a review editor lets you deselect anything you don't want. If the snapshot is partial (some capture steps failed), you'll be warned.
+Before applying, a review editor lets you deselect anything you don't want. If the snapshot is partial (some capture steps failed), you'll be warned.
 
 | Category | What's applied |
 |----------|----------------|

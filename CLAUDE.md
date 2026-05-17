@@ -14,15 +14,20 @@ The CLI lives at [openbootdotdev/openboot](https://github.com/openbootdotdev/ope
 npm run dev                # Local dev server
 npm run build              # Production build
 npm run check              # Type checking (svelte-kit sync + svelte-check)
+npm run lint               # ESLint
+npm run validate           # check + lint + test (the harness gate)
 npm test                   # Run all tests (vitest)
 npx vitest run src/lib/server/auth.test.ts           # Run a single test file
 npx vitest run -t "test name"                        # Run test by name
 npm run test:coverage      # Tests with coverage report
+npm run install:hooks      # Install git pre-commit/pre-push hooks
 
 # Database
 wrangler d1 migrations apply openboot --local   # Apply migrations locally
 wrangler d1 migrations apply openboot --remote  # Apply migrations to production
 ```
+
+See [AGENTS.md](./AGENTS.md) for harness invariants (no `process.env`, no `console.log` in server code, D1 access scoping) and [docs/HARNESS.md](./docs/HARNESS.md) for the full enforcement model.
 
 Local dev requires `.dev.vars` with `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 
@@ -57,7 +62,7 @@ Three auth flows:
 
 ### Database
 
-D1 (SQLite), no ORM — direct parameterized SQL via `env.DB.prepare(sql).bind(...)`. Four tables: `users`, `configs`, `api_tokens`, `cli_auth_codes`. The `configs.packages` field is a JSON array (stored as `{name, type}` objects; the config endpoint transforms to `{name, desc}` on read, filling descriptions from `package-metadata.ts`). Config visibility: `public` (discoverable), `unlisted` (accessible but not listed), `private` (owner-only, 403 on install).
+D1 (SQLite), no ORM — direct parameterized SQL via `env.DB.prepare(sql).bind(...)`. Five tables: `users`, `configs`, `config_revisions`, `api_tokens`, `cli_auth_codes`. The `configs.packages` field is a JSON array of `{name, type}` objects; on read, endpoints enrich each entry with a `desc` filled from `package-metadata.ts`. Config visibility: `public` (discoverable), `unlisted` (accessible but not listed), `private` (owner-only, 403 on install).
 
 **D1 limitation**: No `ALTER TABLE DROP COLUMN`. Plan column removals via new table + data migration.
 

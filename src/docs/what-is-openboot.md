@@ -7,7 +7,7 @@ order: 1
 
 # What is OpenBoot
 
-Fresh Mac? Run one command and get everything installed—Git, Node, Docker, your shell config, dotfiles, macOS preferences. Then snapshot that setup and share it with your team.
+Fresh Mac? Run one command and get everything installed — Git, Node, Docker, your shell config, dotfiles, macOS preferences. Then snapshot that setup and share it with your team.
 
 OpenBoot is an open-source CLI that automates the boring part of setting up a new Mac. It installs Homebrew packages, GUI apps, configures your shell, links dotfiles, and applies developer-friendly macOS settings. All in one run.
 
