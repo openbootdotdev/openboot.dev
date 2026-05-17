@@ -50,28 +50,23 @@ GET /api/configs
   "configs": [
     {
       "id": "cfg_abc123",
-      "user_id": "usr_xyz",
       "slug": "my-setup",
       "name": "My Dev Setup",
       "description": "Personal development environment",
       "base_preset": "developer",
       "packages": [{ "name": "node", "type": "formula" }],
-      "custom_script": "",
-      "dotfiles_repo": "",
       "snapshot": null,
       "snapshot_at": null,
       "visibility": "unlisted",
       "alias": null,
       "install_count": 12,
-      "forked_from": null,
-      "created_at": "2024-01-15T10:30:00Z",
       "updated_at": "2024-02-10T14:20:00Z"
     }
   ]
 }
 ```
 
-`packages` and `snapshot` are returned as parsed JSON (not strings).
+`packages` and `snapshot` are returned as parsed JSON (not strings). For the full row (including `custom_script`, `dotfiles_repo`, etc.), use `GET /api/configs/:slug`.
 
 ### Get Config (Dashboard)
 
@@ -289,7 +284,7 @@ Get the shell install script for a config. The CLI's `install.sh` curls this URL
 GET /:username/:slug/install
 ```
 
-**Auth required:** Only for `private` configs. Send a Bearer token belonging to the owner; otherwise the endpoint returns `403 Config is private` as plain text. (The browser-friendly auth flow for private configs is served via the curl-detection path at `/:username/:slug`, not here.)
+**Auth required:** Only for `private` configs. Send a Bearer token belonging to the owner; otherwise the endpoint returns `403 Config is private` as plain text. (The page route `/:username/:slug` returns 404 for non-owners of a private config — there is no interactive auth prompt.)
 
 **Response:** Shell script, `Content-Type: text/plain; charset=utf-8`.
 
@@ -461,7 +456,8 @@ GET /api/user
   "user": {
     "id": "usr_abc123",
     "username": "johndoe",
-    "email": "john@example.com"
+    "email": "john@example.com",
+    "avatar_url": "https://avatars.githubusercontent.com/u/123?v=4"
   }
 }
 ```
