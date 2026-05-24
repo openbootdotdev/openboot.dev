@@ -300,6 +300,17 @@ describe('validatePackages', () => {
 		expect(result.valid).toBe(true);
 	});
 
+	it('should accept package names with plus character (e.g. logi-options+)', () => {
+		const packages = [
+			{ name: 'logi-options+', type: 'cask' },
+			{ name: 'gtk+', type: 'formula' }
+		];
+		const result = validatePackages(packages);
+
+		expect(result.valid).toBe(true);
+		expect(result.error).toBeUndefined();
+	});
+
 	it('should reject non-array input', () => {
 		const result = validatePackages('not an array' as any);
 

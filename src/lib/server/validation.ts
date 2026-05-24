@@ -139,7 +139,8 @@ interface Package {
 }
 
 /** Validates packages array: prevents shell injection in package names.
- *  Package names must match standard package manager formats (alphanumeric, hyphens, underscores, dots, slashes for scoped packages).
+ *  Package names must match standard package manager formats (alphanumeric, hyphens, underscores, dots, pluses, slashes for scoped packages).
+ *  `+` is allowed because real Homebrew casks contain it (e.g. `logi-options+`, `gnupg@2.1+`).
  *  Types must be: formula, cask, tap, npm.
  *  Maximum 500 packages per config. */
 export function validatePackages(packages: unknown): ValidationResult {
@@ -174,10 +175,10 @@ export function validatePackages(packages: unknown): ValidationResult {
 			return { valid: false, error: `Package name too long at index ${i}` };
 		}
 
-		if (!/^[@a-zA-Z0-9._\/-]+$/.test(name)) {
+		if (!/^[@a-zA-Z0-9._+\/-]+$/.test(name)) {
 			return {
 				valid: false,
-				error: `Invalid package name at index ${i}: "${name}". Only alphanumeric, hyphens, underscores, dots, @ and / allowed.`
+				error: `Invalid package name at index ${i}: "${name}". Only alphanumeric, hyphens, underscores, dots, plus, @ and / allowed.`
 			};
 		}
 
