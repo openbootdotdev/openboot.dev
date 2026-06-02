@@ -1,6 +1,6 @@
 ---
 title: Dotfiles & Shell
-description: Automatic Oh-My-Zsh setup, dotfiles linking with GNU Stow, and developer-friendly macOS preferences.
+description: Automatic Oh-My-Zsh setup, dotfiles linking via Makefile or GNU Stow, and developer-friendly macOS preferences.
 group: Features
 order: 6
 ---
@@ -39,7 +39,19 @@ If you keep your config files in a Git repo (`.zshrc`, `.gitconfig`, `.vimrc`, e
 
 1. Set a **dotfiles repo URL** in your config (via the dashboard or config JSON)
 2. During install, OpenBoot clones the repo to `~/.dotfiles`
-3. Files are symlinked into your home directory using [GNU Stow](https://www.gnu.org/software/stow/)
+3. Files are symlinked into your home directory — OpenBoot detects the linking method automatically
+
+### Linking Methods
+
+OpenBoot tries three methods in order, using the first one that applies:
+
+| Priority | Condition | What happens |
+|----------|-----------|-------------|
+| 1 | `Makefile` with an `install:` target | Runs `make install` in `~/.dotfiles` |
+| 2 | Top-level subdirectories (stow packages) | Links each package with [GNU Stow](https://www.gnu.org/software/stow/) |
+| 3 | Flat file structure | Symlinks files directly into `$HOME` |
+
+This lets your dotfiles repo own its own deployment logic — directory pre-creation, custom stow flags, or any other setup — without requiring OpenBoot to know repo-specific details.
 
 ### Dotfiles Modes
 
@@ -48,7 +60,7 @@ Control how OpenBoot handles dotfiles with the `--dotfiles` flag:
 | Mode | What it does |
 |------|-------------|
 | `clone` | Clone the repo to `~/.dotfiles` |
-| `link` | Clone and symlink with `stow` |
+| `link` | Clone and link using the detected method above |
 | `skip` | Don't touch dotfiles |
 
 ```
@@ -58,7 +70,18 @@ openboot install --dotfiles skip
 
 ### Setting Up Your Dotfiles Repo
 
-Don't have a dotfiles repo yet? Here's the minimum structure that works with `stow`:
+**Option A — Makefile (recommended for custom setups)**
+
+Add a `Makefile` with an `install:` target. OpenBoot runs `make install`, so your repo controls everything:
+
+```makefile
+install:
+	stow -v --target="$(HOME)" git zsh vim
+```
+
+**Option B — Stow packages**
+
+Structure your repo so each top-level directory is a stow package. OpenBoot calls `stow` on each one automatically:
 
 ```
 ~/.dotfiles/
