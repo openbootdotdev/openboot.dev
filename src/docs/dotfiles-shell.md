@@ -17,6 +17,8 @@ OpenBoot sets up **Zsh** with **Oh-My-Zsh** automatically:
 - **Theme**: A clean, informative prompt
 - **Aliases**: Common shortcuts for developer workflows
 
+External plugins referenced in `.zshrc` (such as `zsh-autosuggestions` and `zsh-syntax-highlighting`) are cloned automatically during install and snapshot restore — no manual `git clone` needed.
+
 If you already have Oh-My-Zsh installed, OpenBoot merges its plugin recommendations without overwriting your existing config.
 
 After installation, restart your terminal or run `source ~/.zshrc` to pick up the new configuration.
@@ -78,19 +80,25 @@ OpenBoot applies a curated set of developer-friendly macOS settings. These are a
 
 ### What Gets Configured
 
-**Dock** — Auto-hide, hide delay, icon size, show recent apps, position, minimize animation, show only active apps, launch animation
+**System** — Show all file extensions, always-visible scrollbars, disable auto-correct/auto-capitalization, key repeat rate and delay
 
-**Finder** — Default view style, new window location, search scope, path bar, status bar, hidden files, file extensions, POSIX path in title bar
+**Dock** — Auto-hide, icon size, show recent apps, minimize animation
 
-**Trackpad** — Tap to click, natural scrolling, three-finger drag
+**Finder** — View style, new window location, search scope, path/status bar, hidden files, file extensions, POSIX title, .DS_Store suppression, desktop icon visibility, and more
 
-**Desktop** — Click wallpaper to show desktop
+**Trackpad** — Tap to click (wired + Bluetooth), three-finger drag
 
-**Keyboard** — Key repeat rate, delay until repeat, press-and-hold for accents
+**Keyboard** — Use F1–F12 as standard function keys
 
-**Screenshots** — File format (PNG/JPEG/PDF/TIFF), disable window shadows
+**Screenshots** — Save location, file format (PNG/JPEG/PDF/TIFF), disable window shadows
 
-**Menu Bar** — Show Sound control
+**Mission Control** — Auto-rearrange Spaces, group windows by app, hot corners (all four)
+
+**Menu Bar** — Per-icon visibility (Sound, Bluetooth, Wi-Fi, Battery, AirDrop, Display, Focus, Now Playing, Screen Mirroring); Sound always-show mode
+
+**Security** — Require password after sleep, no grace period delay
+
+**Desktop & Stage Manager** — Click wallpaper to show desktop (Stage Manager interaction mode)
 
 ### Skipping macOS Preferences
 

@@ -1,6 +1,6 @@
 ---
 title: Config Options
-description: Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the 26 macOS preferences whitelist.
+description: Full config schema — packages, custom scripts, dotfiles repo, visibility, aliases, and the macOS preferences whitelist.
 group: Reference
 order: 10
 ---
@@ -140,65 +140,118 @@ You can export any config as a JSON file from the dashboard. Click the **Export*
 
 ## macOS Preferences Whitelist
 
-These are the 26 system settings that OpenBoot can configure. Only these are captured by `openboot snapshot` and applied during install. In the dashboard, preferences are grouped into collapsible accordion sections by category.
+These are the system settings that OpenBoot can configure. Only these are captured by `openboot snapshot` and applied during install. In the dashboard, preferences are grouped into collapsible accordion sections by category.
 
-### Dock
+### System
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Auto-hide Dock | Automatically hide and show the Dock | on |
-| Auto-hide delay (s) | Delay before Dock appears on hover — 0 for instant | 0 |
-| Icon size | Dock icon size in pixels | 48 |
-| Show recent apps | Show recently used apps in a separate Dock section | off |
-| Position on screen | Which edge the Dock appears on (bottom, left, right) | bottom |
-| Minimize animation | Visual effect when minimizing windows (genie or scale) | genie |
-| Show only active apps | Hide non-running apps from the Dock | off |
-| Animate app launches | Bounce icons when launching an app | on |
+| Show all file extensions | Show extensions for all files | on |
+| Always show scrollbars | Always visible, not just on scroll | Always |
+| Disable auto-correct | Turn off automatic spelling correction | off |
+| Disable auto-capitalization | Turn off automatic capitalization | off |
+| Fast key repeat rate | How fast keys repeat when held — lower = faster (KeyRepeat) | 2 |
+| Short delay until key repeat | How long before a held key starts repeating (InitialKeyRepeat) | 15 |
 
 ### Finder
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Default view style | How files display in new windows (icon, list, column, gallery) | list |
-| New window opens | Default location for new Finder windows | Home folder |
-| Default search scope | Where Finder searches by default (This Mac, current folder) | Current folder |
 | Show path bar | Full folder path at bottom of windows | on |
 | Show status bar | Item count and disk space at bottom of windows | on |
-| Show hidden files | Show files and folders starting with a dot | off |
-| Always show file extensions | Show extensions for all files | on |
-| Show full path in title bar | Display POSIX path in window title | off |
+| Show sidebar | Show sidebar in Finder windows | on |
+| Show tab bar | Show tab bar in Finder windows | on |
+| Show preview pane | Show preview pane in Finder windows | off |
+| Default view style | How files display in new windows (Nlsv=list, icnv=icon, clmv=column, glyv=gallery) | list |
+| Show hidden files | Show files and folders starting with a dot | on |
+| Show full POSIX path in title | Display full path in window title bar | on |
+| No extension change warning | Suppress the warning when changing a file extension | on |
+| Default search scope | Where Finder searches by default (SCcf=current folder, SCev=This Mac) | Current folder |
+| Keep folders on top (name sort) | Folders sorted before files when sorting by name | on |
+| Keep folders on top (Desktop) | Folders sorted before files on the Desktop | on |
+| Don't warn before emptying Trash | Skip confirmation dialog when emptying Trash | on |
+| Remove Trash items after 30 days | Auto-purge items in Trash older than 30 days | on |
+| Allow quitting Finder (⌘Q) | Enable Quit menu item for Finder | on |
+| New window target | Default location for new Finder windows (PfHm=Home, PfDe=Desktop, PfDo=Documents, PfLo=custom path) | Home |
+| New window custom path | Custom path when target is PfLo | — |
+| Show external drives on Desktop | Show mounted external hard drives on Desktop | on |
+| Show internal hard drives on Desktop | Show internal drives on Desktop | off |
+| Show servers on Desktop | Show mounted network servers on Desktop | off |
+| Show removable media on Desktop | Show USB drives etc. on Desktop | on |
+| Show recent tags in sidebar | Show recent tags in Finder sidebar | on |
+| No .DS_Store on network volumes | Suppress .DS_Store files on network shares | on |
+| No .DS_Store on USB volumes | Suppress .DS_Store files on USB drives | on |
 
-### Trackpad
+### Dock
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Tap to click | Tap the trackpad to click instead of pressing down | on |
-| Natural scrolling | Scroll content in the direction your fingers move | on |
-| Three-finger drag | Drag windows and items using three fingers | off |
-
-### Desktop
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Click desktop to show it | Click wallpaper to hide all windows | off |
-
-### Keyboard
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Key repeat rate | How fast keys repeat when held — lower = faster | 2 |
-| Delay until key repeat | How long before a held key starts repeating | 15 |
-| Press and hold for accents | Show accent menu when holding a key (disable for faster repeat) | off |
+| Auto-hide Dock | Automatically hide and show the Dock | off |
+| Show recent apps | Show recently used apps in a separate Dock section | off |
+| Icon size | Dock icon size in pixels | 48 |
+| Minimize animation | Visual effect when minimizing windows (scale or genie) | scale |
 
 ### Screenshots
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Screenshot format | File format for screenshots (PNG, JPEG, PDF, TIFF) | PNG |
+| Screenshot save location | Folder where screenshots are saved | ~/Screenshots |
+| Screenshot format | File format for screenshots (png, jpg, pdf, tiff) | png |
 | Disable window shadows | Remove drop shadows from window screenshots | on |
+
+### Trackpad
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Tap to click (wired) | Tap the trackpad to click instead of pressing down | on |
+| Tap to click (Bluetooth) | Same setting for Bluetooth trackpads | on |
+| Three-finger drag | Drag windows and items using three fingers | on |
+
+### Keyboard
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Use F1–F12 as standard function keys | Fn key not required to use function keys | on |
+
+### Mission Control
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Don't auto-rearrange Spaces | Keep Spaces order fixed instead of reordering by recent use | on |
+| Group windows by application | Group windows by app in Mission Control | on |
+| Top-left hot corner | Action when cursor hits top-left corner (0 = disabled) | 0 |
+| Top-right hot corner | Action when cursor hits top-right corner (0 = disabled) | 0 |
+| Bottom-left hot corner | Action when cursor hits bottom-left corner (0 = disabled) | 0 |
+| Bottom-right hot corner | Action when cursor hits bottom-right corner (0 = disabled) | 0 |
+| Top-left hot corner modifier | Modifier key for top-left corner (0 = none) | 0 |
+| Top-right hot corner modifier | Modifier key for top-right corner (0 = none) | 0 |
+| Bottom-left hot corner modifier | Modifier key for bottom-left corner (0 = none) | 0 |
+| Bottom-right hot corner modifier | Modifier key for bottom-right corner (0 = none) | 0 |
 
 ### Menu Bar
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Show Sound in menu bar | Always show volume control in the menu bar | on |
+| Show Sound in menu bar | Show/hide Sound icon | on |
+| Show Bluetooth in menu bar | Show/hide Bluetooth icon | on |
+| Show Wi-Fi in menu bar | Show/hide Wi-Fi icon | on |
+| Show Battery in menu bar | Show/hide Battery icon | on |
+| Hide AirDrop from menu bar | Hide AirDrop icon | on |
+| Hide Display from menu bar | Hide Display icon | on |
+| Hide Focus Modes from menu bar | Hide Focus Modes icon | on |
+| Hide Now Playing from menu bar | Hide Now Playing icon | on |
+| Hide Screen Mirroring from menu bar | Hide Screen Mirroring icon | on |
+| Sound always-show mode | 3-way dropdown: 18 = Always Show, 2 = Show When Active, 8 = Don't Show (written to ByHost scope on Sequoia) | 18 (Always Show) |
+
+### Security
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Require password after sleep | Ask for password after sleep or screen saver begins | on |
+| No password delay | Require password immediately (no grace period) | on |
+
+### Desktop & Stage Manager
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Click wallpaper to show desktop | `false` = only reveals desktop while Stage Manager is active (Sonoma+ default); `true` = always reveals desktop (pre-Sonoma) | off |
