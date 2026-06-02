@@ -12,11 +12,12 @@ OpenBoot v1.0 has two real verbs: **`install`** adds things to your Mac, **`snap
 ```
 openboot install [source] # install from preset, file, or cloud config
 openboot snapshot         # capture your environment
+openboot doctor           # check system health and diagnose issues
 openboot login / logout   # openboot.dev auth
 openboot version          # print version
 ```
 
-> **v1.0 removed these commands:** `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `doctor`, `update`, `list`, `edit`, `delete`. OpenBoot no longer uninstalls packages or tracks revision history — `install` is add-only, and `snapshot --publish` overwrites. Manage configs on the [dashboard](/dashboard). See the project [CHANGELOG](https://github.com/openbootdotdev/openboot/blob/main/CHANGELOG.md) for migration.
+> **v1.0 removed these commands:** `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `update`, `list`, `edit`, `delete`. OpenBoot no longer uninstalls packages or tracks revision history — `install` is add-only, and `snapshot --publish` overwrites. Manage configs on the [dashboard](/dashboard). See the project [CHANGELOG](https://github.com/openbootdotdev/openboot/blob/main/CHANGELOG.md) for migration.
 
 ## `openboot install`
 
@@ -59,6 +60,8 @@ openboot install ./backup.json     # local config or snapshot file
 openboot install developer         # built-in preset
 openboot install myalias           # alias configured on the dashboard
 openboot install --dry-run         # preview without installing
+openboot install alice/dev-setup --pick node,ripgrep   # install only named packages
+openboot install alice/dev-setup --dry-run             # list available package names
 ```
 
 Explicit flags (`--from`, `--user`/`-u`, `-p`/`--preset`) always override the positional argument.
@@ -74,6 +77,7 @@ For private configs, run `openboot login` first.
 | `--from <file>` | Install from a local config or snapshot JSON |
 | `-s, --silent` | Non-interactive mode (for CI/automation) |
 | `--dry-run` | Preview without installing |
+| `--pick <names>` | Comma-separated list of package names to install from a remote config (e.g. `--pick node,ripgrep`). Fails if any name is unknown. Use `--dry-run` to list available names. |
 | `--packages-only` | Skip shell, macOS, dotfiles, post-install |
 | `--shell <mode>` | `install` or `skip` |
 | `--macos <mode>` | `configure` or `skip` |
@@ -190,6 +194,34 @@ Print the OpenBoot version.
 ```
 openboot version
 ```
+
+---
+
+## `openboot doctor`
+
+Run read-only diagnostic checks on your development environment and get a pass/warn/fail summary.
+
+```
+openboot doctor
+```
+
+Checks performed:
+
+| Check | What it verifies |
+|-------|-----------------|
+| Homebrew | Installed and on PATH |
+| Homebrew outdated | Reports count of outdated packages |
+| Git | Installed; user.name and user.email configured |
+| Node.js | Installed and reachable |
+| npm | Installed and reachable |
+| Shell | Default shell is zsh |
+| Oh-My-Zsh | Installed at `~/.oh-my-zsh` |
+| Brew shellenv | `~/.zshrc` sources `brew shellenv` (Apple Silicon only) |
+| OpenBoot dir | `~/.openboot/` exists |
+| OpenBoot state | `install_state.json` is valid JSON |
+| PATH | `/usr/local/bin` and/or Homebrew prefix on PATH |
+
+All checks are read-only — `doctor` never modifies your system.
 
 ---
 
