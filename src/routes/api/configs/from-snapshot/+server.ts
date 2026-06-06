@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const base_preset = snapshot.matched_preset || 'developer';
 
 	// Validate snapshot.packages is the canonical structured format:
-	// { formulae: string[], casks: string[], taps: string[], npm: string[] }
+	// { formulae: string[], casks: string[], taps: string[], npm: string[], bun?: string[] }
 	if (!snapshot.packages || typeof snapshot.packages !== 'object' || Array.isArray(snapshot.packages)) {
 		return json({ error: 'snapshot.packages must be an object with formulae, casks, taps, npm arrays' }, { status: 400 });
 	}
@@ -66,6 +66,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const snapshotFormulae: string[] = snapshot.packages?.formulae || [];
 	const snapshotCasks: string[] = snapshot.packages?.casks || [];
 	const snapshotNpm: string[] = snapshot.packages?.npm || [];
+	const snapshotBun: string[] = snapshot.packages?.bun || [];
 	const snapshotTaps: string[] = snapshot.packages?.taps || [];
 
 	// Build a set of formula names that are already covered by a tap entry
@@ -81,12 +82,20 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		}
 	}
 
+	// Bun globals come from the npm registry and install fine via `npm install -g`,
+	// so we bucket them with npm in the typed `packages` array (the canonical
+	// downstream schema only special-cases `npm` and `cask`). Bun provenance is
+	// still preserved in the raw `snapshot.packages.bun` blob for future use.
+	const npmSet = new Set(snapshotNpm);
+	const bunAsNpm = snapshotBun.filter((name) => !npmSet.has(name));
+
 	const packages = [
 		...snapshotFormulae
 			.filter((name) => !tapFormulaNames.has(name))
 			.map((name) => ({ name, type: 'formula' })),
 		...snapshotCasks.map((name) => ({ name, type: 'cask' })),
 		...snapshotNpm.map((name) => ({ name, type: 'npm' })),
+		...bunAsNpm.map((name) => ({ name, type: 'npm' })),
 		...snapshotTaps.map((name) => ({ name, type: 'tap' })),
 	];
 
