@@ -13,7 +13,7 @@
 <header class="site-header">
 	<div class="header-container">
 		<div class="header-left">
-			<a href="/" class="header-logo">OpenBoot</a>
+			<a href="/" class="header-logo"><span class="prompt">$</span> openboot</a>
 			<nav class="header-nav">
 				<a href="/explore" class:active={currentPath === '/explore' || currentPath.startsWith('/explore')}>Explore</a>
 				<a href="/docs" class:active={currentPath === '/docs' || currentPath.startsWith('/docs')}>Docs</a>
@@ -52,9 +52,10 @@
 	}
 
 	.header-container {
-		max-width: 1200px;
+		max-width: 1160px;
 		margin: 0 auto;
-		padding: 14px 24px;
+		height: 56px;
+		padding: 0 36px;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -63,17 +64,22 @@
 	.header-left {
 		display: flex;
 		align-items: center;
-		gap: 20px;
+		gap: 26px;
 	}
 
 	.header-logo {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: var(--accent);
-		letter-spacing: -0.02em;
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		letter-spacing: -0.01em;
 		text-decoration: none;
 		transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.header-logo .prompt {
+		color: var(--accent);
+		margin-right: 2px;
 	}
 
 	.header-logo:hover {
@@ -83,13 +89,14 @@
 	.header-nav {
 		display: flex;
 		align-items: center;
-		gap: 20px;
+		gap: 22px;
 	}
 
 	.header-nav a {
 		color: var(--text-secondary);
-		font-size: 0.9rem;
-		font-weight: 500;
+		font-size: 0.85rem;
+		font-weight: 400;
+		text-transform: lowercase;
 		text-decoration: none;
 		transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		position: relative;
