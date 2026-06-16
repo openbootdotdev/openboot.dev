@@ -28,11 +28,39 @@
 	}
 
 	:global(body) {
-		font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+		font-family: var(--font-mono);
 		background: var(--bg-primary);
 		color: var(--text-primary);
-		line-height: 1.6;
+		line-height: 1.5;
 		min-height: 100vh;
+		position: relative;
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+		font-feature-settings:
+			'calt' 1,
+			'ss01' 1;
+	}
+
+	/* edge vignette for depth (dark only via --vignette) */
+	:global(body)::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+		background: radial-gradient(120% 80% at 50% -10%, transparent 55%, var(--vignette) 100%);
+	}
+
+	/* film grain — the texture that kills the flat digital look */
+	:global(body)::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		pointer-events: none;
+		opacity: var(--grain-opacity);
+		mix-blend-mode: var(--grain-blend);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 	}
 
 	:global(a) {
@@ -41,6 +69,22 @@
 	}
 
 	:global(code) {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
+	}
+
+	:global(::selection) {
+		background: var(--accent);
+		color: var(--bg-primary);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(*),
+		:global(*)::before,
+		:global(*)::after {
+			animation-duration: 0.001ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.001ms !important;
+			scroll-behavior: auto !important;
+		}
 	}
 </style>

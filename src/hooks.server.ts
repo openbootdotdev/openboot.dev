@@ -19,7 +19,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 	'Content-Security-Policy': [
 		"default-src 'self'",
 		"script-src 'self' 'unsafe-inline'",
-		"style-src 'self' 'unsafe-inline'",
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 		"img-src 'self' https: data:",
 		"font-src 'self' https://fonts.gstatic.com",
 		"connect-src 'self' https://api.github.com https://accounts.google.com https://oauth2.googleapis.com https://formulae.brew.sh https://registry.npmjs.org",

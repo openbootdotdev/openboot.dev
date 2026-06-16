@@ -111,40 +111,30 @@
 </svelte:head>
 
 <main class="page">
-	<div class="page-bg"></div>
-	<svg class="noise" xmlns="http://www.w3.org/2000/svg">
-		<filter id="noise">
-			<feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/>
-			<feColorMatrix type="saturate" values="0"/>
-		</filter>
-		<rect width="100%" height="100%" filter="url(#noise)" opacity="0.04"/>
-	</svg>
-
 	<div class="container">
 		<section class="hero">
-			<div class="hero-bg"></div>
 			<div class="hero-content">
-				<h1 class="hero-title">Explore</h1>
-				<p class="hero-subtitle">Discover developer configurations shared by the community</p>
-				{#if total > 0}
-					<p class="hero-count">{total} public configurations shared by developers like you</p>
-				{/if}
-		</div>
-		<div class="sort-controls">
-			<label for="sort-select" class="sort-label">Sort by:</label>
-			<select 
-				id="sort-select"
-				class="sort-select"
-				bind:value={sortBy}
-				onchange={() => handleSortChange(sortBy)}
-			>
-				<option value="featured">Featured</option>
-				<option value="installs">Most Installed</option>
-				<option value="trending">This Week</option>
-				<option value="new">New</option>
-				<option value="recent">Recent</option>
-			</select>
-		</div>
+				<p class="hero-prompt"><span class="accent">&gt;</span> explore</p>
+				<h1 class="hero-title">Community configurations</h1>
+				<p class="hero-subtitle">
+					Developer setups shared by the community{#if total > 0} — {total} public {total === 1 ? 'config' : 'configs'} and counting{/if}.
+				</p>
+			</div>
+			<div class="sort-controls">
+				<label for="sort-select" class="sort-label">sort:</label>
+				<select
+					id="sort-select"
+					class="sort-select"
+					bind:value={sortBy}
+					onchange={() => handleSortChange(sortBy)}
+				>
+					<option value="featured">Featured</option>
+					<option value="installs">Most Installed</option>
+					<option value="trending">This Week</option>
+					<option value="new">New</option>
+					<option value="recent">Recent</option>
+				</select>
+			</div>
 		</section>
 
 		{#if loading && configs.length === 0}
@@ -198,17 +188,11 @@
 								/>
 								<span class="username">@{config.username}</span>
 								{#if config.username === 'openboot'}
-									<span class="official-badge">
-										<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-										Official
-									</span>
+									<span class="official-badge">[official]</span>
 								{/if}
 							</div>
 							{#if config.featured === 1}
-								<span class="featured-badge">
-									<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-									Featured
-								</span>
+								<span class="featured-badge">[featured]</span>
 							{/if}
 						</div>
 						<h3 class="config-name">{config.name}</h3>
@@ -268,122 +252,74 @@
 	.page {
 		min-height: 100vh;
 		position: relative;
-		overflow: hidden;
-	}
-
-	.page-bg {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: var(--bg-primary);
-		z-index: -2;
-	}
-
-	.noise {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: -1;
 	}
 
 	.container {
-		max-width: 1400px;
+		max-width: 1160px;
 		margin: 0 auto;
-		padding: 0 24px;
+		padding: 0 36px;
 		position: relative;
 	}
 
 	.hero {
-		padding: 80px 0 60px;
-		position: relative;
+		padding: 104px 0 56px;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
+		justify-content: space-between;
+		align-items: flex-end;
+		gap: 32px;
+		flex-wrap: wrap;
 	}
 
-	.hero-bg {
-		position: absolute;
-		top: -100px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 1200px;
-		height: 600px;
-		background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
-		pointer-events: none;
-		z-index: -1;
+	.hero-prompt {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		letter-spacing: 0.01em;
+		margin: 0 0 16px;
 	}
 
-	.hero::before {
-		content: '';
-		position: absolute;
-		inset: -60px -200px;
-		background-image: 
-			repeating-linear-gradient(0deg, transparent 0px, transparent 39px, color-mix(in srgb, var(--text-primary) 8%, transparent) 39px, transparent 40px),
-			repeating-linear-gradient(90deg, transparent 0px, transparent 39px, color-mix(in srgb, var(--text-primary) 8%, transparent) 39px, transparent 40px);
-		mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-		-webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-		pointer-events: none;
-		z-index: -1;
-	}
-
-	.hero-content {
-		margin-bottom: 32px;
+	.hero-prompt .accent {
+		color: var(--accent);
 	}
 
 	.hero-title {
-		font-size: 3.5rem;
-		font-weight: 800;
-		letter-spacing: -0.04em;
-		background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		text-fill-color: transparent;
-		margin-bottom: 12px;
+		font-size: 1.9rem;
+		font-weight: 500;
+		letter-spacing: -0.025em;
+		color: var(--text-primary);
+		margin: 0 0 12px;
 	}
 
 	.hero-subtitle {
-		font-size: 1.1rem;
-		color: var(--text-secondary);
-		margin-bottom: 8px;
-	}
-
-	.hero-count {
-		font-family: 'JetBrains Mono', monospace;
 		font-size: 0.9rem;
-		color: var(--text-muted);
+		color: var(--text-secondary);
+		margin: 0;
+		max-width: 60ch;
+		line-height: 1.6;
 	}
 
 	.sort-controls {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 10px;
 	}
 
 	.sort-label {
-		font-size: 0.9rem;
-		color: var(--text-secondary);
-		font-weight: 500;
+		font-size: 0.8rem;
+		color: var(--text-muted);
 	}
 
 	.sort-select {
-		padding: 10px 16px;
-		padding-right: 36px;
+		padding: 9px 34px 9px 13px;
 		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 10px;
+		border: 1px solid var(--border-hover);
+		border-radius: 8px;
 		color: var(--text-primary);
-		font-size: 0.9rem;
-		font-weight: 500;
+		font-size: 0.82rem;
 		font-family: inherit;
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
 		appearance: none;
 		-webkit-appearance: none;
 		-moz-appearance: none;
@@ -393,8 +329,7 @@
 	}
 
 	.sort-select:hover {
-		border-color: var(--accent);
-		background-color: var(--bg-tertiary);
+		border-color: var(--accent-deep);
 	}
 
 	.sort-select:focus {
@@ -411,7 +346,7 @@
 	.configs-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 20px;
+		gap: 16px;
 		margin-bottom: 60px;
 	}
 
@@ -509,53 +444,58 @@
 	}
 
 	.empty-title {
-		font-size: 1.75rem;
-		font-weight: 700;
+		font-size: 1.4rem;
+		font-weight: 500;
 		margin-bottom: 12px;
 		color: var(--text-primary);
+		letter-spacing: -0.02em;
 	}
 
 	.empty-desc {
-		font-size: 1.05rem;
+		font-size: 0.9rem;
 		color: var(--text-secondary);
-		margin-bottom: 32px;
+		margin-bottom: 28px;
 	}
 
 	.empty-desc code {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
 		padding: 3px 10px;
 		border-radius: 6px;
 		color: var(--accent);
-		font-size: 0.95rem;
+		font-size: 0.85rem;
 	}
 
 	.empty-cta {
 		display: inline-block;
-		padding: 14px 32px;
+		padding: 13px 28px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		text-decoration: none;
-		border-radius: 10px;
-		font-weight: 600;
-		font-size: 0.95rem;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		border-radius: 9px;
+		font-weight: 500;
+		font-size: 0.88rem;
+		transition:
+			background 0.18s ease,
+			box-shadow 0.18s ease;
 	}
 
 	.empty-cta:hover {
 		background: var(--accent-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+		box-shadow: 0 0 0 3px var(--accent-glow);
 	}
 
 	.config-card {
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
-		border-radius: 16px;
+		border-radius: 12px;
 		padding: 20px;
 		text-decoration: none;
 		color: inherit;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
@@ -568,23 +508,18 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 3px;
+		height: 2px;
 		background: var(--card-color);
-		transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		opacity: 0.8;
 	}
 
 	.config-card:hover {
-		transform: translateY(-6px);
-		box-shadow: 0 0 30px color-mix(in srgb, var(--card-color) 20%, transparent);
-		background: color-mix(in srgb, var(--bg-secondary) 95%, var(--card-color) 5%);
-	}
-
-	.config-card:hover .card-accent {
-		height: 4px;
+		border-color: var(--border-hover);
+		box-shadow: 0 0 0 1px var(--accent-glow), 0 14px 40px -22px var(--shadow);
 	}
 
 	.config-card:hover .config-name {
-		color: var(--card-color);
+		color: var(--accent);
 	}
 
 	.config-card:hover .install-preview {
@@ -606,59 +541,45 @@
 	}
 
 	.avatar {
-		width: 28px;
-		height: 28px;
+		width: 26px;
+		height: 26px;
 		border-radius: 50%;
-		border: 2px solid var(--card-color);
+		border: 1px solid var(--border-hover);
 	}
 
 	.username {
-		font-size: 0.85rem;
+		font-size: 0.82rem;
 		color: var(--text-muted);
-		font-weight: 500;
+	}
+
+	.official-badge,
+	.featured-badge {
+		font-size: 0.72rem;
+		letter-spacing: 0.01em;
 	}
 
 	.official-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 3px;
-		padding: 2px 6px;
-		background: color-mix(in srgb, #3b82f6 15%, transparent);
-		color: #3b82f6;
-		border-radius: 4px;
-		font-size: 0.65rem;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
+		color: var(--text-secondary);
 		margin-left: 4px;
 	}
 
 	.featured-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 3px 8px;
-		background: color-mix(in srgb, var(--accent) 15%, transparent);
 		color: var(--accent);
-		border-radius: 6px;
-		font-size: 0.7rem;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
 	}
 
 	.config-name {
-		font-size: 1.1rem;
-		font-weight: 600;
+		font-size: 1rem;
+		font-weight: 500;
 		color: var(--text-primary);
 		margin: 0;
-		transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		letter-spacing: -0.01em;
+		transition: color 0.18s ease;
 	}
 
 	.config-description {
-		font-size: 0.85rem;
+		font-size: 0.82rem;
 		color: var(--text-secondary);
-		line-height: 1.5;
+		line-height: 1.6;
 		margin: 0;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
@@ -668,10 +589,10 @@
 
 	.card-footer {
 		display: flex;
-		gap: 12px;
+		gap: 14px;
 		align-items: center;
 		margin-top: auto;
-		padding-top: 12px;
+		padding-top: 14px;
 		border-top: 1px solid var(--border);
 		flex-wrap: wrap;
 	}
@@ -680,12 +601,12 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 0.8rem;
+		font-size: 0.78rem;
 		color: var(--text-secondary);
 	}
 
 	.stat.packages {
-		font-family: 'JetBrains Mono', monospace;
+		color: var(--accent);
 		font-size: 0.75rem;
 	}
 
@@ -698,15 +619,19 @@
 		max-height: 0;
 		opacity: 0;
 		overflow: hidden;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			max-height 0.25s ease,
+			opacity 0.25s ease,
+			margin-top 0.25s ease;
 		padding: 0 12px;
-		background: var(--code-bg);
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
 		border-radius: 8px;
 	}
 
 	.install-preview code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.75rem;
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
 		color: var(--text-secondary);
 		display: block;
 		white-space: nowrap;
@@ -716,8 +641,7 @@
 	}
 
 	.install-preview .prompt {
-		color: var(--card-color);
-		font-weight: 700;
+		color: var(--accent);
 	}
 
 	.load-more-section {
@@ -729,30 +653,27 @@
 	}
 
 	.load-more-count {
-		font-size: 0.9rem;
+		font-size: 0.82rem;
 		color: var(--text-muted);
-		font-family: 'JetBrains Mono', monospace;
 	}
 
 	.load-more-btn {
-		padding: 14px 40px;
-		background: transparent;
-		border: 1px solid var(--border);
-		border-radius: 10px;
+		padding: 12px 32px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-hover);
+		border-radius: 9px;
 		color: var(--text-primary);
-		font-size: 0.95rem;
-		font-weight: 500;
+		font-size: 0.85rem;
 		cursor: pointer;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
 		font-family: inherit;
 	}
 
 	.load-more-btn:hover:not(:disabled) {
-		border-color: var(--accent);
-		background: var(--accent);
-		color: #000;
-		transform: translateY(-2px);
-		box-shadow: 0 8px 24px rgba(34, 197, 94, 0.2);
+		border-color: var(--accent-deep);
+		box-shadow: 0 0 0 3px var(--accent-glow);
 	}
 
 	.load-more-btn:disabled {
@@ -762,20 +683,9 @@
 
 	.cta-banner {
 		position: relative;
-		padding: 100px 0;
-		margin-top: 60px;
-		overflow: hidden;
-	}
-
-	.cta-glow {
-		position: absolute;
-		top: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 800px;
-		height: 400px;
-		background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
-		pointer-events: none;
+		padding: 80px 0;
+		margin-top: 40px;
+		border-top: 1px solid var(--border);
 	}
 
 	.cta-content {
@@ -786,17 +696,17 @@
 	}
 
 	.cta-title {
-		font-size: 2rem;
-		font-weight: 700;
-		margin-bottom: 16px;
+		font-size: 1.5rem;
+		font-weight: 500;
+		margin-bottom: 14px;
 		color: var(--text-primary);
 		letter-spacing: -0.02em;
 	}
 
 	.cta-desc {
-		font-size: 1.05rem;
+		font-size: 0.9rem;
 		color: var(--text-secondary);
-		margin-bottom: 32px;
+		margin-bottom: 28px;
 		line-height: 1.6;
 	}
 
@@ -804,22 +714,23 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 10px;
-		padding: 16px 36px;
+		padding: 13px 28px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
-		border-radius: 10px;
-		font-size: 1rem;
-		font-weight: 600;
+		border-radius: 9px;
+		font-size: 0.88rem;
+		font-weight: 500;
 		text-decoration: none;
 		cursor: pointer;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			background 0.18s ease,
+			box-shadow 0.18s ease;
 	}
 
 	.cta-button:hover {
 		background: var(--accent-hover);
-		transform: translateY(-3px);
-		box-shadow: 0 12px 32px rgba(34, 197, 94, 0.4);
+		box-shadow: 0 0 0 3px var(--accent-glow);
 	}
 
 	@media (max-width: 1200px) {

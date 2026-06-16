@@ -386,7 +386,7 @@
 
 	.reading-progress {
 		position: fixed;
-		top: 49px;
+		top: 56px;
 		left: 0;
 		height: 2px;
 		background: var(--accent);
@@ -435,8 +435,8 @@
 
 	.docs-layout {
 		display: flex;
-		margin-top: 49px;
-		min-height: calc(100vh - 49px);
+		margin-top: 56px;
+		min-height: calc(100vh - 56px);
 	}
 
 	/* ── Left Sidebar ─────────────────────────────────── */
@@ -448,8 +448,8 @@
 		border-right: 1px solid var(--border);
 		padding: 28px 0;
 		position: sticky;
-		top: 49px;
-		height: calc(100vh - 49px);
+		top: 56px;
+		height: calc(100vh - 56px);
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
@@ -557,8 +557,8 @@
 		width: 220px;
 		flex-shrink: 0;
 		position: sticky;
-		top: 49px;
-		height: calc(100vh - 49px);
+		top: 56px;
+		height: calc(100vh - 56px);
 		overflow-y: auto;
 		padding: 32px 16px 32px 0;
 		border-left: 1px solid var(--border);
@@ -644,21 +644,21 @@
 		right: 20px;
 		z-index: 90;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
-		border-radius: 12px;
+		border-radius: 10px;
 		padding: 12px 18px;
 		font-size: 0.85rem;
-		font-weight: 600;
+		font-weight: 500;
 		font-family: inherit;
 		cursor: pointer;
 		align-items: center;
 		gap: 8px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 197, 94, 0.2);
-		transition: transform 0.2s;
+		box-shadow: 0 4px 20px var(--shadow);
+		transition: box-shadow 0.2s;
 	}
 
-	.mobile-menu-btn:hover { transform: scale(1.05); }
+	.mobile-menu-btn:hover { box-shadow: 0 0 0 3px var(--accent-glow); }
 
 	/* ── Mobile TOC Button ────────────────────────────── */
 
@@ -815,12 +815,12 @@
 	/* ── Prose ─────────────────────────────────────────── */
 
 	.prose :global(h1) {
-		font-size: 2rem;
-		font-weight: 800;
-		letter-spacing: -0.03em;
+		font-size: 1.9rem;
+		font-weight: 600;
+		letter-spacing: -0.035em;
 		margin-bottom: 12px;
 		color: var(--text-primary);
-		line-height: 1.2;
+		line-height: 1.15;
 	}
 
 	.prose :global(h1 + p) {
@@ -831,9 +831,9 @@
 	}
 
 	.prose :global(h2) {
-		font-size: 1.35rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
+		font-size: 1.3rem;
+		font-weight: 600;
+		letter-spacing: -0.025em;
 		margin-top: 48px;
 		margin-bottom: 16px;
 		color: var(--text-primary);
@@ -992,7 +992,7 @@
 	@media (max-width: 860px) {
 		.sidebar {
 			position: fixed;
-			top: 49px;
+			top: 56px;
 			left: 0;
 			bottom: 0;
 			z-index: 80;

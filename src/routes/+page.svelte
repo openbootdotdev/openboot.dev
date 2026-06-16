@@ -42,67 +42,46 @@
 
 <div class="page-wrapper">
 	<main>
-		<div class="hero-background">
-			<div class="hero-glow hero-glow-primary"></div>
-			<div class="hero-glow hero-glow-secondary"></div>
-			<div class="grid-overlay"></div>
-		</div>
-
 		<div class="container">
 			<section class="hero">
+				<div class="hero-grid"></div>
 				<div class="hero-content">
-				<h1 class="hero-title">
-					Fresh Mac? Don't spend 3 hours <span style="white-space:nowrap">setting it up</span>
-				</h1>
-				<p class="hero-subtitle">
-					One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd normally spend your first day installing. Then snapshot your setup and share it with your team so they get the same thing.
-				</p>
+					<p class="eyebrow"><span class="prompt">#</span> macOS bootstrap, automated</p>
+					<h1 class="hero-title">
+						Fresh Mac?<br />Set it up in<br /><span class="accent">one command.</span>
+					</h1>
+					<p class="hero-subtitle">
+						One command installs Git, Node, Docker, VS Code, shell config, dotfiles—everything you'd normally spend your first day installing. Then snapshot your setup and share it with your team so they get the same thing.
+					</p>
 
-				<div class="features-list">
-				<div class="feature-item">
-					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-						<polyline points="20 6 9 17 4 12"/>
-					</svg>
-					<span>Installs Homebrew packages, apps, configures shell + macOS preferences</span>
-				</div>
-				<div class="feature-item">
-					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-						<polyline points="20 6 9 17 4 12"/>
-					</svg>
-					<span>Snapshot your current Mac and recreate it on another machine</span>
-				</div>
-				<div class="feature-item">
-					<svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-						<polyline points="20 6 9 17 4 12"/>
-					</svg>
-					<span>Share your exact setup with teammates via a one-line install URL</span>
-				</div>
-				</div>
+					<ul class="features-list">
+						<li class="feature-item"><span class="check">✓</span> Installs Homebrew packages, apps, configures shell + macOS preferences</li>
+						<li class="feature-item"><span class="check">✓</span> Snapshot your current Mac and recreate it on another machine</li>
+						<li class="feature-item"><span class="check">✓</span> Share your exact setup with teammates via a one-line install URL</li>
+					</ul>
 
 					<div class="install-section">
-						<div class="install-command-wrapper">
-							<div class="install-command">
-								<div class="install-prompt">$</div>
-								<code>curl -fsSL openboot.dev/install.sh | bash</code>
-								<button class="copy-btn" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
-									{#if copied === 'main'}
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-											<polyline points="20 6 9 17 4 12"/>
-										</svg>
-									{:else}
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-											<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-										</svg>
-									{/if}
-								</button>
-							</div>
+						<div class="install-command">
+							<span class="install-prompt">$</span>
+							<code>curl -fsSL openboot.dev/install.sh | bash</code>
+							<button class="copy-btn" aria-label="Copy install command" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
+								{#if copied === 'main'}
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+										<polyline points="20 6 9 17 4 12"/>
+									</svg>
+								{:else}
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+									</svg>
+								{/if}
+							</button>
 						</div>
 						<p class="install-alt">
 							Have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
 						</p>
+					</div>
 				</div>
-			</div>
 
 				<div class="hero-visual">
 					<div class="terminal-window">
@@ -112,7 +91,7 @@
 								<span class="dot dot-yellow"></span>
 								<span class="dot dot-green"></span>
 							</div>
-							<span class="terminal-title">openboot</span>
+							<span class="terminal-title">openboot — install</span>
 							<div class="terminal-spacer"></div>
 						</div>
 						<div class="terminal-body">
@@ -124,41 +103,30 @@
 
 			<section class="how-it-works">
 				<div class="section-header">
-					<h2 class="section-title">How It Works</h2>
-					<p class="section-subtitle">One command, a few picks, done in under 30 minutes.</p>
+					<p class="section-prompt"><span class="accent">&gt;</span> how it works</p>
+					<h2 class="section-title">One command, a few picks, done in under 30 minutes.</h2>
 				</div>
 
-				<div class="steps-container">
-					<div class="steps-line"></div>
-					<div class="steps-grid">
-						<div class="step step-1">
-							<div class="step-number">
-								<span>1</span>
-							</div>
-							<h3>Run one command</h3>
-							<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too — Xcode tools and all. Then the package picker opens.</p>
-						</div>
-						<div class="step step-2">
-							<div class="step-number">
-								<span>2</span>
-							</div>
-							<h3>Pick your tools</h3>
-							<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want, confirm, and you're done choosing.</p>
-						</div>
-						<div class="step step-3">
-							<div class="step-number">
-								<span>3</span>
-							</div>
-							<h3>Everything installs itself</h3>
-							<p>Packages download, shell gets configured, dotfiles get linked, macOS preferences get applied. It runs unattended — no babysitting needed.</p>
-						</div>
-						<div class="step step-4">
-							<div class="step-number">
-								<span>4</span>
-							</div>
-							<h3>Open a new terminal</h3>
-							<p>Your tools are there, aliases work, shell config is live. Everything that used to take a full day is already done.</p>
-						</div>
+				<div class="steps-grid">
+					<div class="step">
+						<div class="step-number">01</div>
+						<h3>Run one command</h3>
+						<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too — Xcode tools and all. Then the package picker opens.</p>
+					</div>
+					<div class="step">
+						<div class="step-number">02</div>
+						<h3>Pick your tools</h3>
+						<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want, confirm, and you're done choosing.</p>
+					</div>
+					<div class="step">
+						<div class="step-number">03</div>
+						<h3>Everything installs itself</h3>
+						<p>Packages download, shell gets configured, dotfiles get linked, macOS preferences get applied. It runs unattended — no babysitting needed.</p>
+					</div>
+					<div class="step">
+						<div class="step-number">04</div>
+						<h3>Open a new terminal</h3>
+						<p>Your tools are there, aliases work, shell config is live. Everything that used to take a full day is already done.</p>
 					</div>
 				</div>
 			</section>
@@ -167,291 +135,180 @@
 
 	<footer>
 		<div class="container">
-			<div class="footer-content">
-				<div class="footer-links">
+			<p class="foot-prompt"><span class="accent">openboot</span> $ <span class="caret"></span></p>
+			<div class="footer-cols">
+				<div class="footer-col">
+					<h4>Product</h4>
+					<a href="/explore">Explore configs</a>
 					{#if $auth.user}
-						<a href="/dashboard">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<rect x="3" y="3" width="7" height="7" />
-								<rect x="14" y="3" width="7" height="7" />
-								<rect x="14" y="14" width="7" height="7" />
-								<rect x="3" y="14" width="7" height="7" />
-							</svg>
-							Dashboard
-						</a>
+						<a href="/dashboard">Dashboard</a>
 					{:else}
-						<a href="/login">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M12 20h9"/>
-								<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-							</svg>
-							Custom Configs
-						</a>
+						<a href="/login">Custom configs</a>
 					{/if}
-					<a href="/docs">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-							<polyline points="14 2 14 8 20 8"/>
-						</svg>
-						Docs
-					</a>
-					<a href="https://github.com/openbootdotdev/openboot" target="_blank" rel="noopener">
-						<svg viewBox="0 0 24 24" fill="currentColor">
-							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-						</svg>
-						GitHub
-					</a>
-					<a href="https://github.com/openbootdotdev/openboot/issues" target="_blank" rel="noopener">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="12" cy="12" r="10"/>
-							<path d="M12 16v-4M12 8h.01"/>
-						</svg>
-						Issues
-					</a>
+					<a href="/docs">Documentation</a>
 				</div>
-				<p class="footer-tagline">Open source, zero telemetry. Automate what you'd otherwise do manually.</p>
-				<p class="footer-text">MIT License</p>
+				<div class="footer-col">
+					<h4>Open source</h4>
+					<a href="https://github.com/openbootdotdev/openboot" target="_blank" rel="noopener">GitHub</a>
+					<a href="https://github.com/openbootdotdev/openboot/issues" target="_blank" rel="noopener">Issues</a>
+				</div>
 			</div>
+			<p class="footer-legal">Open source, zero telemetry · MIT License · © 2026 OpenBoot</p>
 		</div>
 	</footer>
 </div>
 
 <style>
-	:global(body) {
-		margin: 0;
-		padding: 0;
-		overflow-x: hidden;
-	}
-
 	.page-wrapper {
 		position: relative;
 		min-height: 100vh;
-		background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
-	}
-
-	.page-wrapper::after {
-		content: '';
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-		opacity: 0.03;
-		mix-blend-mode: multiply;
-		pointer-events: none;
-		z-index: 1;
 	}
 
 	.container {
-		max-width: 1200px;
+		max-width: 1160px;
 		margin: 0 auto;
-		padding: 0 24px;
+		padding: 0 36px;
 		position: relative;
-		z-index: 2;
 	}
 
 	main {
-		padding-top: 80px;
-		position: relative;
-		z-index: 2;
+		padding-top: 56px;
 	}
 
-	.hero-background {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 900px;
-		overflow: hidden;
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.hero-glow {
-		position: absolute;
-		border-radius: 50%;
-		filter: blur(120px);
-		opacity: 0.4;
-	}
-
-	.hero-glow-primary {
-		width: 1000px;
-		height: 1000px;
-		background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-		top: -300px;
-		left: 50%;
-		transform: translateX(-50%);
-		opacity: 0.2;
-	}
-
-	.hero-glow-secondary {
-		width: 700px;
-		height: 700px;
-		background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
-		top: 50px;
-		right: -150px;
-		opacity: 0.1;
-	}
-
-	.grid-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 100%;
-		background-image: 
-			linear-gradient(to right, var(--border) 1px, transparent 1px),
-			linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-		background-size: 60px 60px;
-		opacity: 0.3;
-		mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
-		-webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
-	}
-
+	/* ---------- hero ---------- */
 	.hero {
-		padding: 80px 0 60px;
-		display: grid;
-		grid-template-columns: 1.2fr 1fr;
-		gap: 64px;
-		align-items: center;
 		position: relative;
+		padding: 120px 0 124px;
+		display: grid;
+		grid-template-columns: 1.05fr 0.95fr;
+		gap: 60px;
+		align-items: center;
+	}
+
+	.hero-grid {
+		position: absolute;
+		inset: -40px 0 0;
+		z-index: -1;
+		pointer-events: none;
+		background-image:
+			linear-gradient(var(--border) 1px, transparent 1px),
+			linear-gradient(90deg, var(--border) 1px, transparent 1px);
+		background-size: 46px 46px;
+		-webkit-mask-image: radial-gradient(ellipse 75% 55% at 22% 28%, #000 0%, transparent 68%);
+		mask-image: radial-gradient(ellipse 75% 55% at 22% 28%, #000 0%, transparent 68%);
+		opacity: 0.4;
 	}
 
 	.hero-content {
 		display: flex;
 		flex-direction: column;
-		gap: 32px;
-		padding-right: 20px;
+	}
+
+	.eyebrow {
+		color: var(--text-muted);
+		font-size: 0.8rem;
+		letter-spacing: 0.02em;
+		margin: 0 0 26px;
+	}
+
+	.eyebrow .prompt {
+		color: var(--accent);
 	}
 
 	.hero-title {
-		font-size: 3.5rem;
-		font-weight: 800;
-		line-height: 1.1;
+		font-size: clamp(2.3rem, 4.6vw, 3.7rem);
+		font-weight: 500;
+		line-height: 1.04;
 		letter-spacing: -0.04em;
-		background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		margin: 0;
+		color: var(--text-primary);
+		margin: 0 0 26px;
+	}
+
+	.hero-title .accent {
+		color: var(--accent);
 	}
 
 	.hero-subtitle {
-		font-size: 1.15rem;
+		font-size: 0.94rem;
 		color: var(--text-secondary);
-		line-height: 1.6;
-		margin: 0;
-		max-width: 520px;
+		line-height: 1.75;
+		margin: 0 0 32px;
+		max-width: 54ch;
 	}
 
 	.features-list {
-		display: flex;
-		flex-direction: column;
+		list-style: none;
+		display: grid;
 		gap: 12px;
+		margin: 0 0 38px;
+		padding: 0;
 	}
 
 	.feature-item {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 12px;
 		color: var(--text-secondary);
-		font-size: 0.95rem;
+		font-size: 0.875rem;
+		line-height: 1.6;
 	}
 
-	.feature-check {
-		width: 18px;
-		height: 18px;
+	.feature-item .check {
 		color: var(--accent);
+		font-size: 0.8rem;
 		flex-shrink: 0;
 	}
 
 	.install-section {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
-	}
-
-	.install-command-wrapper {
-		position: relative;
-	}
-
-	.install-command-wrapper::before {
-		content: '';
-		position: absolute;
-		inset: -2px;
-		background: linear-gradient(90deg, var(--accent), #3b82f6, var(--accent));
-		background-size: 200% 100%;
-		border-radius: 14px;
-		opacity: 0;
-		transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		animation: borderRotate 4s linear infinite paused;
-	}
-
-	.install-command-wrapper:hover::before {
-		opacity: 1;
-		animation-play-state: running;
-	}
-
-	@keyframes borderRotate {
-		0% {
-			background-position: 0% 50%;
-		}
-		100% {
-			background-position: 200% 50%;
-		}
+		gap: 17px;
 	}
 
 	.install-command {
-		position: relative;
-		background: var(--code-bg);
-		border: 1px solid var(--accent);
-		border-radius: 12px;
-		padding: 20px 24px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-hover);
+		border-radius: 10px;
+		padding: 16px 17px;
 		display: flex;
 		align-items: center;
-		gap: 16px;
-		box-shadow: 
-			0 0 15px var(--accent-glow) inset,
-			0 0 40px var(--accent-glow),
-			0 8px 32px rgba(0, 0, 0, 0.1);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		gap: 13px;
+		max-width: 510px;
+		font-size: 0.9rem;
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
 	}
 
 	.install-command:hover {
-		border-color: var(--accent-hover);
-		box-shadow: 
-			0 0 20px var(--accent-glow) inset,
-			0 0 60px var(--accent-glow),
-			0 12px 48px rgba(0, 0, 0, 0.15);
+		border-color: var(--accent-deep);
+		box-shadow: 0 0 0 3px var(--accent-glow);
 	}
 
 	.install-prompt {
 		color: var(--accent);
-		font-family: 'JetBrains Mono', monospace;
-		font-weight: 700;
-		font-size: 1.25rem;
 		flex-shrink: 0;
 		user-select: none;
 	}
 
 	.install-command code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.95rem;
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
 		color: var(--text-primary);
 		flex: 1;
 		min-width: 0;
 		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.copy-btn {
 		background: transparent;
-		border: 1px solid var(--border);
-		color: var(--text-secondary);
-		padding: 8px;
-		border-radius: 8px;
+		border: none;
+		color: var(--text-muted);
+		padding: 2px;
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: color 0.15s ease;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -459,94 +316,22 @@
 	}
 
 	.copy-btn:hover {
-		border-color: var(--accent);
 		color: var(--accent);
-		background: var(--accent-glow);
 	}
 
 	.install-alt {
 		color: var(--text-muted);
-		font-size: 0.85rem;
+		font-size: 0.78rem;
 		margin: 0;
 	}
 
 	.install-alt code {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.8rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
 		color: var(--text-secondary);
 	}
 
-	.cta-buttons {
-		display: flex;
-		gap: 12px;
-	}
-
-	.btn-primary {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 12px 24px;
-		border-radius: 10px;
-		font-size: 0.95rem;
-		font-weight: 600;
-		cursor: pointer;
-		text-decoration: none;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		background: var(--accent);
-		color: #000;
-		border: none;
-		box-shadow: 0 0 30px var(--accent-glow);
-	}
-
-	.btn-primary:hover {
-		background: var(--accent-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 0 40px var(--accent-glow);
-	}
-
-	.btn-secondary {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 12px 24px;
-		border-radius: 10px;
-		font-size: 0.95rem;
-		font-weight: 500;
-		cursor: pointer;
-		text-decoration: none;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		background: transparent;
-		color: var(--text-secondary);
-		border: 1px solid var(--border);
-	}
-
-	.btn-secondary:hover {
-		color: var(--text-primary);
-		border-color: var(--accent);
-		background: var(--accent-glow);
-		transform: translateY(-2px);
-	}
-
-	.star-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		padding: 3px 8px;
-		border-radius: 12px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		color: var(--text-secondary);
-		font-family: 'JetBrains Mono', monospace;
-	}
-
-	.star-badge::before {
-		content: '★';
-		color: #f59e0b;
-		font-size: 0.7rem;
-	}
-
+	/* ---------- terminal ---------- */
 	.hero-visual {
 		display: flex;
 		justify-content: center;
@@ -555,70 +340,53 @@
 
 	.terminal-window {
 		width: 100%;
-		max-width: 660px;
-		border-radius: 16px;
+		max-width: 620px;
+		border-radius: 12px;
 		overflow: hidden;
-		background: #1e1e2e;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		box-shadow:
-			0 0 0 1px rgba(255, 255, 255, 0.1),
-			0 20px 40px -12px rgba(0, 0, 0, 0.8),
-			0 0 80px -20px rgba(34, 197, 94, 0.25),
-			0 40px 100px rgba(0, 0, 0, 0.5);
-		transform: perspective(1200px) rotateY(-2deg) rotateX(0.5deg);
-		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	.terminal-window:hover {
-		transform: perspective(1200px) rotateY(0deg) rotateX(0deg) translateY(-12px);
-		box-shadow:
-			0 0 0 1px rgba(255, 255, 255, 0.15),
-			0 30px 60px -15px rgba(0, 0, 0, 0.9),
-			0 0 120px -10px rgba(34, 197, 94, 0.35),
-			0 60px 120px rgba(0, 0, 0, 0.6);
+			0 1px 0 color-mix(in srgb, var(--text-primary) 6%, transparent) inset,
+			0 30px 60px -20px var(--shadow);
 	}
 
 	.terminal-header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		padding: 14px 18px;
-		background: linear-gradient(180deg, #1e1e2e 0%, #1a1a28 100%);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		gap: 7px;
+		padding: 13px 15px;
+		border-bottom: 1px solid var(--border);
 	}
 
 	.terminal-dots {
 		display: flex;
-		gap: 8px;
+		gap: 7px;
 	}
 
 	.dot {
-		width: 12px;
-		height: 12px;
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
-		transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		opacity: 0.9;
 	}
 
-	.terminal-window:hover .dot {
-		transform: scale(1.1);
-	}
-
-	.dot-red { background: #ff5f57; }
-	.dot-yellow { background: #febc2e; }
-	.dot-green { background: #28c840; }
+	.dot-red { background: #d4655c; }
+	.dot-yellow { background: #c9a14e; }
+	.dot-green { background: #4ec98a; }
 
 	.terminal-title {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.4);
-		font-weight: 500;
+		margin: 0 auto;
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		letter-spacing: 0.02em;
 	}
 
 	.terminal-spacer {
-		width: 52px;
+		width: 44px;
 	}
 
 	.terminal-body {
-		background: #1e1e2e;
+		background: var(--bg-secondary);
 	}
 
 	.terminal-body img {
@@ -626,321 +394,183 @@
 		display: block;
 	}
 
+	/* ---------- how it works ---------- */
 	.how-it-works {
-		padding: 60px 0 120px;
-		position: relative;
-	}
-
-	.how-it-works::before {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: 800px;
-		height: 400px;
-		background: radial-gradient(ellipse, var(--accent-glow) 0%, rgba(59, 130, 246, 0.04) 40%, transparent 70%);
-		pointer-events: none;
-		z-index: -1;
+		padding: 112px 0;
+		border-top: 1px solid var(--border);
 	}
 
 	.section-header {
-		text-align: center;
-		margin-bottom: 64px;
+		margin-bottom: 60px;
+	}
+
+	.section-prompt {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		letter-spacing: 0.01em;
+		margin: 0 0 16px;
+	}
+
+	.section-prompt .accent {
+		color: var(--accent);
 	}
 
 	.section-title {
-		font-size: 2rem;
-		font-weight: 600;
-		letter-spacing: -0.03em;
+		font-size: 1.7rem;
+		font-weight: 500;
+		letter-spacing: -0.025em;
 		color: var(--text-primary);
-		margin: 0 0 12px 0;
-	}
-
-	.section-subtitle {
-		font-size: 1rem;
-		color: var(--text-secondary);
 		margin: 0;
-	}
-
-	.steps-container {
-		position: relative;
-	}
-
-	.steps-line {
-		position: absolute;
-		top: 56px;
-		left: 12.5%;
-		right: 12.5%;
-		height: 2px;
-		background: linear-gradient(90deg, 
-			var(--accent) 0%, 
-			var(--accent) 25%, 
-			#3b82f6 50%, 
-			var(--accent) 75%, 
-			var(--accent) 100%
-		);
-		opacity: 0.3;
-		z-index: 0;
 	}
 
 	.steps-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 32px;
-		position: relative;
-		z-index: 1;
+		gap: 1px;
+		background: var(--border);
+		border: 1px solid var(--border);
+		border-radius: 13px;
+		overflow: hidden;
 	}
 
 	.step {
-		text-align: center;
-		padding: 32px 24px;
-		background: var(--bg-secondary);
-		border-radius: 20px;
-		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-		border: 1px solid var(--border);
-		opacity: 0;
-		transform: translateY(20px);
-		animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
-
-	.step-1 { animation-delay: 0.1s; }
-	.step-2 { animation-delay: 0.2s; }
-	.step-3 { animation-delay: 0.3s; }
-	.step-4 { animation-delay: 0.4s; }
-
-	@keyframes fadeInUp {
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+		background: var(--bg-primary);
+		padding: 30px 26px 34px;
+		transition: background 0.2s ease;
 	}
 
 	.step:hover {
-		transform: translateY(-8px);
-		background: var(--bg-tertiary);
-		border-color: var(--accent);
-		box-shadow: 
-			0 0 40px var(--accent-glow),
-			0 20px 40px rgba(0, 0, 0, 0.1);
+		background: var(--bg-secondary);
 	}
 
 	.step-number {
-		width: 48px;
-		height: 48px;
-		border-radius: 50%;
-		background: var(--accent);
-		color: #000;
-		font-family: 'JetBrains Mono', monospace;
-		font-weight: 700;
-		font-size: 1.1rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: 0 auto 20px;
-		box-shadow: 0 0 30px var(--accent-glow);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	.step:hover .step-number {
-		transform: scale(1.1);
-		box-shadow: 0 0 50px var(--accent-glow);
+		color: var(--accent);
+		font-size: 0.85rem;
+		letter-spacing: 0.04em;
 	}
 
 	.step h3 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 12px 0;
-		letter-spacing: -0.02em;
+		font-size: 0.98rem;
+		font-weight: 500;
+		margin: 22px 0 12px;
+		letter-spacing: -0.01em;
 		color: var(--text-primary);
 	}
 
 	.step p {
 		color: var(--text-secondary);
-		font-size: 0.9rem;
-		line-height: 1.6;
+		font-size: 0.82rem;
+		line-height: 1.7;
 		margin: 0;
 	}
 
+	/* ---------- footer ---------- */
 	footer {
-		border-top: 1px solid transparent;
-		background: linear-gradient(to right, transparent, var(--accent), transparent) top / 100% 1px no-repeat,
-					var(--bg-primary);
-		padding: 64px 0;
-		text-align: center;
-		position: relative;
-		z-index: 2;
+		border-top: 1px solid var(--border);
+		padding: 66px 0 76px;
 	}
 
-	.footer-content {
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
-		align-items: center;
-	}
-
-	.footer-links {
-		display: flex;
-		justify-content: center;
-		gap: 32px;
-		flex-wrap: wrap;
-	}
-
-	.footer-links a {
+	.foot-prompt {
 		color: var(--text-muted);
-		font-size: 0.9rem;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		text-decoration: none;
-		position: relative;
+		font-size: 0.88rem;
+		margin: 0 0 46px;
 	}
 
-	.footer-links a:hover {
+	.foot-prompt .accent {
 		color: var(--accent);
 	}
 
-	.footer-links a::after {
-		content: '';
-		position: absolute;
-		bottom: -4px;
-		left: 0;
-		right: 0;
-		height: 1px;
+	.caret {
+		display: inline-block;
+		width: 7px;
+		height: 1.02em;
 		background: var(--accent);
-		transform: scaleX(0);
-		transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		translate: 0 2px;
+		animation: blink 1.15s steps(1) infinite;
 	}
 
-	.footer-links a:hover::after {
-		transform: scaleX(1);
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
 	}
 
-	.footer-links svg {
-		width: 16px;
-		height: 16px;
+	.footer-cols {
+		display: flex;
+		gap: 90px;
+		flex-wrap: wrap;
+		margin-bottom: 50px;
 	}
 
-	.footer-tagline {
-		color: var(--text-secondary);
-		font-size: 0.95rem;
-		margin: 0;
+	.footer-col h4 {
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		margin: 0 0 18px;
 		font-weight: 500;
 	}
 
-	.footer-text {
+	.footer-col a {
+		display: block;
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		margin-bottom: 12px;
+		transition: color 0.15s ease;
+	}
+
+	.footer-col a:hover {
+		color: var(--accent);
+	}
+
+	.footer-legal {
 		color: var(--text-muted);
-		font-size: 0.8rem;
+		font-size: 0.78rem;
+		border-top: 1px solid var(--border);
+		padding-top: 28px;
+		letter-spacing: 0.01em;
 		margin: 0;
 	}
 
-	@media (max-width: 960px) {
-		.grid-overlay {
-			display: none;
-		}
-
+	@media (max-width: 880px) {
 		.hero {
 			grid-template-columns: 1fr;
-			gap: 60px;
-			padding: 60px 0 100px;
+			gap: 44px;
+			padding: 72px 0;
 		}
 
 		.hero-visual {
 			order: -1;
 		}
 
-		.hero-content {
-			align-items: center;
-			text-align: center;
-		}
-
-		.hero-title {
-			font-size: 2.5rem;
-		}
-
-		.hero-subtitle {
-			max-width: 100%;
-		}
-
-		.features-list {
-			align-items: flex-start;
-			max-width: 400px;
-		}
-
-		.install-section {
-			width: 100%;
-			max-width: 500px;
-		}
-
-		.cta-buttons {
-			justify-content: center;
+		.hero-grid {
+			display: none;
 		}
 
 		.steps-grid {
-			grid-template-columns: repeat(2, 1fr);
-			gap: 24px;
+			grid-template-columns: 1fr 1fr;
 		}
 
-		.steps-line {
-			display: none;
-		}
-	}
-
-	@media (max-width: 900px) {
-		.cta-buttons {
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.btn-primary,
-		.btn-secondary {
-			justify-content: center;
+		.how-it-works {
+			padding: 80px 0;
 		}
 	}
 
-	@media (max-width: 640px) {
-		.hero-title {
-			font-size: 2rem;
-		}
-
-		.hero-subtitle {
-			font-size: 1rem;
-		}
-
-		.install-command {
-			padding: 16px 18px;
-			gap: 12px;
-		}
-
-		.install-command code {
-			font-size: 0.72rem;
-		}
-
-		.install-prompt {
-			font-size: 1rem;
-		}
-
-		.copy-btn {
-			padding: 8px 12px;
-			font-size: 0.75rem;
+	@media (max-width: 560px) {
+		.container {
+			padding: 0 22px;
 		}
 
 		.steps-grid {
 			grid-template-columns: 1fr;
 		}
 
-		.features-list {
-			width: 100%;
+		.install-command code {
+			font-size: 0.8rem;
 		}
 
-		.feature-item {
-			font-size: 0.9rem;
-		}
-
-		.btn-primary,
-		.btn-secondary {
-			width: 100%;
+		.footer-cols {
+			gap: 48px;
 		}
 	}
 </style>

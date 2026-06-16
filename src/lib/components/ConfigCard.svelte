@@ -188,9 +188,8 @@
 	}
 
 	.card:hover {
-		border-color: var(--card-border-hover);
-		transform: translateY(-4px);
-		box-shadow: 0 20px 50px -12px rgba(var(--card-accent), 0.15);
+		border-color: var(--border-hover);
+		box-shadow: 0 0 0 1px var(--accent-glow), 0 14px 40px -22px var(--shadow);
 	}
 
 	.card:focus-visible {
@@ -235,11 +234,12 @@
 	}
 
 	.card-name {
-		font-size: 1.2rem;
-		font-weight: 700;
+		font-size: 1.1rem;
+		font-weight: 600;
 		color: var(--text-primary);
 		margin: 0;
 		line-height: 1.3;
+		letter-spacing: -0.01em;
 	}
 
 	.card-slug {
@@ -264,7 +264,7 @@
 	.vis-tag {
 		padding: 3px 8px;
 		font-size: 0.6rem;
-		font-weight: 700;
+		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		border-radius: 5px;
@@ -301,8 +301,8 @@
 	}
 
 	.stat-val {
-		font-size: 1.5rem;
-		font-weight: 800;
+		font-size: 1.4rem;
+		font-weight: 600;
 		line-height: 1;
 		color: var(--text-primary);
 		font-variant-numeric: tabular-nums;
