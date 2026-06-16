@@ -20,7 +20,7 @@
 	--accent-deep: #2f6b4d;
 	--amber: #c9a14e;
 	--shadow: rgba(0, 0, 0, 0.5);
-	--vignette: color-mix(in srgb, var(--bg-primary) 55%, #000);
+	--vignette: color-mix(in srgb, var(--bg-primary) 72%, #000);
 	--grain-blend: soft-light;
 	--grain-opacity: 0.05;
 	--font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;

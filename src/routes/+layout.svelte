@@ -29,7 +29,10 @@
 
 	:global(body) {
 		font-family: var(--font-mono);
-		background: var(--bg-primary);
+		/* edge vignette lives in the background layer so it never washes out content */
+		background-color: var(--bg-primary);
+		background-image: radial-gradient(125% 85% at 50% -10%, transparent 62%, var(--vignette) 100%);
+		background-attachment: fixed;
 		color: var(--text-primary);
 		line-height: 1.5;
 		min-height: 100vh;
@@ -39,16 +42,6 @@
 		font-feature-settings:
 			'calt' 1,
 			'ss01' 1;
-	}
-
-	/* edge vignette for depth (dark only via --vignette) */
-	:global(body)::before {
-		content: '';
-		position: fixed;
-		inset: 0;
-		z-index: 0;
-		pointer-events: none;
-		background: radial-gradient(120% 80% at 50% -10%, transparent 55%, var(--vignette) 100%);
 	}
 
 	/* film grain — the texture that kills the flat digital look */
