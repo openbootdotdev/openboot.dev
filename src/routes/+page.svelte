@@ -486,13 +486,6 @@
 		height: 1.02em;
 		background: var(--accent);
 		translate: 0 2px;
-		animation: blink 1.15s steps(1) infinite;
-	}
-
-	@keyframes blink {
-		50% {
-			opacity: 0;
-		}
 	}
 
 	.footer-cols {
