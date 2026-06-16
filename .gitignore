@@ -33,3 +33,6 @@ vite.config.ts.timestamp-*
 !.claude/skills/
 .claude/settings.local.json
 .dev.vars
+
+# Playwright MCP scratch artifacts
+.playwright-mcp/

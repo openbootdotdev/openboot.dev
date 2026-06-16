@@ -715,11 +715,11 @@
 	.save-btn {
 		padding: 10px 24px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 10px;
 		font-size: 0.88rem;
-		font-weight: 700;
+		font-weight: 600;
 		font-family: inherit;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -812,7 +812,7 @@
 
 	.section-tag {
 		font-size: 0.68rem;
-		font-weight: 800;
+		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
 		color: var(--text-muted);
@@ -870,7 +870,7 @@
 		border: none;
 		color: var(--text-primary);
 		font-size: 2.2rem;
-		font-weight: 800;
+		font-weight: 600;
 		font-family: inherit;
 		outline: none;
 		padding: 0;
@@ -941,7 +941,7 @@
 
 	.vis-pill.active {
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 	}
 
 	.alias-field {
@@ -1063,8 +1063,8 @@
 		background: var(--accent);
 		border-radius: 8px;
 		font-size: 0.65rem;
-		font-weight: 700;
-		color: #000;
+		font-weight: 600;
+		color: var(--bg-primary);
 		line-height: 1.3;
 	}
 
@@ -1110,7 +1110,7 @@
 		border: 1.5px solid var(--border);
 		border-radius: 4px;
 		font-size: 0.65rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: transparent;
 		background: var(--bg-secondary);
 		transition: all 0.15s;
@@ -1119,7 +1119,7 @@
 	.pref-check-on {
 		background: var(--accent);
 		border-color: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 	}
 
 	.pref-info {
@@ -1149,7 +1149,7 @@
 		padding: 4px 10px;
 		border-radius: 6px;
 		font-size: 0.72rem;
-		font-weight: 700;
+		font-weight: 600;
 		font-family: inherit;
 		cursor: pointer;
 		transition: all 0.15s;
@@ -1373,7 +1373,7 @@
 
 	.script-edit-btn:hover {
 		border-color: var(--accent);
-		background: rgba(34, 197, 94, 0.08);
+		background: var(--accent-glow);
 	}
 
 	.script-preview {
@@ -1478,7 +1478,7 @@
 		background: var(--accent);
 		border: none;
 		border-radius: 8px;
-		color: #000;
+		color: var(--bg-primary);
 		font-size: 0.82rem;
 		font-weight: 600;
 		font-family: inherit;
