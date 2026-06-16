@@ -350,23 +350,20 @@
 		height: 104px;
 		border-radius: 50%;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-weight: 800;
+		font-weight: 600;
 		font-size: 2.75rem;
 		box-shadow: 0 0 40px var(--accent-glow);
 	}
 
 	.profile-username {
-		font-size: 2.75rem;
-		font-weight: 800;
+		font-size: 2.4rem;
+		font-weight: 600;
 		margin-bottom: 12px;
-		background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--text-primary);
 		letter-spacing: -0.04em;
 	}
 
@@ -396,7 +393,7 @@
 		left: 50%;
 		transform: translateX(-50%);
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		padding: 6px 12px;
 		border-radius: 6px;
 		font-size: 0.75rem;
@@ -472,25 +469,25 @@
 	}
 
 	.stat-installs .stat-bar {
-		background: linear-gradient(90deg, #3b82f6 0%, transparent 100%);
+		background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
 	}
 
 	.stat-installs .stat-value {
-		color: #3b82f6;
+		color: var(--accent);
 	}
 
 	.stat-packages .stat-bar {
-		background: linear-gradient(90deg, #a855f7 0%, transparent 100%);
+		background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
 	}
 
 	.stat-packages .stat-value {
-		color: #a855f7;
+		color: var(--accent);
 	}
 
 	.stat-value {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 2.5rem;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1;
 	}
 
@@ -536,7 +533,7 @@
 		gap: 8px;
 		padding: 14px 28px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 10px;
 		font-size: 0.95rem;
@@ -608,29 +605,13 @@
 	.config-card[data-color="cyan"] .card-accent { background: #0ea5e9; }
 
 	.config-card:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		border-color: var(--border-hover);
+		box-shadow: 0 0 0 1px var(--accent-glow), 0 14px 40px -22px var(--shadow);
 	}
 
 	.config-card:hover .card-accent {
 		width: 5px;
 		opacity: 1;
-	}
-
-	.config-card[data-color="green"]:hover {
-		box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15);
-	}
-
-	.config-card[data-color="blue"]:hover {
-		box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
-	}
-
-	.config-card[data-color="purple"]:hover {
-		box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15);
-	}
-
-	.config-card[data-color="orange"]:hover {
-		box-shadow: 0 8px 32px rgba(251, 146, 60, 0.15);
 	}
 
 	.config-card[data-color="pink"]:hover {
@@ -749,7 +730,7 @@
 	.install-command .prompt {
 		color: var(--accent);
 		margin-right: 8px;
-		font-weight: 700;
+		font-weight: 600;
 	}
 
 	.copy-button {
@@ -819,7 +800,7 @@
 
 	.cta-title {
 		font-size: 1.5rem;
-		font-weight: 700;
+		font-weight: 600;
 		margin-bottom: 8px;
 		color: var(--text-primary);
 	}
@@ -836,7 +817,7 @@
 		gap: 8px;
 		padding: 14px 28px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 10px;
 		font-size: 0.95rem;

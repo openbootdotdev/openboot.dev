@@ -552,12 +552,12 @@
 		height: 64px;
 		border-radius: 50%;
 		border: 2px solid var(--border);
-		background: linear-gradient(135deg, var(--accent), #3b82f6);
-		color: #000;
+		background: var(--bg-tertiary);
+		color: var(--accent);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-weight: 700;
+		font-weight: 600;
 		font-size: 1.5rem;
 	}
 
@@ -584,14 +584,12 @@
 	}
 
 	.title {
-		font-size: 3.5rem;
-		font-weight: 800;
+		font-size: clamp(2.2rem, 5vw, 3.2rem);
+		font-weight: 600;
 		margin: 0 0 16px;
-		line-height: 1.1;
-		background: linear-gradient(135deg, var(--text-primary), var(--accent));
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		line-height: 1.05;
+		letter-spacing: -0.035em;
+		color: var(--text-primary);
 	}
 
 	.desc {
@@ -663,7 +661,7 @@
 		align-items: center;
 		gap: 6px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		padding: 10px 18px;
 		border-radius: 8px;
@@ -758,7 +756,7 @@
 
 	.stat-val {
 		font-size: 2.5rem;
-		font-weight: 800;
+		font-weight: 600;
 		color: var(--accent);
 		line-height: 1;
 		margin-bottom: 8px;
@@ -784,7 +782,7 @@
 
 	.section-title {
 		font-size: 1.75rem;
-		font-weight: 700;
+		font-weight: 600;
 		margin: 0 0 32px;
 		color: var(--text-primary);
 	}
@@ -817,7 +815,7 @@
 		align-items: center;
 		justify-content: center;
 		font-size: 2rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: #fff;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	}
@@ -852,7 +850,7 @@
 		align-items: center;
 		justify-content: center;
 		font-size: 1.5rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: #fff;
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 	}
@@ -995,7 +993,7 @@
 
 	.v.badge {
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		padding: 4px 12px;
 		border-radius: 6px;
 		font-size: 0.8rem;
@@ -1037,7 +1035,7 @@
 
 	.code-header button {
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		padding: 6px 14px;
 		border-radius: 6px;
@@ -1125,7 +1123,7 @@
 
 	.cta-text h3 {
 		font-size: 1.5rem;
-		font-weight: 700;
+		font-weight: 600;
 		margin: 0 0 8px;
 		color: var(--text-primary);
 	}
@@ -1142,11 +1140,11 @@
 		gap: 8px;
 		padding: 16px 32px;
 		background: var(--accent);
-		color: #000;
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 12px;
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		text-decoration: none;
 		cursor: pointer;
 		transition: all 0.2s;

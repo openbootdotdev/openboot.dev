@@ -444,12 +444,10 @@
 	}
 
 	.page-title {
-		font-size: 2.2rem;
-		font-weight: 800;
-		background: linear-gradient(135deg, var(--text-primary), var(--accent));
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		font-size: 1.9rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		letter-spacing: -0.03em;
 		line-height: 1.2;
 	}
 
@@ -577,7 +575,7 @@
 
 	.modal-head h3 {
 		font-size: 1.15rem;
-		font-weight: 700;
+		font-weight: 600;
 		margin: 0;
 	}
 
@@ -710,13 +708,13 @@
 		bottom: 24px;
 		left: 50%;
 		transform: translateX(-50%);
-		background: #22c55e;
-		color: #000;
+		background: var(--accent);
+		color: var(--bg-primary);
 		padding: 12px 24px;
 		border-radius: 10px;
 		font-weight: 600;
 		font-size: 0.88rem;
-		box-shadow: 0 4px 24px rgba(34, 197, 94, 0.3);
+		box-shadow: 0 8px 30px -8px var(--shadow);
 		z-index: 9999;
 		animation: toastIn 0.3s ease-out;
 	}

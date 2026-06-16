@@ -192,7 +192,7 @@
 
 	.page-title {
 		font-size: 1.6rem;
-		font-weight: 700;
+		font-weight: 600;
 	}
 
 	.page-stats {
@@ -235,7 +235,7 @@
 	.btn.primary {
 		background: var(--accent);
 		border: none;
-		color: #000;
+		color: var(--bg-primary);
 	}
 
 	.btn.primary:hover {
