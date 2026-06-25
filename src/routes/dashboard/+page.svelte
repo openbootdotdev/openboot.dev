@@ -262,7 +262,8 @@
 	{:else}
 		<div class="page-header">
 			<div>
-				<h1 class="page-title">My Configurations</h1>
+				<p class="eyebrow"><span class="accent">&gt;</span> dashboard</p>
+					<h1 class="page-title">My configurations</h1>
 				<p class="page-stats">
 					{configs.length} config{configs.length !== 1 ? 's' : ''}
 					{#if totalInstalls > 0}
@@ -272,12 +273,10 @@
 				</p>
 			</div>
 			<div class="header-actions">
-				<Button variant="secondary" onclick={() => (showImportModal = true)}>
-					Import Brewfile
-				</Button>
-				<Button variant="primary" onclick={() => goto('/dashboard/edit/_new')}>
-					+ New Config
-				</Button>
+				<button class="btn-import" onclick={() => (showImportModal = true)}>Import Brewfile</button>
+				<button class="btn-new" onclick={() => goto('/dashboard/edit/_new')}>
+					<span class="plus">+</span> New config
+				</button>
 			</div>
 		</div>
 
@@ -411,9 +410,9 @@
 
 <style>
 	.dashboard {
-		max-width: 1000px;
+		max-width: 1160px;
 		margin: 0 auto;
-		padding: 80px 24px 60px;
+		padding: 0 36px 80px;
 	}
 
 	.loading {
@@ -439,16 +438,28 @@
 	.page-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 36px;
+		align-items: flex-end;
+		padding-top: 96px;
+		margin-bottom: 40px;
+	}
+
+	.eyebrow {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		margin: 0 0 14px;
+	}
+
+	.eyebrow .accent {
+		color: var(--accent);
 	}
 
 	.page-title {
 		font-size: 1.9rem;
-		font-weight: 600;
+		font-weight: 500;
 		color: var(--text-primary);
-		letter-spacing: -0.03em;
+		letter-spacing: -0.025em;
 		line-height: 1.2;
+		margin: 0 0 10px;
 	}
 
 	.page-stats {
@@ -464,8 +475,58 @@
 
 	.header-actions {
 		display: flex;
-		gap: 10px;
+		gap: 12px;
 		align-items: center;
+	}
+
+	.btn-import {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 18px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-hover);
+		border-radius: 9px;
+		font-family: inherit;
+		font-size: 0.84rem;
+		color: var(--text-primary);
+		cursor: pointer;
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+
+	.btn-import:hover {
+		border-color: var(--accent-deep);
+		box-shadow: 0 0 0 3px var(--accent-glow);
+	}
+
+	.btn-new {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		padding: 10px 20px;
+		background: var(--accent);
+		color: var(--bg-primary);
+		border: none;
+		border-radius: 9px;
+		font-family: inherit;
+		font-size: 0.84rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			background 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+
+	.btn-new:hover {
+		background: var(--accent-hover);
+		box-shadow: 0 0 0 3px var(--accent-glow);
+	}
+
+	.plus {
+		font-size: 1rem;
+		line-height: 1;
 	}
 
 	/* Empty state */
@@ -508,8 +569,8 @@
 	/* Card grid */
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 20px;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 16px;
 	}
 
 	.card-wrap {
@@ -724,13 +785,21 @@
 		to { opacity: 1; transform: translateX(-50%) translateY(0); }
 	}
 
+	@media (max-width: 1024px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
 	@media (max-width: 768px) {
 		.page-header {
 			flex-direction: column;
 			align-items: flex-start;
 			gap: 16px;
 		}
+	}
 
+	@media (max-width: 600px) {
 		.grid {
 			grid-template-columns: 1fr;
 		}
