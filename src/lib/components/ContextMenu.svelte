@@ -36,13 +36,7 @@
 <svelte:window onclick={handleClickOutside} />
 
 <div class="ctx" bind:this={menuEl}>
-	<button class="trigger" onclick={toggle} aria-label="More actions">
-		<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-			<circle cx="8" cy="3" r="1.5" />
-			<circle cx="8" cy="8" r="1.5" />
-			<circle cx="8" cy="13" r="1.5" />
-		</svg>
-	</button>
+	<button class="trigger" onclick={toggle} aria-label="More actions">⋯</button>
 	{#if open}
 		<div class="dropdown">
 			{#each items as item, i}
@@ -70,20 +64,23 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
-		background: none;
-		border: 1px solid transparent;
-		border-radius: 8px;
+		padding: 8px 12px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border);
+		border-radius: 7px;
 		color: var(--text-muted);
 		cursor: pointer;
-		transition: all 0.15s;
+		font-family: inherit;
+		font-size: 0.9rem;
+		line-height: 1;
+		transition:
+			border-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	.trigger:hover {
-		background: var(--bg-tertiary);
-		border-color: var(--border);
-		color: var(--text-secondary);
+		border-color: var(--border-hover);
+		color: var(--accent);
 	}
 
 	.dropdown {

@@ -64,17 +64,8 @@
 						<div class="install-command">
 							<span class="install-prompt">$</span>
 							<code>curl -fsSL openboot.dev/install.sh | bash</code>
-							<button class="copy-btn" aria-label="Copy install command" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
-								{#if copied === 'main'}
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-										<polyline points="20 6 9 17 4 12"/>
-									</svg>
-								{:else}
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-										<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-									</svg>
-								{/if}
+							<button class="copy-btn" class:copied={copied === 'main'} aria-label="Copy install command" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
+								<span>{copied === 'main' ? '✓ copied' : '⧉ copy'}</span>
 							</button>
 						</div>
 						<p class="install-alt">
@@ -95,7 +86,17 @@
 							<div class="terminal-spacer"></div>
 						</div>
 						<div class="terminal-body">
-							<img src="/demo.gif" alt="OpenBoot demo — installing dev tools in one command" loading="eager" />
+							<div class="t-line"><span class="t-accent">✓</span> Checksum verified <span class="t-muted">·</span> Added to PATH</div>
+							<div class="t-line t-head">=== OpenBoot Installer v0.20.0 ===</div>
+							<div class="t-line t-note">[DRY-RUN MODE — no changes will be made]</div>
+							<div class="t-line t-head">=== Step 1: Git configuration ===</div>
+							<div class="t-line t-ok"><span class="t-accent">✓</span> Already configured: <span class="t-strong">jam &lt;jam@hey.com&gt;</span></div>
+							<div class="t-line t-head">=== Step 2: Preset selection ===</div>
+							<div class="t-line t-prompt-label">Choose your preset</div>
+							<div class="t-line t-sel"><span class="t-accent">›</span> <span class="t-strong">developer</span> — Node, Go, Docker, VS Code</div>
+							<div class="t-line t-opt">full — languages, DevOps, databases, AI</div>
+							<div class="t-line t-opt">minimal — CLI essentials only</div>
+							<div class="t-line t-keys">↑ up · ↓ down · / filter · ⏎ submit <span class="t-caret"></span></div>
 						</div>
 					</div>
 				</div>
@@ -178,7 +179,7 @@
 	/* ---------- hero ---------- */
 	.hero {
 		position: relative;
-		padding: 120px 0 124px;
+		padding: 108px 0 110px;
 		display: grid;
 		grid-template-columns: 1.05fr 0.95fr;
 		gap: 60px;
@@ -194,9 +195,9 @@
 			linear-gradient(var(--border) 1px, transparent 1px),
 			linear-gradient(90deg, var(--border) 1px, transparent 1px);
 		background-size: 46px 46px;
-		-webkit-mask-image: radial-gradient(ellipse 75% 55% at 22% 28%, #000 0%, transparent 68%);
-		mask-image: radial-gradient(ellipse 75% 55% at 22% 28%, #000 0%, transparent 68%);
-		opacity: 0.4;
+		-webkit-mask-image: radial-gradient(ellipse 75% 55% at 22% 30%, #000 0%, transparent 68%);
+		mask-image: radial-gradient(ellipse 75% 55% at 22% 30%, #000 0%, transparent 68%);
+		opacity: 0.45;
 	}
 
 	.hero-content {
@@ -216,9 +217,9 @@
 	}
 
 	.hero-title {
-		font-size: clamp(2.3rem, 4.6vw, 3.7rem);
+		font-size: clamp(2.3rem, 4.6vw, 3.4rem);
 		font-weight: 500;
-		line-height: 1.04;
+		line-height: 1.05;
 		letter-spacing: -0.04em;
 		color: var(--text-primary);
 		margin: 0 0 26px;
@@ -233,14 +234,14 @@
 		color: var(--text-secondary);
 		line-height: 1.75;
 		margin: 0 0 32px;
-		max-width: 54ch;
+		max-width: 52ch;
 	}
 
 	.features-list {
 		list-style: none;
 		display: grid;
 		gap: 12px;
-		margin: 0 0 38px;
+		margin: 0 0 36px;
 		padding: 0;
 	}
 
@@ -269,11 +270,11 @@
 		background: var(--bg-secondary);
 		border: 1px solid var(--border-hover);
 		border-radius: 10px;
-		padding: 16px 17px;
+		padding: 15px 16px;
 		display: flex;
 		align-items: center;
 		gap: 13px;
-		max-width: 510px;
+		max-width: 500px;
 		font-size: 0.9rem;
 		transition:
 			border-color 0.18s ease,
@@ -306,16 +307,22 @@
 		background: transparent;
 		border: none;
 		color: var(--text-muted);
-		padding: 2px;
+		padding: 0;
 		cursor: pointer;
 		transition: color 0.15s ease;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
+		font-family: inherit;
+		font-size: 0.78rem;
 	}
 
 	.copy-btn:hover {
+		color: var(--accent);
+	}
+
+	.copy-btn.copied {
 		color: var(--accent);
 	}
 
@@ -340,7 +347,7 @@
 
 	.terminal-window {
 		width: 100%;
-		max-width: 620px;
+		max-width: 560px;
 		border-radius: 12px;
 		overflow: hidden;
 		background: var(--bg-secondary);
@@ -387,21 +394,89 @@
 
 	.terminal-body {
 		background: var(--bg-secondary);
+		padding: 18px 18px 20px;
+		font-size: 0.76rem;
+		line-height: 1.85;
+		color: var(--text-secondary);
 	}
 
-	.terminal-body img {
-		width: 100%;
-		display: block;
+	.t-line {
+		white-space: nowrap;
+	}
+
+	.t-accent {
+		color: var(--accent);
+	}
+
+	.t-muted {
+		color: var(--text-muted);
+	}
+
+	.t-strong {
+		color: var(--text-primary);
+	}
+
+	.t-head {
+		color: var(--accent);
+		margin-top: 10px;
+	}
+
+	.t-note {
+		color: var(--text-muted);
+		margin-top: 8px;
+	}
+
+	.t-ok {
+		margin-top: 4px;
+	}
+
+	.t-prompt-label {
+		color: var(--amber);
+		margin-top: 6px;
+	}
+
+	.t-sel {
+		margin-top: 2px;
+	}
+
+	.t-opt {
+		color: var(--text-muted);
+		padding-left: 14px;
+	}
+
+	.t-keys {
+		color: var(--text-muted);
+		margin-top: 10px;
+	}
+
+	.t-caret {
+		display: inline-block;
+		width: 7px;
+		height: 1em;
+		background: var(--accent);
+		translate: 0 2px;
+		animation: ob-blink 1s infinite;
+	}
+
+	@keyframes ob-blink {
+		0%,
+		49% {
+			opacity: 1;
+		}
+		50%,
+		100% {
+			opacity: 0;
+		}
 	}
 
 	/* ---------- how it works ---------- */
 	.how-it-works {
-		padding: 112px 0;
+		padding: 104px 0;
 		border-top: 1px solid var(--border);
 	}
 
 	.section-header {
-		margin-bottom: 60px;
+		margin-bottom: 56px;
 	}
 
 	.section-prompt {
@@ -435,7 +510,7 @@
 
 	.step {
 		background: var(--bg-primary);
-		padding: 30px 26px 34px;
+		padding: 28px 24px 32px;
 		transition: background 0.2s ease;
 	}
 

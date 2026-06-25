@@ -262,7 +262,7 @@
 	}
 
 	.hero {
-		padding: 104px 0 56px;
+		padding: 100px 0 52px;
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-end;
@@ -522,12 +522,6 @@
 		color: var(--accent);
 	}
 
-	.config-card:hover .install-preview {
-		max-height: 100px;
-		opacity: 1;
-		margin-top: 8px;
-	}
-
 	.card-header {
 		display: flex;
 		justify-content: space-between;
@@ -616,14 +610,8 @@
 	}
 
 	.install-preview {
-		max-height: 0;
-		opacity: 0;
 		overflow: hidden;
-		transition:
-			max-height 0.25s ease,
-			opacity 0.25s ease,
-			margin-top 0.25s ease;
-		padding: 0 12px;
+		padding: 9px 11px;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -631,13 +619,12 @@
 
 	.install-preview code {
 		font-family: var(--font-mono);
-		font-size: 0.74rem;
+		font-size: 0.72rem;
 		color: var(--text-secondary);
 		display: block;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		padding: 10px 0;
 	}
 
 	.install-preview .prompt {
