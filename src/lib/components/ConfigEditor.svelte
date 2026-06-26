@@ -350,6 +350,8 @@
 			<div class="savebar-right">
 				{#if error}
 					<span class="savebar-error">{error}</span>
+				{:else if rawMode}
+					<span class="status raw">editing config.json</span>
 				{:else if dirty}
 					<span class="status unsaved"><span class="status-dot"></span> Unsaved changes</span>
 				{:else if !isNew}
@@ -359,7 +361,7 @@
 					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
 					Raw
 				</button>
-				{#if dirty}
+				{#if dirty && !rawMode}
 					<button class="discard" onclick={discard}>Discard</button>
 				{/if}
 				<button class="save" class:inactive={!canSave} disabled={saving || !canSave} onclick={save}>
@@ -531,6 +533,10 @@
 
 	.status.saved {
 		color: var(--accent);
+	}
+
+	.status.raw {
+		color: var(--text-muted);
 	}
 
 	.status-dot {
