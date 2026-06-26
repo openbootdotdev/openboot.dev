@@ -23,8 +23,6 @@
 	let total = $state(0);
 	let limit = 24;
 
-	const cardColors = ['#22c55e', '#3b82f6', '#a855f7', '#f97316', '#ec4899', '#06b6d4', '#eab308', '#f43f5e'];
-
 	async function loadConfigs(reset = false) {
 		if (reset) {
 			offset = 0;
@@ -168,24 +166,19 @@
 				</svg>
 				<h3 class="empty-title">No configurations yet</h3>
 				<p class="empty-desc">Be the first to share your setup with <code>openboot snapshot</code></p>
-				<a href="/login" class="empty-cta">Get Started</a>
+				<a href="/login" class="empty-cta">Get started</a>
 			</div>
 		{:else}
 			<div class="configs-grid">
-				{#each configs as config, i}
-					<a 
-						href="/{config.username}/{config.slug}" 
-						class="config-card"
-						style="--card-color: {cardColors[i % cardColors.length]};"
-					>
-						<div class="card-accent"></div>
+				{#each configs as config}
+					<a href="/{config.username}/{config.slug}" class="config-card">
 						<div class="card-header">
 							<div class="user-info">
-								<img 
-									src={config.avatar_url} 
-									alt={config.username} 
-									class="avatar"
-								/>
+								{#if config.avatar_url}
+									<img src={config.avatar_url} alt={config.username} class="avatar" />
+								{:else}
+									<span class="avatar avatar-letter">{config.username.charAt(0)}</span>
+								{/if}
 								<span class="username">@{config.username}</span>
 								{#if config.username === 'openboot'}
 									<span class="official-badge">[official]</span>
@@ -196,9 +189,7 @@
 							{/if}
 						</div>
 						<h3 class="config-name">{config.name}</h3>
-						{#if config.description}
-							<p class="config-description">{config.description}</p>
-						{/if}
+						<p class="config-description">{config.description}</p>
 						<div class="card-footer">
 							{#if getPackageBreakdown(config).cli > 0 || getPackageBreakdown(config).apps > 0}
 								<div class="stat packages">
@@ -232,13 +223,12 @@
 	</div>
 
 	<section class="cta-banner">
-		<div class="cta-glow"></div>
 		<div class="container">
 			<div class="cta-content">
 				<h3 class="cta-title">Create your own config and share it with the community</h3>
 				<p class="cta-desc">Capture your development environment in seconds and share it with a single command</p>
 				<a href="/login?return_to=/dashboard" class="cta-button">
-					Get Started
+					Get started
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
 					</svg>
@@ -309,7 +299,7 @@
 	}
 
 	.sort-select {
-		padding: 9px 34px 9px 13px;
+		padding: 9px 34px 9px 14px;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border-hover);
 		border-radius: 8px;
@@ -347,7 +337,7 @@
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
 		gap: 16px;
-		margin-bottom: 60px;
+		padding-bottom: 8px;
 	}
 
 	.skeleton-card {
@@ -494,8 +484,9 @@
 		text-decoration: none;
 		color: inherit;
 		transition:
-			border-color 0.18s ease,
-			box-shadow 0.18s ease;
+			transform 0.2s ease,
+			border-color 0.2s ease,
+			box-shadow 0.2s ease;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
@@ -503,23 +494,10 @@
 		overflow: hidden;
 	}
 
-	.card-accent {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 2px;
-		background: var(--card-color);
-		opacity: 0.8;
-	}
-
 	.config-card:hover {
+		transform: translateY(-4px);
 		border-color: var(--border-hover);
-		box-shadow: 0 0 0 1px var(--accent-glow), 0 14px 40px -22px var(--shadow);
-	}
-
-	.config-card:hover .config-name {
-		color: var(--accent);
+		box-shadow: 0 16px 34px -16px var(--shadow);
 	}
 
 	.card-header {
@@ -539,6 +517,16 @@
 		height: 26px;
 		border-radius: 50%;
 		border: 1px solid var(--border-hover);
+	}
+
+	.avatar-letter {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-tertiary);
+		font-size: 0.72rem;
+		color: var(--text-secondary);
+		text-transform: lowercase;
 	}
 
 	.username {
@@ -575,6 +563,7 @@
 		color: var(--text-secondary);
 		line-height: 1.6;
 		margin: 0;
+		min-height: 2.6em;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -670,7 +659,7 @@
 
 	.cta-banner {
 		position: relative;
-		padding: 80px 0;
+		padding: 96px 0 40px;
 		margin-top: 40px;
 		border-top: 1px solid var(--border);
 	}

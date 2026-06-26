@@ -3,17 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/stores/auth';
 	import PackageManager from './PackageManager.svelte';
-	import PackageDna from './PackageDna.svelte';
-	import SectionNav from './SectionNav.svelte';
-	import {
-		MACOS_PREF_CATALOG,
-		CATALOG_CATEGORIES,
-		getCatalogItem,
-		type MacOSPrefCatalogItem,
-	} from '$lib/macos-prefs-catalog';
-	import { PRESET_PACKAGES } from '$lib/presets';
-	import ShellEditor from './ShellEditor.svelte';
 	import MacOSPreferencesEditor from './MacOSPreferencesEditor.svelte';
+	import { PRESET_PACKAGES } from '$lib/presets';
 
 	let { slug, skipAuth = false }: { slug?: string; skipAuth?: boolean } = $props();
 	const isNew = !slug;
@@ -23,21 +14,9 @@
 	let error = $state('');
 	let editingConfig = $state<any>(null);
 	let initialSnapshot = $state('');
+	let initialPayload: any = null;
 	let rawMode = $state(false);
 	let rawJson = $state('');
-
-	function captureSnapshot(): string {
-		return JSON.stringify({
-			formData,
-			packages: [...selectedPackages.entries()].sort(),
-			packageDescs: [...packageDescs.entries()].sort(),
-			macosPrefs,
-		});
-	}
-
-	const hasChanges = $derived(isNew || initialSnapshot === '' || rawMode || captureSnapshot() !== initialSnapshot);
-	let showScriptModal = $state(false);
-	let scriptDraft = $state('');
 
 	let formData = $state({
 		name: '',
@@ -46,7 +25,7 @@
 		visibility: 'unlisted' as string,
 		alias: '',
 		custom_script: '',
-		dotfiles_repo: '',
+		dotfiles_repo: ''
 	});
 
 	let selectedPackages = $state(new Map<string, string>());
@@ -65,79 +44,21 @@
 		host?: string;
 	}
 	let macosPrefs = $state<MacOSPref[]>([]);
-	let expandedPrefCats = $state<Set<string>>(new Set());
 
-	const packages = $derived(
-		Array.from(selectedPackages.entries()).map(([key, type]) => {
-			const name = key.slice(type.length + 1);
-			return { name, type, desc: packageDescs.get(key) || '' };
-		})
-	);
+	const scriptPlaceholder =
+		'#!/usr/bin/env bash\n# Runs after packages, shell, dotfiles, and macOS prefs.\n\n# npm install -g pnpm vercel\n# git config --global pull.rebase true';
 
-	const sections = [
-		{ id: 'identity', label: 'Identity' },
-		{ id: 'stack', label: 'Stack' },
-		{ id: 'system', label: 'System' },
-		{ id: 'script', label: 'Script' },
-	];
-
-	// Gradient from config name (matches ConfigCard)
-	const GRADIENTS = [
-		'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
-		'linear-gradient(135deg, #f43f5e 0%, #fb923c 50%, #fbbf24 100%)',
-		'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%)',
-		'linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%)',
-		'linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%)',
-		'linear-gradient(135deg, #8b5cf6 0%, #d946ef 50%, #f43f5e 100%)',
-		'linear-gradient(135deg, #14b8a6 0%, #22c55e 50%, #84cc16 100%)',
-		'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%)',
-	];
-	function hashStr(s: string): number {
-		let h = 0;
-		for (let i = 0; i < s.length; i++) {
-			h = ((h << 5) - h) + s.charCodeAt(i);
-			h |= 0;
-		}
-		return Math.abs(h);
+	function captureSnapshot(): string {
+		return JSON.stringify({
+			formData,
+			packages: [...selectedPackages.entries()].sort(),
+			packageDescs: [...packageDescs.entries()].sort(),
+			macosPrefs
+		});
 	}
-	const editorGradient = $derived(
-		formData.name
-			? GRADIENTS[hashStr(formData.name) % GRADIENTS.length]
-			: GRADIENTS[0]
-	);
 
-	const catalogByCategory = $derived.by(() => {
-		const map: Record<string, MacOSPrefCatalogItem[]> = {};
-		for (const cat of CATALOG_CATEGORIES) {
-			map[cat] = MACOS_PREF_CATALOG.filter((i) => i.category === cat);
-		}
-		return map;
-	});
-
-	const addedCountByCategory = $derived.by(() => {
-		const counts: Record<string, number> = {};
-		for (const pref of macosPrefs) {
-			const ci = getCatalogItem(pref.domain, pref.key);
-			const cat = ci?.category ?? 'Custom';
-			counts[cat] = (counts[cat] || 0) + 1;
-		}
-		return counts;
-	});
-
-	const customPrefs = $derived(
-		macosPrefs
-			.map((p, i) => ({ pref: p, index: i }))
-			.filter(({ pref }) => !getCatalogItem(pref.domain, pref.key))
-	);
-
-	function initExpandedCats() {
-		const cats = new Set<string>();
-		for (const pref of macosPrefs) {
-			const ci = getCatalogItem(pref.domain, pref.key);
-			if (ci) cats.add(ci.category);
-		}
-		expandedPrefCats = cats.size > 0 ? cats : new Set([CATALOG_CATEGORIES[0]]);
-	}
+	const dirty = $derived(initialSnapshot !== '' && captureSnapshot() !== initialSnapshot);
+	const canSave = $derived(isNew || dirty || rawMode);
 
 	function initPackagesForPreset(preset: string) {
 		const p = PRESET_PACKAGES[preset];
@@ -151,7 +72,12 @@
 
 	function handlePresetChange(preset: string) {
 		formData.base_preset = preset;
-		initPackagesForPreset(preset);
+		if (preset === 'scratch') {
+			selectedPackages = new Map();
+			packageDescs = new Map();
+		} else {
+			initPackagesForPreset(preset);
+		}
 	}
 
 	function togglePackage(name: string, type: string, desc: string = '') {
@@ -170,10 +96,23 @@
 	}
 
 	function normalizePrefValue(type: string, value: string): string {
-		if (type === 'bool') {
-			return (value === '1' || value === 'true') ? 'true' : 'false';
-		}
+		if (type === 'bool') return value === '1' || value === 'true' ? 'true' : 'false';
 		return value;
+	}
+
+	function mapPrefs(raw: any[]): MacOSPref[] {
+		return raw.map((p: any) => {
+			const type = p.type || '';
+			const out: MacOSPref = {
+				domain: p.domain || '',
+				key: p.key || '',
+				type,
+				value: normalizePrefValue(type, String(p.value ?? '')),
+				desc: p.desc || ''
+			};
+			if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+			return out;
+		});
 	}
 
 	onMount(async () => {
@@ -198,7 +137,7 @@
 						visibility: data.visibility || 'unlisted',
 						alias: '',
 						custom_script: data.custom_script || '',
-						dotfiles_repo: data.dotfiles_repo || '',
+						dotfiles_repo: data.dotfiles_repo || ''
 					};
 					if (data.packages?.length) {
 						const map = new Map<string, string>();
@@ -218,21 +157,7 @@
 					} else {
 						initPackagesForPreset(formData.base_preset);
 					}
-					if (data.snapshot?.macos_prefs) {
-						macosPrefs = data.snapshot.macos_prefs.map((p: any) => {
-							const type = p.type || '';
-							const out: MacOSPref = {
-								domain: p.domain || '',
-								key: p.key || '',
-								type,
-								value: normalizePrefValue(type, String(p.value ?? '')),
-								desc: p.desc || '',
-							};
-							if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
-							return out;
-						});
-					}
-					initExpandedCats();
+					if (data.snapshot?.macos_prefs) macosPrefs = mapPrefs(data.snapshot.macos_prefs);
 				} catch {
 					initPackagesForPreset('developer');
 				}
@@ -253,23 +178,11 @@
 					visibility: config.visibility || 'unlisted',
 					alias: config.alias || '',
 					custom_script: config.custom_script || '',
-					dotfiles_repo: config.dotfiles_repo || '',
+					dotfiles_repo: config.dotfiles_repo || ''
 				};
 				macosPrefs = Array.isArray(config.snapshot?.macos_prefs)
-					? config.snapshot.macos_prefs.map((p: any) => {
-							const type = p.type || '';
-							const out: MacOSPref = {
-								domain: p.domain || '',
-								key: p.key || '',
-								type,
-								value: normalizePrefValue(type, String(p.value ?? '')),
-								desc: p.desc || '',
-							};
-							if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
-							return out;
-						})
+					? mapPrefs(config.snapshot.macos_prefs)
 					: [];
-				initExpandedCats();
 				const savedPkgs = config.packages || [];
 				if (savedPkgs.length > 0) {
 					const newMap = new Map<string, string>();
@@ -292,9 +205,11 @@
 			} catch {
 				error = 'Failed to load configuration';
 			}
-			initialSnapshot = captureSnapshot();
 			loading = false;
 		}
+
+		initialPayload = JSON.parse(JSON.stringify(buildPayload()));
+		initialSnapshot = captureSnapshot();
 	});
 
 	function buildPayload() {
@@ -310,7 +225,7 @@
 				const name = key.slice(type.length + 1);
 				return { name, type, desc: packageDescs.get(key) || '' };
 			}),
-			snapshot: updatedSnapshot,
+			snapshot: updatedSnapshot
 		};
 	}
 
@@ -322,7 +237,7 @@
 			visibility: parsed.visibility || 'unlisted',
 			alias: parsed.alias || '',
 			custom_script: parsed.custom_script || '',
-			dotfiles_repo: parsed.dotfiles_repo || '',
+			dotfiles_repo: parsed.dotfiles_repo || ''
 		};
 		const newMap = new Map<string, string>();
 		const newDescs = new Map<string, string>();
@@ -338,21 +253,7 @@
 		}
 		selectedPackages = newMap;
 		packageDescs = newDescs;
-		macosPrefs = Array.isArray(parsed.snapshot?.macos_prefs)
-			? parsed.snapshot.macos_prefs.map((p: any) => {
-					const type = p.type || '';
-					const out: MacOSPref = {
-						domain: p.domain || '',
-						key: p.key || '',
-						type,
-						value: normalizePrefValue(type, String(p.value ?? '')),
-						desc: p.desc || '',
-					};
-					if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
-					return out;
-				})
-			: [];
-		initExpandedCats();
+		macosPrefs = Array.isArray(parsed.snapshot?.macos_prefs) ? mapPrefs(parsed.snapshot.macos_prefs) : [];
 	}
 
 	function enterRawMode() {
@@ -363,8 +264,7 @@
 
 	function exitRawMode() {
 		try {
-			const parsed = JSON.parse(rawJson);
-			applyParsed(parsed);
+			applyParsed(JSON.parse(rawJson));
 			rawMode = false;
 			error = '';
 		} catch {
@@ -372,8 +272,18 @@
 		}
 	}
 
+	function toggleRaw() {
+		if (rawMode) exitRawMode();
+		else enterRawMode();
+	}
+
+	function discard() {
+		if (initialPayload) applyParsed(JSON.parse(JSON.stringify(initialPayload)));
+		error = '';
+	}
+
 	async function save() {
-		let payload: ReturnType<typeof buildPayload> | any;
+		let payload: any;
 		if (rawMode) {
 			try {
 				payload = JSON.parse(rawJson);
@@ -400,7 +310,7 @@
 			const response = await fetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
+				body: JSON.stringify(payload)
 			});
 			const text = await response.text();
 			let result;
@@ -428,204 +338,113 @@
 </svelte:head>
 
 {#if loading}
-	<div class="editor-loading">
-		<div class="loader"></div>
-	</div>
+	<div class="editor-loading"><div class="loader"></div></div>
 {:else}
 	<div class="editor">
-		{#if !rawMode}
-			<SectionNav {sections} />
-		{/if}
-
-		<header class="editor-header">
-			<button class="back-btn" onclick={() => goto('/dashboard')}>
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M19 12H5" /><path d="m12 19-7-7 7-7" />
-				</svg>
-				Back
+		<!-- save bar -->
+		<div class="savebar">
+			<button class="back" onclick={() => goto('/dashboard')}>
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+				Back to dashboard
 			</button>
-			<div class="header-right">
-				{#if !rawMode}
-					<div class="dna-preview">
-						<PackageDna {packages} />
-					</div>
-				{/if}
-				<button
-					class="raw-btn"
-					class:raw-btn-active={rawMode}
-					onclick={() => rawMode ? exitRawMode() : enterRawMode()}
-					title={rawMode ? 'Switch to visual editor' : 'Edit raw JSON'}
-				>
-					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
-					</svg>
-					{rawMode ? 'Visual' : 'Raw'}
-				</button>
+			<div class="savebar-right">
 				{#if error}
-					<span class="header-error">{error}</span>
+					<span class="savebar-error">{error}</span>
+				{:else if dirty}
+					<span class="status unsaved"><span class="status-dot"></span> Unsaved changes</span>
+				{:else if !isNew}
+					<span class="status saved">✓ All changes saved</span>
 				{/if}
-				<button class="save-btn" class:save-btn-inactive={!hasChanges} onclick={save} disabled={saving || !hasChanges}>
-					{saving ? 'Saving...' : isNew ? 'Create Config' : 'Save Changes'}
+				<button class="raw-btn" class:active={rawMode} onclick={toggleRaw} title={rawMode ? 'Back to the form' : 'Edit raw JSON'}>
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+					Raw
+				</button>
+				{#if dirty}
+					<button class="discard" onclick={discard}>Discard</button>
+				{/if}
+				<button class="save" class:inactive={!canSave} disabled={saving || !canSave} onclick={save}>
+					{saving ? 'Saving…' : 'Save changes'}
 				</button>
 			</div>
-		</header>
+		</div>
 
 		{#if rawMode}
-			<div class="raw-editor">
-				<div class="raw-hint">Edit the config JSON directly. Switch back to Visual to see your changes reflected in the form.</div>
-				<textarea
-					class="raw-textarea"
-					bind:value={rawJson}
-					spellcheck="false"
-					autocomplete="off"
-					autocapitalize="off"
-				></textarea>
+			<div class="raw-wrap">
+				<div class="term">
+					<div class="term-head">
+						<span class="dot dot-red"></span><span class="dot dot-amber"></span><span class="dot dot-green"></span>
+						<span class="term-name">config.json</span>
+						<span class="term-note">editable · consumed by the CLI</span>
+					</div>
+					<textarea class="raw-textarea" bind:value={rawJson} spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+				</div>
 			</div>
 		{:else}
-
-		<div class="editor-body">
-			<!-- IDENTITY -->
-			<section class="section" id="identity">
-				<div class="identity-hero" style="background: {editorGradient}">
-					<div class="identity-glass">
-						<input
-							class="name-input"
-							bind:value={formData.name}
-							placeholder="Config name"
-						/>
-						<input
-							class="desc-input"
-							bind:value={formData.description}
-							placeholder="What's this config for?"
-						/>
-						<div class="identity-row">
+			<div class="form-grid">
+				<!-- IDENTITY -->
+				<section class="col-full">
+					<p class="eyebrow"><span class="gt">&gt;</span> IDENTITY</p>
+					<div class="card identity-card">
+						<input class="name-input" bind:value={formData.name} placeholder="Config name" />
+						<input class="desc-input" bind:value={formData.description} placeholder="What's this config for?" />
+						<div class="identity-foot">
 							<div class="vis-pills">
-								{#each ['public', 'unlisted', 'private'] as v}
-									<button
-										class="vis-pill"
-										class:active={formData.visibility === v}
-										onclick={() => (formData.visibility = v)}
-									>
-										{v}
-									</button>
+								{#each ['public', 'unlisted', 'private'] as v (v)}
+									<button class="vis-pill" class:active={formData.visibility === v} onclick={() => (formData.visibility = v)}>{v}</button>
 								{/each}
 							</div>
 							<div class="alias-field">
 								<span class="alias-prefix">openboot.dev/</span>
-								<input
-									class="alias-input"
-									bind:value={formData.alias}
-									placeholder="alias"
-								/>
+								<input class="alias-input" bind:value={formData.alias} placeholder="alias" />
 							</div>
 						</div>
 					</div>
-				</div>
-			</section>
+				</section>
 
-			<!-- STACK -->
-			<section class="section" id="stack">
-				<div class="section-top">
-					<div class="section-tag">STACK</div>
-					<span class="section-count">{selectedPackages.size} packages</span>
-				</div>
-				<PackageManager
-					{selectedPackages}
-					{packageDescs}
-					basePreset={formData.base_preset}
-					{togglePackage}
-					onPresetChange={handlePresetChange}
-				/>
-			</section>
-
-			<!-- SYSTEM -->
-			<section class="section" id="system">
-				<div class="section-tag">SYSTEM</div>
-
-				<div class="system-dotfiles">
-					<span class="dotfiles-label">Dotfiles Repository</span>
-					<input
-						class="dotfiles-input"
-						bind:value={formData.dotfiles_repo}
-						placeholder="https://github.com/you/dotfiles"
-					/>
-					<p class="dotfiles-hint">Cloned & deployed via GNU Stow after install.</p>
-				</div>
-
-				<MacOSPreferencesEditor
-					bind:macosPrefs
-					bind:expandedPrefCats
-					{catalogByCategory}
-					{addedCountByCategory}
-					{customPrefs}
-				/>
-			</section>
-
-			<!-- SCRIPT -->
-			<section class="section" id="script">
-				<div class="section-tag">SCRIPT</div>
-				<div class="script-card">
-					<div class="script-bar">
-						<span class="script-filename">post-install.sh</span>
-						<button
-							class="script-edit-btn"
-							type="button"
-							onclick={() => { scriptDraft = formData.custom_script; showScriptModal = true; }}
-						>
-							{formData.custom_script ? 'Edit' : 'Add Script'}
-						</button>
+				<!-- STACK -->
+				<section>
+					<div class="eyebrow-row">
+						<p class="eyebrow"><span class="gt">&gt;</span> STACK</p>
+						<span class="eyebrow-count">{selectedPackages.size} packages</span>
 					</div>
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					{#if formData.custom_script}
-						<pre class="script-preview" onclick={() => { scriptDraft = formData.custom_script; showScriptModal = true; }}>{formData.custom_script}</pre>
-					{:else}
-						<div class="script-empty" onclick={() => { scriptDraft = ''; showScriptModal = true; }}>No post-install script — click to add</div>
-					{/if}
-				</div>
-			</section>
-		</div>
+					<PackageManager
+						{selectedPackages}
+						basePreset={formData.base_preset}
+						{togglePackage}
+						onPresetChange={handlePresetChange}
+					/>
+				</section>
+
+				<!-- SYSTEM -->
+				<section>
+					<p class="eyebrow"><span class="gt">&gt;</span> SYSTEM</p>
+					<div class="card">
+						<div class="field-label">Dotfiles repository</div>
+						<input class="text-input" bind:value={formData.dotfiles_repo} placeholder="https://github.com/you/dotfiles" />
+						<p class="field-hint">Cloned &amp; deployed via GNU Stow after install.</p>
+						<div class="field-label field-label-spaced">macOS preferences</div>
+						<MacOSPreferencesEditor bind:macosPrefs />
+					</div>
+				</section>
+
+				<!-- SCRIPT -->
+				<section class="col-full">
+					<p class="eyebrow"><span class="gt">&gt;</span> SCRIPT</p>
+					<div class="term">
+						<div class="term-head">
+							<span class="dot dot-red"></span><span class="dot dot-amber"></span><span class="dot dot-green"></span>
+							<span class="term-name">post-install.sh — runs after packages</span>
+						</div>
+						<textarea
+							class="script-textarea"
+							bind:value={formData.custom_script}
+							spellcheck="false"
+							placeholder={scriptPlaceholder}
+						></textarea>
+					</div>
+				</section>
+			</div>
 		{/if}
-	</div>
-{/if}
-
-{#if showScriptModal}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="script-modal-overlay" onkeydown={(e) => { if (e.key === 'Escape') showScriptModal = false; }}>
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<div class="script-modal-backdrop" onclick={() => showScriptModal = false}></div>
-		<div class="script-modal">
-			<div class="script-modal-bar">
-				<span class="script-modal-filename">post-install.sh</span>
-				<div class="script-modal-actions">
-					<button
-						type="button"
-						class="script-modal-cancel"
-						onclick={() => showScriptModal = false}
-					>Cancel</button>
-					<button
-						type="button"
-						class="script-modal-save"
-						onclick={() => { formData.custom_script = scriptDraft; showScriptModal = false; }}
-					>Save</button>
-				</div>
-			</div>
-			<div class="script-modal-body">
-				<ShellEditor
-					bind:value={scriptDraft}
-					placeholder="#!/bin/bash
-# Commands to run after package installation
-
-# Example:
-# mkdir -p ~/Projects
-# npm install -g vercel
-# defaults write com.apple.dock autohide -bool true"
-				/>
-			</div>
-			<div class="script-modal-hint">
-				Commands run sequentially in your home directory after packages, shell, dotfiles, and macOS preferences are applied.
-			</div>
-		</div>
 	</div>
 {/if}
 
@@ -653,879 +472,447 @@
 	}
 
 	.editor {
-		max-width: 820px;
+		max-width: 1160px;
 		margin: 0 auto;
-		padding: 0 24px 100px;
+		padding: 0 36px 96px;
 	}
 
-	/* Header */
-	.editor-header {
+	/* ---------- save bar ---------- */
+	.savebar {
 		position: sticky;
-		top: 53px;
+		top: 56px;
 		z-index: 40;
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		padding: 16px 0;
-		margin-bottom: 40px;
-		background: var(--bg-primary);
+		justify-content: space-between;
+		gap: 16px;
+		padding: 22px 0 16px;
+		background: color-mix(in srgb, var(--bg-primary) 90%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		border-bottom: 1px solid var(--border);
 	}
 
-	.back-btn {
-		display: flex;
+	.back {
+		display: inline-flex;
 		align-items: center;
 		gap: 8px;
 		background: none;
 		border: none;
-		color: var(--text-muted);
-		font-size: 0.88rem;
-		font-weight: 600;
-		font-family: inherit;
 		cursor: pointer;
-		transition: color 0.15s;
-		padding: 8px 0;
+		font-family: inherit;
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		padding: 0;
+		transition: color 0.15s ease;
 	}
 
-	.back-btn:hover {
+	.back:hover {
 		color: var(--text-primary);
 	}
 
-	.header-right {
+	.savebar-right {
 		display: flex;
 		align-items: center;
-		gap: 16px;
+		gap: 14px;
 	}
 
-	.dna-preview {
-		opacity: 0.6;
-		transition: opacity 0.3s;
+	.status {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 0.78rem;
+		animation: ob-fade 0.25s ease;
 	}
 
-	.dna-preview:hover {
-		opacity: 1;
+	.status.unsaved {
+		color: var(--amber);
 	}
 
-	.header-error {
+	.status.saved {
+		color: var(--accent);
+	}
+
+	.status-dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--amber);
+		animation: ob-pulse 1.5s ease infinite;
+	}
+
+	.savebar-error {
+		font-size: 0.78rem;
 		color: var(--danger);
-		font-size: 0.82rem;
-		font-weight: 500;
-	}
-
-	.save-btn {
-		padding: 10px 24px;
-		background: var(--accent);
-		color: var(--bg-primary);
-		border: none;
-		border-radius: 10px;
-		font-size: 0.88rem;
-		font-weight: 600;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.save-btn:hover:not(:disabled) {
-		background: var(--accent-hover);
-		transform: translateY(-1px);
-	}
-
-	.save-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.save-btn-inactive {
-		background: var(--border);
-		color: var(--text-muted);
 	}
 
 	.raw-btn {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		padding: 8px 14px;
-		background: none;
-		border: 1px solid var(--border);
+		gap: 7px;
+		padding: 9px 15px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-hover);
 		border-radius: 8px;
-		color: var(--text-muted);
-		font-size: 0.82rem;
-		font-weight: 600;
 		font-family: inherit;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
 		cursor: pointer;
-		transition: all 0.15s;
+		transition: all 0.15s ease;
 	}
 
 	.raw-btn:hover {
-		border-color: var(--text-muted);
 		color: var(--text-primary);
 	}
 
-	.raw-btn-active {
+	.raw-btn.active {
+		background: var(--accent-glow);
 		border-color: var(--accent);
 		color: var(--accent);
 	}
 
-	.raw-editor {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding-bottom: 100px;
+	.discard {
+		padding: 9px 16px;
+		background: none;
+		border: 1px solid var(--border-hover);
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.82rem;
+		color: var(--text-secondary);
+		cursor: pointer;
+		animation: ob-fade 0.25s ease;
+		transition: color 0.15s ease;
 	}
 
-	.raw-hint {
-		font-size: 0.80rem;
+	.discard:hover {
+		color: var(--text-primary);
+	}
+
+	.save {
+		padding: 10px 22px;
+		background: var(--accent);
+		color: var(--bg-primary);
+		border: none;
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.84rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: filter 0.15s ease, transform 0.15s ease;
+	}
+
+	.save:hover:not(:disabled) {
+		filter: brightness(1.08);
+		transform: translateY(-1px);
+	}
+
+	.save.inactive {
+		background: var(--bg-tertiary);
+		color: var(--text-muted);
+		border: 1px solid var(--border);
+		cursor: default;
+	}
+
+	.save:disabled {
+		cursor: default;
+	}
+
+	/* ---------- form grid ---------- */
+	.form-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 30px 24px;
+		align-items: start;
+		padding-top: 30px;
+	}
+
+	.col-full {
+		grid-column: 1 / -1;
+	}
+
+	.eyebrow {
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+		margin: 0 0 16px;
+	}
+
+	.eyebrow .gt {
+		color: var(--accent);
+	}
+
+	.eyebrow-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 16px;
+	}
+
+	.eyebrow-row .eyebrow {
+		margin: 0;
+	}
+
+	.eyebrow-count {
+		font-size: 0.74rem;
 		color: var(--text-muted);
 	}
 
-	.raw-textarea {
-		width: 100%;
-		min-height: 60vh;
-		padding: 16px;
-		background: var(--bg-secondary, #111);
-		color: var(--text-primary);
+	.card {
+		background: var(--bg-secondary);
 		border: 1px solid var(--border);
-		border-radius: 10px;
-		font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-		font-size: 0.82rem;
-		line-height: 1.6;
-		resize: vertical;
-		outline: none;
-		box-sizing: border-box;
-		transition: border-color 0.15s;
+		border-radius: 14px;
+		padding: 22px;
 	}
 
-	.raw-textarea:focus {
+	.identity-card {
+		padding: 24px;
+	}
+
+	.field-label {
+		font-size: 0.74rem;
+		color: var(--text-secondary);
+		margin-bottom: 11px;
+	}
+
+	.field-label-spaced {
+		margin-top: 22px;
+	}
+
+	.field-hint {
+		font-size: 0.74rem;
+		color: var(--text-muted);
+		margin: 6px 0 0;
+	}
+
+	.text-input {
+		width: 100%;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border-hover);
+		border-radius: 8px;
+		padding: 11px 13px;
+		font-family: inherit;
+		font-size: 0.84rem;
+		color: var(--text-primary);
+		outline: none;
+		transition: border-color 0.15s ease;
+	}
+
+	.text-input:focus {
 		border-color: var(--accent);
 	}
 
-	/* Sections */
-	.editor-body {
-		display: flex;
-		flex-direction: column;
-		gap: 56px;
-	}
-
-	.section {
-		scroll-margin-top: 80px;
-	}
-
-	.section-tag {
-		font-size: 0.68rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.14em;
-		color: var(--text-muted);
-		margin-bottom: 16px;
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.section-tag::after {
-		content: '';
-		flex: 1;
-		height: 1px;
-		background: var(--border);
-	}
-
-	.section-top {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 16px;
-	}
-
-	.section-top .section-tag {
-		margin-bottom: 0;
-	}
-
-	.section-count {
-		font-size: 0.78rem;
-		color: var(--text-muted);
-		font-weight: 600;
-		font-variant-numeric: tabular-nums;
-	}
-
-	/* Identity */
-	.identity-hero {
-		border-radius: 20px;
-		padding: 4px;
-		transition: background 0.5s;
-	}
-
-	.identity-glass {
-		background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border-radius: 17px;
-		padding: 32px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
-
+	/* ---------- identity ---------- */
 	.name-input {
-		background: none;
-		border: none;
-		color: var(--text-primary);
-		font-size: 2.2rem;
-		font-weight: 600;
-		font-family: inherit;
-		outline: none;
-		padding: 0;
-		line-height: 1.2;
 		width: 100%;
-	}
-
-	.name-input::placeholder {
-		color: var(--text-muted);
-		opacity: 0.5;
+		background: transparent;
+		border: none;
+		outline: none;
+		font-family: inherit;
+		font-size: 1.5rem;
+		font-weight: 500;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
+		margin-bottom: 8px;
 	}
 
 	.desc-input {
-		background: none;
-		border: none;
-		color: var(--text-secondary);
-		font-size: 1.05rem;
-		font-family: inherit;
-		outline: none;
-		padding: 0;
 		width: 100%;
+		background: transparent;
+		border: none;
+		outline: none;
+		font-family: inherit;
+		font-size: 0.88rem;
+		color: var(--text-secondary);
+		margin-bottom: 20px;
 	}
 
+	.name-input::placeholder,
 	.desc-input::placeholder {
 		color: var(--text-muted);
-		opacity: 0.5;
 	}
 
-	.identity-row {
+	.identity-foot {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		gap: 16px;
-		margin-top: 12px;
+		justify-content: space-between;
+		gap: 20px;
 		flex-wrap: wrap;
+		padding-top: 18px;
+		border-top: 1px solid var(--border);
 	}
 
 	.vis-pills {
 		display: flex;
-		gap: 0;
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		overflow: hidden;
+		gap: 6px;
 	}
 
 	.vis-pill {
-		padding: 8px 16px;
-		background: var(--bg-tertiary);
-		border: none;
-		color: var(--text-muted);
-		font-size: 0.78rem;
-		font-weight: 600;
+		padding: 7px 15px;
+		border-radius: 7px;
 		font-family: inherit;
+		font-size: 0.8rem;
 		cursor: pointer;
+		background: var(--bg-tertiary);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-hover);
 		text-transform: capitalize;
-		transition: all 0.15s;
-		border-right: 1px solid var(--border);
-	}
-
-	.vis-pill:last-child {
-		border-right: none;
+		transition: all 0.15s ease;
 	}
 
 	.vis-pill:hover {
-		color: var(--text-secondary);
-		background: var(--bg-hover);
+		color: var(--text-primary);
 	}
 
 	.vis-pill.active {
 		background: var(--accent);
 		color: var(--bg-primary);
+		border-color: var(--accent);
 	}
 
 	.alias-field {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border-hover);
+		border-radius: 8px;
+		overflow: hidden;
 	}
 
 	.alias-prefix {
-		color: var(--text-muted);
 		font-size: 0.82rem;
+		color: var(--text-muted);
+		padding: 9px 4px 9px 12px;
 		white-space: nowrap;
 	}
 
 	.alias-input {
-		width: 120px;
-		padding: 8px 10px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-primary);
-		font-size: 0.82rem;
-		font-family: 'JetBrains Mono', monospace;
+		background: transparent;
+		border: none;
 		outline: none;
-		transition: border-color 0.2s;
+		font-family: inherit;
+		font-size: 0.82rem;
+		color: var(--accent);
+		padding: 9px 12px 9px 0;
+		width: 130px;
 	}
 
-	.alias-input:focus {
-		border-color: var(--accent);
-	}
-
-	/* System */
-	.system-prefs {
-		display: flex;
-		flex-direction: column;
-		gap: 14px;
-	}
-
-	.prefs-top {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.prefs-title {
-		font-size: 0.95rem;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.prefs-count {
-		font-size: 0.78rem;
+	.alias-input::placeholder {
 		color: var(--text-muted);
-		font-weight: 500;
 	}
 
-	/* Accordion */
-	.pref-accordion {
-		display: flex;
-		flex-direction: column;
+	/* ---------- terminal (script + raw) ---------- */
+	.term {
+		background: var(--bg-secondary);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 14px;
 		overflow: hidden;
 	}
 
-	.pref-acc-group {
+	.term-head {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		padding: 11px 15px;
 		border-bottom: 1px solid var(--border);
 	}
 
-	.pref-acc-group:last-child {
-		border-bottom: none;
+	.dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
 	}
 
-	.pref-acc-header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 100%;
-		padding: 10px 14px;
-		background: var(--bg-tertiary);
-		border: none;
-		font-family: inherit;
-		cursor: pointer;
-		text-align: left;
-		transition: background 0.1s;
+	.dot-red {
+		background: var(--danger);
 	}
 
-	.pref-acc-header:hover {
-		background: var(--bg-secondary);
+	.dot-amber {
+		background: var(--amber);
 	}
 
-	.pref-acc-header-static {
-		cursor: default;
-	}
-
-	.pref-acc-header-static:hover {
-		background: var(--bg-tertiary);
-	}
-
-	.pref-acc-chevron {
-		color: var(--text-muted);
-		transition: transform 0.15s;
-		flex-shrink: 0;
-	}
-
-	.pref-acc-chevron-open {
-		transform: rotate(90deg);
-	}
-
-	.pref-acc-name {
-		font-size: 0.84rem;
-		font-weight: 600;
-		color: var(--text-primary);
-		flex: 1;
-	}
-
-	.pref-acc-badge {
-		padding: 2px 7px;
+	.dot-green {
 		background: var(--accent);
-		border-radius: 8px;
-		font-size: 0.65rem;
-		font-weight: 600;
-		color: var(--bg-primary);
-		line-height: 1.3;
 	}
 
-	.pref-acc-total {
+	.term-name {
+		margin-left: 6px;
 		font-size: 0.72rem;
 		color: var(--text-muted);
 	}
 
-	.pref-acc-body {
-		display: flex;
-		flex-direction: column;
-		background: var(--bg-primary);
-	}
-
-	/* Pref rows */
-	.pref-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 8px 14px;
-		border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-		transition: background 0.1s;
-	}
-
-	.pref-row-active {
-		background: color-mix(in srgb, var(--accent) 4%, transparent);
-	}
-
-	.pref-toggle-btn {
-		background: none;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		flex-shrink: 0;
-	}
-
-	.pref-check {
-		width: 18px;
-		height: 18px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 1.5px solid var(--border);
-		border-radius: 4px;
-		font-size: 0.65rem;
-		font-weight: 600;
-		color: transparent;
-		background: var(--bg-secondary);
-		transition: all 0.15s;
-	}
-
-	.pref-check-on {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: var(--bg-primary);
-	}
-
-	.pref-info {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.pref-label {
-		font-size: 0.84rem;
-		font-weight: 500;
-		color: var(--text-primary);
-		display: block;
-	}
-
-	.pref-meta {
+	.term-note {
+		margin-left: auto;
 		font-size: 0.7rem;
 		color: var(--text-muted);
-		display: block;
-		line-height: 1.3;
 	}
 
-	.pref-control {
-		flex-shrink: 0;
-	}
-
-	.pref-bool {
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 0.72rem;
-		font-weight: 600;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		color: var(--text-muted);
-		min-width: 44px;
-	}
-
-	.pref-bool.on {
-		background: color-mix(in srgb, var(--accent) 15%, transparent);
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
-	.pref-sel {
-		padding: 4px 8px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 0.78rem;
-		font-family: inherit;
-		cursor: pointer;
-		outline: none;
-	}
-
-	.pref-sel:focus {
-		border-color: var(--accent);
-	}
-
-	.pref-val {
-		width: 72px;
-		padding: 4px 8px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 0.78rem;
-		font-family: 'JetBrains Mono', monospace;
-		outline: none;
-	}
-
-	.pref-val:focus {
-		border-color: var(--accent);
-	}
-
-	.pref-rm {
-		background: none;
-		border: none;
-		color: var(--text-muted);
-		cursor: pointer;
-		font-size: 1.1rem;
-		padding: 2px 4px;
-		border-radius: 4px;
-		transition: color 0.15s;
-		line-height: 1;
-		flex-shrink: 0;
-	}
-
-	.pref-rm:hover {
-		color: var(--danger);
-	}
-
-	.custom-pref-toggle {
-		background: none;
-		border: none;
-		padding: 0;
-		font-size: 0.78rem;
-		color: var(--text-muted);
-		cursor: pointer;
-		font-family: inherit;
-		text-align: left;
-		transition: color 0.15s;
-	}
-
-	.custom-pref-toggle:hover {
-		color: var(--text-secondary);
-	}
-
-	.custom-pref-row {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-	}
-
-	.custom-pref-input {
-		flex: 1;
-		padding: 10px 12px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-primary);
-		font-size: 0.82rem;
-		font-family: 'JetBrains Mono', monospace;
-		outline: none;
-	}
-
-	.custom-pref-input:focus {
-		border-color: var(--accent);
-	}
-
-	.custom-pref-type {
-		padding: 10px 8px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-secondary);
-		font-size: 0.78rem;
-		font-family: inherit;
-		cursor: pointer;
-		outline: none;
-	}
-
-	.custom-pref-add {
-		padding: 10px 16px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-secondary);
-		font-size: 0.82rem;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.custom-pref-add:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
-	.pref-error {
-		font-size: 0.78rem;
-		color: var(--danger);
-	}
-
-	.pref-hint {
-		font-size: 0.75rem;
-		color: var(--text-muted);
-		margin: 0;
-	}
-
-	/* Dotfiles */
-	.system-dotfiles {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 14px;
-		padding: 20px 24px;
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		flex-wrap: wrap;
-		margin-bottom: 20px;
-	}
-
-	.dotfiles-label {
-		font-size: 0.88rem;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.dotfiles-input {
-		flex: 1;
-		min-width: 200px;
-		padding: 10px 12px;
-		background: var(--bg-tertiary);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-primary);
-		font-size: 0.85rem;
-		font-family: inherit;
-		outline: none;
-	}
-
-	.dotfiles-input:focus {
-		border-color: var(--accent);
-	}
-
-	.dotfiles-hint {
-		font-size: 0.75rem;
-		color: var(--text-muted);
-		margin: 0;
-		line-height: 1.4;
-	}
-
-	/* Script */
-	.script-card {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 14px;
-		overflow: hidden;
-	}
-
-	.script-bar {
-		padding: 12px 18px;
-		background: var(--bg-tertiary);
-		border-bottom: 1px solid var(--border);
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.script-filename {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.82rem;
-		font-weight: 600;
-		color: var(--text-secondary);
-	}
-
-	.script-edit-btn {
-		padding: 5px 14px;
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--accent);
-		font-size: 0.8rem;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.script-edit-btn:hover {
-		border-color: var(--accent);
-		background: var(--accent-glow);
-	}
-
-	.script-preview {
-		padding: 16px 20px;
-		margin: 0;
-		color: var(--text-secondary);
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.82rem;
-		line-height: 1.7;
-		white-space: pre-wrap;
-		word-break: break-all;
-		max-height: 160px;
-		overflow: hidden;
-		cursor: pointer;
-	}
-
-	.script-empty {
-		padding: 24px 20px;
-		color: var(--text-muted);
-		font-size: 0.85rem;
-		text-align: center;
-		cursor: pointer;
-	}
-
-	.script-empty:hover {
-		color: var(--text-secondary);
-	}
-
-	/* Script modal */
-	.script-modal-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 1000;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 32px;
-	}
-
-	.script-modal-backdrop {
-		position: absolute;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.7);
-		backdrop-filter: blur(4px);
-	}
-
-	.script-modal {
-		position: relative;
+	.script-textarea {
 		width: 100%;
-		max-width: 860px;
-		height: 80vh;
-		max-height: 700px;
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
-	}
-
-	.script-modal-bar {
-		padding: 14px 20px;
-		background: var(--bg-tertiary);
-		border-bottom: 1px solid var(--border);
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		flex-shrink: 0;
-	}
-
-	.script-modal-filename {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--text-secondary);
-	}
-
-	.script-modal-actions {
-		display: flex;
-		gap: 8px;
-	}
-
-	.script-modal-cancel {
-		padding: 6px 16px;
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		color: var(--text-secondary);
-		font-size: 0.82rem;
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	.script-modal-cancel:hover {
-		border-color: var(--text-muted);
-	}
-
-	.script-modal-save {
-		padding: 6px 16px;
-		background: var(--accent);
+		min-height: 200px;
+		padding: 18px 20px;
+		background: transparent;
 		border: none;
-		border-radius: 8px;
-		color: var(--bg-primary);
-		font-size: 0.82rem;
-		font-weight: 600;
+		outline: none;
+		resize: vertical;
 		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
+		font-size: 0.8rem;
+		line-height: 1.9;
+		color: var(--text-secondary);
 	}
 
-	.script-modal-save:hover {
-		opacity: 0.9;
-	}
-
-	.script-modal-body {
-		flex: 1;
-		overflow: hidden;
-	}
-
-
-	.script-modal-hint {
-		padding: 10px 20px;
-		background: var(--bg-tertiary);
-		border-top: 1px solid var(--border);
+	.script-textarea::placeholder {
 		color: var(--text-muted);
-		font-size: 0.75rem;
-		flex-shrink: 0;
 	}
 
-	@media (max-width: 768px) {
+	.raw-wrap {
+		padding: 30px 0 0;
+	}
+
+	.raw-textarea {
+		display: block;
+		width: 100%;
+		min-height: 58vh;
+		padding: 20px 22px;
+		background: transparent;
+		border: none;
+		outline: none;
+		resize: vertical;
+		font-family: inherit;
+		font-size: 0.8rem;
+		line-height: 1.75;
+		color: var(--text-secondary);
+	}
+
+	@keyframes ob-fade {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes ob-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.45;
+			transform: scale(1.5);
+		}
+	}
+
+	@media (max-width: 880px) {
 		.editor {
-			padding: 0 16px 80px;
+			padding: 0 22px 80px;
 		}
 
-		.name-input {
-			font-size: 1.4rem;
-		}
-
-		.identity-row {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-
-		.editor-header {
-			flex-wrap: wrap;
-			gap: 12px;
-		}
-
-		.dna-preview {
-			display: none;
+		.form-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

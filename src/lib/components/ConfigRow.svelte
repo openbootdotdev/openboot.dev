@@ -107,11 +107,14 @@
 	</div>
 
 	<div class="row-actions">
-		<button class="copy-cmd" onclick={copyInstall}>
+		<button class="copy-cmd" onclick={copyInstall} aria-label={copied ? 'Copied install command' : 'Copy install command'}>
 			<code><span class="prompt">$</span> curl -fsSL {installUrl} | bash</code>
 			<span class="copy-label" class:copied>
-				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-				{copied ? 'copied ✓' : 'click to copy install'}
+				{#if copied}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+				{:else}
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+				{/if}
 			</span>
 		</button>
 		<button class="icon-btn" aria-label="Edit" onclick={() => onaction('edit', config.slug)}>
@@ -127,11 +130,13 @@
 		border: 1px solid var(--border);
 		border-radius: 14px;
 		padding: 20px 22px;
-		transition: border-color 0.18s ease;
+		transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 	}
 
 	.row:hover {
+		transform: translateY(-3px);
 		border-color: var(--border-hover);
+		box-shadow: 0 16px 34px -16px var(--shadow);
 	}
 
 	.row-top {
@@ -257,6 +262,7 @@
 
 	.copy-cmd:hover {
 		border-color: var(--border-hover);
+		background: var(--bg-hover);
 	}
 
 	.copy-cmd code {
@@ -312,7 +318,8 @@
 
 	.icon-btn:hover {
 		border-color: var(--border-hover);
-		color: var(--accent);
+		color: var(--text-primary);
+		background: var(--bg-hover);
 	}
 
 	@media (max-width: 640px) {

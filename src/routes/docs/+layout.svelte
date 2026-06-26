@@ -435,16 +435,19 @@
 
 	.docs-layout {
 		display: flex;
-		margin-top: 56px;
+		align-items: flex-start;
+		max-width: 1160px;
+		margin: 56px auto 0;
+		padding: 0 36px;
 		min-height: calc(100vh - 56px);
 	}
 
 	/* ── Left Sidebar ─────────────────────────────────── */
 
 	.sidebar {
-		width: 240px;
+		width: 228px;
 		flex-shrink: 0;
-		background: var(--bg-secondary);
+		background: transparent;
 		border-right: 1px solid var(--border);
 		padding: 28px 0;
 		position: sticky;
@@ -461,12 +464,12 @@
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
-		font-size: 0.68rem;
+		font-size: 0.66rem;
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.1em;
 		color: var(--text-muted);
-		padding: 0 24px;
+		padding: 0 16px;
 		margin-bottom: 8px;
 		margin-top: 24px;
 		background: none;
@@ -503,13 +506,13 @@
 		display: block;
 		width: 100%;
 		text-align: left;
-		padding: 7px 24px;
-		font-size: 0.85rem;
+		padding: 7px 16px;
+		font-size: 0.82rem;
 		font-weight: 450;
 		color: var(--text-secondary);
 		background: none;
 		border: none;
-		border-left: 3px solid transparent;
+		border-left: 2px solid transparent;
 		cursor: pointer;
 		transition: all 0.15s;
 		font-family: inherit;
@@ -525,12 +528,13 @@
 	.sidebar-item.active {
 		color: var(--accent);
 		border-left-color: var(--accent);
+		border-radius: 0 5px 5px 0;
 		background: var(--accent-glow);
 		font-weight: 600;
 	}
 
 	.sidebar-footer {
-		padding: 20px 24px 0;
+		padding: 20px 16px 0;
 		border-top: 1px solid var(--border);
 		margin-top: 20px;
 		display: flex;
@@ -554,21 +558,21 @@
 	/* ── Right TOC ────────────────────────────────────── */
 
 	.toc {
-		width: 220px;
+		width: 196px;
 		flex-shrink: 0;
 		position: sticky;
 		top: 56px;
 		height: calc(100vh - 56px);
 		overflow-y: auto;
-		padding: 32px 16px 32px 0;
+		padding: 40px 16px 32px 0;
 		border-left: 1px solid var(--border);
 	}
 
 	.toc-label {
-		font-size: 0.68rem;
+		font-size: 0.66rem;
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.1em;
 		color: var(--text-muted);
 		margin-bottom: 12px;
 		padding-left: 16px;
@@ -589,7 +593,7 @@
 	.toc-item {
 		display: block;
 		padding: 4px 16px;
-		font-size: 0.78rem;
+		font-size: 0.76rem;
 		color: var(--text-muted);
 		text-decoration: none;
 		border-left: 2px solid transparent;
@@ -609,7 +613,7 @@
 
 	.toc-item.toc-h3 {
 		padding-left: 28px;
-		font-size: 0.75rem;
+		font-size: 0.72rem;
 	}
 
 	/* ── Content Area ─────────────────────────────────── */
@@ -617,8 +621,8 @@
 	.docs-content {
 		flex: 1;
 		min-width: 0;
-		padding: 40px 56px 80px;
-		max-width: 800px;
+		padding: 40px 44px 96px;
+		max-width: 780px;
 		view-transition-name: docs-content;
 	}
 
@@ -783,23 +787,21 @@
 
 	.prose :global(.copy-btn) {
 		position: absolute;
-		top: 8px;
-		right: 8px;
-		padding: 4px 10px;
-		font-size: 0.72rem;
+		top: 9px;
+		right: 10px;
+		padding: 3px 9px;
+		font-size: 0.68rem;
 		font-family: 'JetBrains Mono', monospace;
 		font-weight: 500;
 		color: var(--text-muted);
-		background: var(--bg-tertiary);
+		background: transparent;
 		border: 1px solid var(--border);
-		border-radius: 6px;
+		border-radius: 5px;
 		cursor: pointer;
-		opacity: 0;
+		opacity: 1;
 		transition: all 0.15s;
 		z-index: 5;
 	}
-
-	.prose :global(.code-block-wrapper:hover .copy-btn) { opacity: 1; }
 
 	.prose :global(.copy-btn:hover) {
 		color: var(--text-primary);
@@ -815,7 +817,7 @@
 	/* ── Prose ─────────────────────────────────────────── */
 
 	.prose :global(h1) {
-		font-size: 1.9rem;
+		font-size: 2rem;
 		font-weight: 600;
 		letter-spacing: -0.035em;
 		margin-bottom: 12px;
@@ -827,14 +829,14 @@
 		font-size: 1.02rem;
 		color: var(--text-secondary);
 		line-height: 1.7;
-		margin-bottom: 36px;
+		margin-bottom: 40px;
 	}
 
 	.prose :global(h2) {
 		font-size: 1.3rem;
 		font-weight: 600;
 		letter-spacing: -0.025em;
-		margin-top: 48px;
+		margin-top: 44px;
 		margin-bottom: 16px;
 		color: var(--text-primary);
 		padding-bottom: 8px;
@@ -842,9 +844,9 @@
 	}
 
 	.prose :global(h3) {
-		font-size: 1.08rem;
+		font-size: 1.05rem;
 		font-weight: 600;
-		margin-top: 32px;
+		margin-top: 28px;
 		margin-bottom: 12px;
 		color: var(--text-primary);
 	}
@@ -902,10 +904,10 @@
 	}
 
 	.prose :global(pre) {
-		background: var(--code-bg);
+		background: var(--bg-secondary);
 		border: 1px solid var(--border);
-		border-radius: 8px;
-		padding: 20px 24px;
+		border-radius: 9px;
+		padding: 16px 18px;
 		margin-bottom: 24px;
 		overflow-x: auto;
 		position: relative;
@@ -996,6 +998,8 @@
 			left: 0;
 			bottom: 0;
 			z-index: 80;
+			height: auto;
+			background: var(--bg-primary);
 			transform: translateX(-100%);
 			transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 			box-shadow: none;

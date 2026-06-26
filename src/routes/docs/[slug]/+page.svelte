@@ -52,6 +52,10 @@
 	})}</script>
 </svelte:head>
 
+<p class="docs-breadcrumb">
+	<span class="accent">&gt;</span> docs{#if meta?.group} / {meta.group.toLowerCase()}{/if}
+</p>
+
 <article class="prose">
 	{#key slug}
 		<Component />
@@ -61,54 +65,51 @@
 <nav class="docs-nav-footer">
 	{#if prev}
 		<a class="nav-btn nav-prev" href="/docs/{prev.slug}">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<polyline points="15 18 9 12 15 6" />
-			</svg>
-			<div>
-				<span class="nav-label">Previous</span>
-				<span class="nav-title">{prev.title}</span>
-			</div>
+			<span class="nav-label">← Previous</span>
+			<span class="nav-title">{prev.title}</span>
 		</a>
 	{:else}
-		<div></div>
+		<span class="nav-spacer"></span>
 	{/if}
 	{#if next}
 		<a class="nav-btn nav-next" href="/docs/{next.slug}">
-			<div>
-				<span class="nav-label">Next</span>
-				<span class="nav-title">{next.title}</span>
-			</div>
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<polyline points="9 18 15 12 9 6" />
-			</svg>
+			<span class="nav-label">Next →</span>
+			<span class="nav-title">{next.title}</span>
 		</a>
 	{:else}
-		<div></div>
+		<span class="nav-spacer"></span>
 	{/if}
 </nav>
 
 <style>
+	.docs-breadcrumb {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		margin-bottom: 16px;
+	}
+
+	.docs-breadcrumb .accent {
+		color: var(--accent);
+	}
+
 	.docs-nav-footer {
 		display: flex;
 		justify-content: space-between;
-		margin-top: 64px;
-		padding-top: 32px;
+		margin-top: 48px;
+		padding-top: 24px;
 		border-top: 1px solid var(--border);
 		gap: 16px;
 	}
 
 	.nav-btn {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 16px 20px;
-		background: var(--bg-secondary);
+		flex: 1;
+		display: block;
+		padding: 16px 18px;
 		border: 1px solid var(--border);
-		border-radius: 12px;
-		cursor: pointer;
-		transition: all 0.2s;
-		font-family: inherit;
-		max-width: 280px;
+		border-radius: 10px;
+		transition:
+			border-color 0.2s,
+			background 0.2s;
 		text-decoration: none;
 		color: inherit;
 	}
@@ -116,41 +117,29 @@
 	.nav-btn:hover {
 		border-color: var(--border-hover);
 		background: var(--bg-tertiary);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 		text-decoration: none;
 	}
 
-	.nav-prev { text-align: left; }
-	.nav-next { text-align: right; margin-left: auto; }
+	.nav-next { text-align: right; }
 
 	.nav-label {
 		display: block;
-		font-size: 0.7rem;
-		font-weight: 500;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		font-size: 0.72rem;
 		color: var(--text-muted);
-		margin-bottom: 2px;
 	}
 
 	.nav-title {
 		display: block;
 		font-size: 0.9rem;
-		font-weight: 600;
-		color: var(--accent);
+		margin-top: 4px;
 	}
 
-	.nav-btn svg {
-		flex-shrink: 0;
-		color: var(--text-muted);
-	}
+	.nav-prev .nav-title { color: var(--text-primary); }
+	.nav-next .nav-title { color: var(--accent); }
 
-	.nav-btn:hover svg { color: var(--accent); }
+	.nav-spacer { flex: 1; }
 
 	@media (max-width: 600px) {
 		.docs-nav-footer { flex-direction: column; }
-		.nav-btn { max-width: 100%; }
-		.nav-next { margin-left: 0; }
 	}
 </style>
