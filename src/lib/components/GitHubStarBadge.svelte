@@ -5,11 +5,13 @@
 	let loading = $state(true);
 
 	onMount(() => {
-		fetch('https://api.github.com/repos/openbootdotdev/openboot')
+		// Same-origin endpoint that proxies + edge-caches the GitHub count, so we
+		// don't burn each visitor's 60 req/hour unauthenticated GitHub API limit.
+		fetch('/api/github/stars')
 			.then((r) => r.json())
 			.then((data) => {
-				if (data.stargazers_count) {
-					starCount = data.stargazers_count;
+				if (data.stars) {
+					starCount = data.stars;
 				}
 				loading = false;
 			})
