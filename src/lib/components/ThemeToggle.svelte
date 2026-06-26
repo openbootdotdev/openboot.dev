@@ -18,24 +18,27 @@
 <style>
 	.theme-toggle {
 		background: none;
-		border: none;
+		border: 1px solid var(--border);
 		cursor: pointer;
-		padding: 8px;
-		border-radius: 6px;
+		width: 30px;
+		height: 30px;
+		border-radius: 7px;
 		color: var(--text-secondary);
-		transition: all 0.2s;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.theme-toggle:hover {
-		background: var(--bg-tertiary);
+		border-color: var(--border-hover);
 		color: var(--text-primary);
 	}
 
 	.theme-toggle svg {
-		width: 20px;
-		height: 20px;
+		width: 15px;
+		height: 15px;
 	}
 </style>

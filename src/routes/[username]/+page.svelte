@@ -332,20 +332,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		transition:
-			border-color 0.18s ease,
-			box-shadow 0.18s ease;
+		transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 	}
 
 	.config-card:hover {
+		transform: translateY(-4px);
 		border-color: var(--border-hover);
-		box-shadow:
-			0 0 0 1px var(--accent-glow),
-			0 14px 40px -22px var(--shadow);
-	}
-
-	.config-card:hover .config-name {
-		color: var(--accent);
+		box-shadow: 0 16px 34px -16px var(--shadow);
 	}
 
 	.card-header {
@@ -549,14 +542,12 @@
 		text-decoration: none;
 		cursor: pointer;
 		white-space: nowrap;
-		transition:
-			background 0.18s ease,
-			box-shadow 0.18s ease;
+		transition: filter 0.16s ease, transform 0.16s ease;
 	}
 
 	.cta-button:hover {
-		background: var(--accent-hover);
-		box-shadow: 0 0 0 3px var(--accent-glow);
+		filter: brightness(1.08);
+		transform: translateY(-1px);
 	}
 
 	/* ---------- responsive ---------- */

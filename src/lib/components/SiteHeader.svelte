@@ -18,21 +18,21 @@
 				<a href="/explore" class:active={currentPath === '/explore' || currentPath.startsWith('/explore')}>Explore</a>
 				<a href="/docs" class:active={currentPath === '/docs' || currentPath.startsWith('/docs')}>Docs</a>
 			</nav>
-			<div class="header-actions">
-				{#if children}{@render children()}{/if}
-				<GitHubStarBadge />
-				{#if $auth.loading}
-					
-				{:else if $auth.user}
+		</div>
+		<div class="header-right">
+			{#if children}{@render children()}{/if}
+			<GitHubStarBadge />
+			{#if $auth.loading}
+
+			{:else if $auth.user}
+				<span class="header-auth">
 					<a href="/dashboard" class="header-dashboard-link">Dashboard</a>
 					<span class="header-separator">/</span>
 					<form method="POST" action="/api/auth/logout" style="display:inline"><button type="submit" class="header-logout-link">Logout</button></form>
-				{:else}
-					<a href="/login" class="header-login-link">Sign in</a>
-				{/if}
-			</div>
-		</div>
-		<div class="header-right">
+				</span>
+			{:else}
+				<a href="/login" class="header-login-link">Sign in</a>
+			{/if}
 			<ThemeToggle />
 		</div>
 	</div>
@@ -64,7 +64,7 @@
 	.header-left {
 		display: flex;
 		align-items: center;
-		gap: 26px;
+		gap: 28px;
 	}
 
 	.header-logo {
@@ -124,23 +124,25 @@
 		transform: scaleX(1);
 	}
 
-	.header-actions {
+	.header-right {
 		display: flex;
 		align-items: center;
 		gap: 16px;
 	}
 
-	.header-right {
+	.header-auth {
 		display: flex;
 		align-items: center;
+		gap: 11px;
 	}
 
 	.header-dashboard-link,
 	.header-login-link,
 	.header-logout-link {
 		color: var(--text-secondary);
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		font-weight: 500;
+		text-transform: lowercase;
 		text-decoration: none;
 		transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
@@ -161,7 +163,7 @@
 
 	.header-separator {
 		color: var(--text-muted);
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		user-select: none;
 	}
 </style>

@@ -266,10 +266,8 @@
 					<h1 class="page-title">My configurations</h1>
 				<p class="page-stats">
 					{configs.length} config{configs.length !== 1 ? 's' : ''}
-					{#if totalInstalls > 0}
-						<span class="stats-sep">&middot;</span>
-						{totalInstalls} install{totalInstalls !== 1 ? 's' : ''}
-					{/if}
+					<span class="stats-sep">&middot;</span>
+					{totalInstalls} install{totalInstalls !== 1 ? 's' : ''}
 				</p>
 			</div>
 			<div class="header-actions">
@@ -465,7 +463,6 @@
 	.page-stats {
 		color: var(--text-secondary);
 		font-size: 0.85rem;
-		margin-top: 6px;
 		font-variant-numeric: tabular-nums;
 	}
 
@@ -498,8 +495,7 @@
 	}
 
 	.btn-import:hover {
-		border-color: var(--accent-deep);
-		box-shadow: 0 0 0 3px var(--accent-glow);
+		border-color: var(--border-hover);
 	}
 
 	.btn-new {
@@ -515,14 +511,12 @@
 		font-size: 0.84rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition:
-			background 0.18s ease,
-			box-shadow 0.18s ease;
+		transition: filter 0.16s ease, transform 0.16s ease;
 	}
 
 	.btn-new:hover {
-		background: var(--accent-hover);
-		box-shadow: 0 0 0 3px var(--accent-glow);
+		filter: brightness(1.08);
+		transform: translateY(-1px);
 	}
 
 	.plus {
