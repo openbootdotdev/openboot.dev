@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/Button.svelte';
-	import ConfigCard from '$lib/components/ConfigCard.svelte';
+	import ConfigRow from '$lib/components/ConfigRow.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	interface Config {
@@ -300,10 +300,10 @@
 				</Button>
 			</div>
 		{:else}
-			<div class="grid">
-				{#each configs as config, i}
+			<div class="config-list">
+				{#each configs as config, i (config.id)}
 					<div class="card-wrap" style="animation-delay: {i * 50}ms">
-						<ConfigCard
+						<ConfigRow
 							{config}
 							username={$auth.user?.username ?? ''}
 							onaction={handleAction}
@@ -463,14 +463,15 @@
 	}
 
 	.page-stats {
-		color: var(--text-muted);
-		font-size: 0.88rem;
+		color: var(--text-secondary);
+		font-size: 0.85rem;
 		margin-top: 6px;
 		font-variant-numeric: tabular-nums;
 	}
 
 	.stats-sep {
 		margin: 0 4px;
+		color: var(--text-muted);
 	}
 
 	.header-actions {
@@ -566,11 +567,11 @@
 		margin: 0;
 	}
 
-	/* Card grid */
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 16px;
+	/* Config list */
+	.config-list {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
 	}
 
 	.card-wrap {
@@ -785,23 +786,11 @@
 		to { opacity: 1; transform: translateX(-50%) translateY(0); }
 	}
 
-	@media (max-width: 1024px) {
-		.grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
-
 	@media (max-width: 768px) {
 		.page-header {
 			flex-direction: column;
 			align-items: flex-start;
 			gap: 16px;
-		}
-	}
-
-	@media (max-width: 600px) {
-		.grid {
-			grid-template-columns: 1fr;
 		}
 	}
 </style>

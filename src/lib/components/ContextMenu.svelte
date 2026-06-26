@@ -5,9 +5,10 @@
 		danger?: boolean;
 	}
 
-	let { items, onselect }: {
+	let { items, onselect, square = false }: {
 		items: MenuItem[];
 		onselect: (action: string) => void;
+		square?: boolean;
 	} = $props();
 
 	let open = $state(false);
@@ -36,7 +37,7 @@
 <svelte:window onclick={handleClickOutside} />
 
 <div class="ctx" bind:this={menuEl}>
-	<button class="trigger" onclick={toggle} aria-label="More actions">⋯</button>
+	<button class="trigger" class:square onclick={toggle} aria-label="More actions">⋯</button>
 	{#if open}
 		<div class="dropdown">
 			{#each items as item, i}
@@ -76,6 +77,15 @@
 		transition:
 			border-color 0.15s ease,
 			color 0.15s ease;
+	}
+
+	.trigger.square {
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border-radius: 9px;
+		font-size: 1rem;
+		color: var(--text-muted);
 	}
 
 	.trigger:hover {
