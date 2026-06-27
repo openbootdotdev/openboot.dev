@@ -27,6 +27,12 @@
 		overflow-x: hidden;
 	}
 
+	/* Always reserve the vertical scrollbar's space so the centered, fixed header
+	   doesn't shift when moving between scrolling and non-scrolling pages. */
+	:global(html) {
+		scrollbar-gutter: stable;
+	}
+
 	:global(body) {
 		font-family: var(--font-mono);
 		/* edge vignette lives in the background layer so it never washes out content */
