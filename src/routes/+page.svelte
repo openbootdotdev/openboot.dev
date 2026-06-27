@@ -1,23 +1,43 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import PackageFingerprint from '$lib/components/PackageFingerprint.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let copied = $state('');
-	// Default to the design's reference number; replaced by the live edge-cached count.
-	let starCount = $state(108);
-
-	onMount(() => {
-		fetch('/api/github/stars')
-			.then((r) => r.json())
-			.then((data) => {
-				if (data.stars) starCount = data.stars;
-			})
-			.catch(() => {});
-	});
 
 	function copyCommand(command: string, id: string) {
 		navigator.clipboard.writeText(command);
 		copied = id;
 		setTimeout(() => (copied = ''), 2000);
+	}
+
+	// Scroll-reveal: arm an element (hidden + offset) then reveal when it enters
+	// the viewport. Skipped under reduced-motion so content stays visible.
+	function reveal(node: HTMLElement, params: { index?: number } = {}) {
+		const reduce =
+			typeof window !== 'undefined' &&
+			window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+		if (reduce) return;
+		node.classList.add('ob-rv-armed');
+		if (params.index) node.style.transitionDelay = `${params.index * 85}ms`;
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) {
+					if (e.isIntersecting) {
+						node.classList.add('ob-shown');
+						io.disconnect();
+					}
+				}
+			},
+			{ rootMargin: '0px 0px -10% 0px', threshold: 0.05 }
+		);
+		io.observe(node);
+		return {
+			destroy() {
+				io.disconnect();
+			}
+		};
 	}
 
 	// Packages shown in the animated terminal demo (package-picker screen)
@@ -36,6 +56,13 @@
 		{ name: 'btop', desc: 'Resource monitor' },
 		{ name: 'tree', desc: 'Directory tree viewer' },
 		{ name: 'tealdeer', desc: 'Simplified man pages (tldr)' }
+	];
+
+	const steps = [
+		{ n: '01', t: 'Run one command', d: 'Paste the curl line. Homebrew gets set up if needed.' },
+		{ n: '02', t: 'Pick your tools', d: 'A terminal menu opens — preset or package by package.' },
+		{ n: '03', t: 'Everything installs', d: 'Packages, shell, dotfiles, macOS prefs. Unattended.' },
+		{ n: '04', t: 'Open a new terminal', d: "You're set up. A full day of setup, already done." }
 	];
 </script>
 
@@ -75,40 +102,27 @@
 			<section class="hero">
 				<div class="hero-grid"></div>
 				<div class="hero-content">
-					<div class="hero-badge">
-						<span class="badge-dot"></span>
-						<span class="badge-label">macOS bootstrap, automated</span>
-						<span class="badge-version">v0.44</span>
-					</div>
-					<h1 class="hero-title">
+					<h1 class="hero-title enter" style="animation-delay:0.05s">
 						Fresh Mac?<br />Set it up in<br /><span class="accent">one command.</span>
 					</h1>
-					<p class="hero-subtitle">
-						One command installs Git, Node, Docker, VS Code, shell config, dotfiles — everything you'd normally spend your first day installing. Then snapshot your setup and share it with your team.
+					<p class="hero-subtitle enter" style="animation-delay:0.1s">
+						Pick your stack in a terminal menu, then walk away while it installs everything.
 					</p>
-
-					<ul class="features-list">
-						<li class="feature-item"><span class="check">✓</span> Installs Homebrew packages, apps, configures shell + macOS preferences</li>
-						<li class="feature-item"><span class="check">✓</span> Snapshot your current Mac and recreate it on another machine</li>
-						<li class="feature-item"><span class="check">✓</span> Share your exact setup via a one-line install URL</li>
-					</ul>
-
-					<div class="install-section">
-						<div class="install-command">
-							<span class="install-prompt">$</span>
-							<code>curl -fsSL openboot.dev/install.sh | bash</code>
-							<button class="copy-btn" class:copied={copied === 'main'} aria-label="Copy install command" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
-								<span>{copied === 'main' ? '✓ copied' : '⧉ copy'}</span>
-							</button>
-						</div>
-						<p class="install-alt">
-							Have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
-						</p>
+					<div class="install-command enter" style="animation-delay:0.13s">
+						<span class="install-prompt">$</span>
+						<code>curl -fsSL openboot.dev/install.sh | bash</code>
+						<button class="copy-btn" class:copied={copied === 'main'} aria-label="Copy install command" onclick={() => copyCommand('curl -fsSL openboot.dev/install.sh | bash', 'main')}>
+							<span>{copied === 'main' ? '✓ copied' : '⧉ copy'}</span>
+						</button>
 					</div>
+					<p class="install-alt enter" style="animation-delay:0.21s">
+						Have Homebrew? <code>brew install openbootdotdev/tap/openboot</code>
+					</p>
 				</div>
 
 				<div class="hero-visual">
-					<div class="terminal-window">
+					<div class="hero-glow"></div>
+					<div class="terminal-window enter-r" style="animation-delay:0.28s">
 						<div class="terminal-header">
 							<div class="terminal-dots">
 								<span class="dot dot-red"></span>
@@ -121,7 +135,7 @@
 						<div class="terminal-body">
 							<!-- SCREEN A: bootstrap log -->
 							<div class="t-screen t-screen-a">
-								<div><span class="t-accent">$</span> curl -fsSL openboot.dev/install | bash</div>
+								<div><span class="t-accent">$</span> curl -fsSL openboot.dev/install.sh | bash</div>
 								<div class="t-head t-mt14">OpenBoot Installer</div>
 								<div class="t-accent">==================</div>
 								<div class="t-mt13"><span class="t-accent">✓</span> Xcode Command Line Tools ready</div>
@@ -166,7 +180,7 @@
 								<div class="t-mt14"><span class="t-accent">✓</span> <span class="t-accent">OpenBoot has successfully configured your Mac.</span></div>
 								<div class="t-mt15 t-strong">What was installed:</div>
 								<div class="t-muted t-pl16">– Git configured with your identity</div>
-								<div class="t-muted t-pl16">– <span class="t-strong">28</span> CLI packages</div>
+								<div class="t-muted t-pl16">– <span class="t-strong">29</span> CLI packages</div>
 								<div class="t-muted t-pl16">– <span class="t-strong">14</span> GUI applications</div>
 								<div class="t-muted t-pl16">– <span class="t-strong">5</span> npm global packages</div>
 								<div class="t-mt15 t-strong">Next steps:</div>
@@ -179,74 +193,47 @@
 				</div>
 			</section>
 
-			<section class="stats">
-					<div class="stats-card">
-						<div class="stats-grid">
-							<div class="stat">
-								<div class="stat-num accent">{starCount}</div>
-								<div class="stat-label">GitHub stars</div>
-							</div>
-							<div class="stat">
-								<div class="stat-num">~4<span class="stat-unit">min</span></div>
-								<div class="stat-label">average setup time</div>
-							</div>
-							<div class="stat">
-								<div class="stat-num">48<span class="stat-unit">pkgs</span></div>
-								<div class="stat-label">curated in the default preset</div>
-							</div>
-							<div class="stat">
-								<div class="stat-num amber">0</div>
-								<div class="stat-label">telemetry · MIT licensed</div>
-							</div>
-						</div>
-					</div>
-				</section>
-
-				<section class="how-it-works">
-				<div class="section-header">
+			<section class="how-it-works">
+				<div class="section-header" use:reveal>
 					<p class="section-prompt"><span class="accent">&gt;</span> how it works</p>
-					<h2 class="section-title">One command, a few picks, done in under 30 minutes.</h2>
 				</div>
-
 				<div class="steps-grid">
-					<div class="step">
-						<div class="step-head">
-								<span class="step-number">01</span>
+					{#each steps as s, i (s.n)}
+						<div class="step" use:reveal={{ index: i }}>
+							<div class="step-head">
+								<span class="step-number">{s.n}</span>
 								<span class="step-line"></span>
 							</div>
 							<div class="step-dot"></div>
-						<h3>Run one command</h3>
-						<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too.</p>
-					</div>
-					<div class="step">
-						<div class="step-head">
-								<span class="step-number">02</span>
-								<span class="step-line"></span>
-							</div>
-							<div class="step-dot"></div>
-						<h3>Pick your tools</h3>
-						<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want.</p>
-					</div>
-					<div class="step">
-						<div class="step-head">
-								<span class="step-number">03</span>
-								<span class="step-line"></span>
-							</div>
-							<div class="step-dot"></div>
-						<h3>Everything installs</h3>
-						<p>Packages download, shell gets configured, dotfiles linked, macOS prefs applied. Unattended.</p>
-					</div>
-					<div class="step">
-						<div class="step-head">
-								<span class="step-number">04</span>
-								<span class="step-line"></span>
-							</div>
-							<div class="step-dot"></div>
-						<h3>Open a new terminal</h3>
-						<p>Your tools are there, aliases work, shell config is live. A full day of setup, already done.</p>
-					</div>
+							<h3>{s.t}</h3>
+							<p>{s.d}</p>
+						</div>
+					{/each}
 				</div>
 			</section>
+
+			{#if data.communityConfigs.length > 0}
+				<section class="community">
+					<div class="community-head" use:reveal>
+						<p class="section-prompt"><span class="accent">&gt;</span> community configs</p>
+						<a href="/explore" class="browse-btn">Browse all configs <span>→</span></a>
+					</div>
+					<div class="community-grid" use:reveal>
+						{#each data.communityConfigs as c (c.slug)}
+							<a class="cc-card" href="/{c.username}/{c.slug}">
+								<div class="cc-head">
+									<h3 class="cc-name">{c.name}</h3>
+									<span class="cc-meta">{c.counts.cli} cli · {c.counts.cask} apps</span>
+								</div>
+								<div class="cc-fingerprint" aria-hidden="true">
+									<PackageFingerprint counts={c.counts} seed={c.slug} />
+								</div>
+								<code class="cc-cmd"><span class="accent">$</span> curl -fsSL openboot.dev/{c.username}/{c.slug} | bash</code>
+							</a>
+						{/each}
+					</div>
+				</section>
+			{/if}
 		</div>
 	</main>
 
@@ -280,10 +267,10 @@
 	/* ---------- hero ---------- */
 	.hero {
 		position: relative;
-		padding: 108px 0 110px;
+		padding: 72px 0 96px;
 		display: grid;
-		grid-template-columns: 1.05fr 0.95fr;
-		gap: 60px;
+		grid-template-columns: 1fr 1.05fr;
+		gap: 56px;
 		align-items: center;
 	}
 
@@ -296,55 +283,25 @@
 			linear-gradient(var(--border) 1px, transparent 1px),
 			linear-gradient(90deg, var(--border) 1px, transparent 1px);
 		background-size: 46px 46px;
-		-webkit-mask-image: radial-gradient(ellipse 75% 55% at 22% 30%, #000 0%, transparent 68%);
-		mask-image: radial-gradient(ellipse 75% 55% at 22% 30%, #000 0%, transparent 68%);
-		opacity: 0.45;
+		-webkit-mask-image: radial-gradient(ellipse 70% 60% at 28% 40%, #000 0%, transparent 70%);
+		mask-image: radial-gradient(ellipse 70% 60% at 28% 40%, #000 0%, transparent 70%);
+		opacity: 0.22;
 	}
 
 	.hero-content {
 		display: flex;
 		flex-direction: column;
-	}
-
-	.hero-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 9px;
-		align-self: flex-start;
-		border: 1px solid var(--border-hover);
-		border-radius: 100px;
-		padding: 6px 13px 6px 11px;
-		margin: 0 0 28px;
-	}
-
-	.badge-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--accent);
-		animation: ob-pulse 1.8s ease infinite;
-	}
-
-	.badge-label {
-		font-size: 0.76rem;
-		color: var(--text-secondary);
-		letter-spacing: 0.01em;
-	}
-
-	.badge-version {
-		font-size: 0.7rem;
-		color: var(--text-muted);
-		border-left: 1px solid var(--border-hover);
-		padding-left: 9px;
+		align-items: flex-start;
+		text-align: left;
 	}
 
 	.hero-title {
-		font-size: clamp(2.5rem, 5vw, 4rem);
+		font-size: clamp(2.3rem, 5vw, 3.1rem);
 		font-weight: 500;
-		line-height: 1.02;
+		line-height: 1.04;
 		letter-spacing: -0.045em;
 		color: var(--text-primary);
-		margin: 0 0 24px;
+		margin: 0 0 16px;
 	}
 
 	.hero-title .accent {
@@ -352,60 +309,22 @@
 	}
 
 	.hero-subtitle {
-		font-size: 0.94rem;
+		font-size: 0.95rem;
 		color: var(--text-secondary);
-		line-height: 1.75;
-		margin: 0 0 32px;
-		max-width: 52ch;
-	}
-
-	.features-list {
-		list-style: none;
-		display: grid;
-		gap: 12px;
-		margin: 0 0 36px;
-		padding: 0;
-	}
-
-	.feature-item {
-		display: flex;
-		align-items: baseline;
-		gap: 12px;
-		color: var(--text-secondary);
-		font-size: 0.875rem;
 		line-height: 1.6;
-	}
-
-	.feature-item .check {
-		color: var(--accent);
-		font-size: 0.8rem;
-		flex-shrink: 0;
-	}
-
-	.install-section {
-		display: flex;
-		flex-direction: column;
-		gap: 17px;
+		margin: 0 0 26px;
+		max-width: 38ch;
 	}
 
 	.install-command {
+		display: inline-flex;
+		align-items: center;
+		gap: 13px;
+		max-width: 100%;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border-hover);
 		border-radius: 10px;
-		padding: 15px 16px;
-		display: flex;
-		align-items: center;
-		gap: 13px;
-		max-width: 500px;
-		font-size: 0.9rem;
-		transition:
-			border-color 0.18s ease,
-			box-shadow 0.18s ease;
-	}
-
-	.install-command:hover {
-		border-color: var(--accent-deep);
-		box-shadow: 0 0 0 3px var(--accent-glow);
+		padding: 13px 16px;
 	}
 
 	.install-prompt {
@@ -416,9 +335,8 @@
 
 	.install-command code {
 		font-family: var(--font-mono);
-		font-size: 0.9rem;
+		font-size: 0.88rem;
 		color: var(--text-primary);
-		flex: 1;
 		min-width: 0;
 		white-space: nowrap;
 		overflow: hidden;
@@ -451,7 +369,7 @@
 	.install-alt {
 		color: var(--text-muted);
 		font-size: 0.78rem;
-		margin: 0;
+		margin: 14px 0 0;
 	}
 
 	.install-alt code {
@@ -462,21 +380,34 @@
 
 	/* ---------- terminal ---------- */
 	.hero-visual {
+		position: relative;
 		display: flex;
 		justify-content: center;
 		align-items: center;
 	}
 
+	.hero-glow {
+		position: absolute;
+		width: 60%;
+		height: 60%;
+		top: 8%;
+		right: 0;
+		border-radius: 50%;
+		background: var(--accent);
+		opacity: 0.06;
+		filter: blur(110px);
+		pointer-events: none;
+	}
+
 	.terminal-window {
+		position: relative;
 		width: 100%;
-		max-width: 560px;
-		border-radius: 12px;
+		max-width: 580px;
+		border-radius: 13px;
 		overflow: hidden;
 		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		box-shadow:
-			0 1px 0 color-mix(in srgb, var(--text-primary) 6%, transparent) inset,
-			0 30px 60px -20px var(--shadow);
+		border: 1px solid var(--border-hover);
+		box-shadow: 0 30px 70px -34px var(--shadow);
 	}
 
 	.terminal-header {
@@ -516,7 +447,7 @@
 
 	.terminal-body {
 		position: relative;
-		height: 486px;
+		height: 398px;
 		overflow: hidden;
 		background: var(--bg-secondary);
 		font-size: 0.72rem;
@@ -653,122 +584,91 @@
 		100% { opacity: 0; }
 	}
 
+	/* terminal demo screens overlap so it never blanks */
 	@keyframes ob-scrA {
-		0%, 1% { opacity: 0; }
-		4%, 19% { opacity: 1; }
-		23%, 100% { opacity: 0; }
+		0% { opacity: 1; }
+		24% { opacity: 1; }
+		30% { opacity: 0; }
+		91% { opacity: 0; }
+		98% { opacity: 1; }
+		100% { opacity: 1; }
 	}
 
 	@keyframes ob-scrB {
-		0%, 25% { opacity: 0; }
-		28%, 70% { opacity: 1; }
-		73%, 100% { opacity: 0; }
+		0%, 24% { opacity: 0; }
+		30%, 57% { opacity: 1; }
+		63%, 100% { opacity: 0; }
 	}
 
 	@keyframes ob-scrC {
-		0%, 75% { opacity: 0; }
-		78%, 97% { opacity: 1; }
-		99.5%, 100% { opacity: 0; }
+		0%, 57% { opacity: 0; }
+		63%, 90% { opacity: 1; }
+		97%, 100% { opacity: 0; }
 	}
 
-	@keyframes ob-pulse {
-		0%,
-		100% { opacity: 1; transform: scale(1); }
-		50% { opacity: 0.45; transform: scale(1.5); }
+	/* entrance + scroll reveal */
+	@keyframes ob-enter {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 
-	/* ---------- stats band ---------- */
-	.stats {
-		padding: 60px 0;
-		border-top: 1px solid var(--border);
+	@keyframes ob-enter-r {
+		from {
+			opacity: 0;
+			transform: translateY(28px) scale(0.985);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 
-	.stats-card {
-		position: relative;
-		border: 1px solid var(--border-hover);
-		border-radius: 16px;
-		overflow: hidden;
-		background: var(--bg-secondary);
+	.enter {
+		animation: ob-enter 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 	}
 
-	.stats-card::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(120deg, var(--accent-glow), transparent 55%);
-		pointer-events: none;
+	.enter-r {
+		animation: ob-enter-r 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 	}
 
-	.stats-grid {
-		position: relative;
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+	:global(.ob-rv-armed) {
+		opacity: 0;
+		transform: translateY(28px);
+		transition:
+			opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+			transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 	}
 
-	.stat {
-		padding: 34px 30px;
-		border-right: 1px solid var(--border);
-	}
-
-	.stat:last-child {
-		border-right: none;
-	}
-
-	.stat-num {
-		font-size: 2.6rem;
-		font-weight: 500;
-		letter-spacing: -0.03em;
-		line-height: 1;
-		color: var(--text-primary);
-	}
-
-	.stat-num.accent {
-		color: var(--accent);
-	}
-
-	.stat-num.amber {
-		color: var(--amber);
-	}
-
-	.stat-unit {
-		font-size: 1.1rem;
-		color: var(--text-muted);
-		margin-left: 4px;
-	}
-
-	.stat-label {
-		font-size: 0.78rem;
-		color: var(--text-secondary);
-		margin-top: 12px;
+	:global(.ob-rv-armed.ob-shown) {
+		opacity: 1;
+		transform: none;
 	}
 
 	/* ---------- how it works ---------- */
 	.how-it-works {
-		padding: 60px 0 104px;
+		padding: 84px 0 96px;
+		border-top: 1px solid var(--border);
 	}
 
 	.section-header {
-		margin-bottom: 56px;
+		margin-bottom: 44px;
 	}
 
 	.section-prompt {
 		color: var(--text-muted);
-		font-size: 0.85rem;
+		font-size: 0.95rem;
 		letter-spacing: 0.01em;
-		margin: 0 0 16px;
+		margin: 0;
 	}
 
 	.section-prompt .accent {
 		color: var(--accent);
-	}
-
-	.section-title {
-		font-size: 1.9rem;
-		font-weight: 500;
-		letter-spacing: -0.03em;
-		color: var(--text-primary);
-		margin: 0;
-		max-width: 22ch;
 	}
 
 	.steps-grid {
@@ -826,6 +726,112 @@
 		margin: 0;
 	}
 
+	/* ---------- community configs ---------- */
+	.community {
+		padding: 0 0 104px;
+	}
+
+	.community-head {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 24px;
+		margin-bottom: 32px;
+		flex-wrap: wrap;
+	}
+
+	.browse-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		border: 1px solid var(--border-hover);
+		border-radius: 9px;
+		padding: 11px 18px;
+		font-size: 0.84rem;
+		color: var(--text-primary);
+		white-space: nowrap;
+		transition:
+			border-color 0.15s ease,
+			background 0.15s ease;
+	}
+
+	.browse-btn:hover {
+		border-color: var(--accent);
+		background: var(--bg-secondary);
+	}
+
+	.community-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 16px;
+	}
+
+	.cc-card {
+		display: flex;
+		flex-direction: column;
+		gap: 13px;
+		min-width: 0;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 20px;
+		color: inherit;
+		transition:
+			transform 0.2s ease,
+			border-color 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.cc-card:hover {
+		transform: translateY(-4px);
+		border-color: var(--border-hover);
+		box-shadow: 0 16px 34px -16px var(--shadow);
+	}
+
+	.cc-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.cc-name {
+		font-size: 1rem;
+		font-weight: 500;
+		margin: 0;
+		min-width: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.cc-meta {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.cc-fingerprint {
+		display: flex;
+		align-items: flex-end;
+		gap: 2px;
+		height: 30px;
+	}
+
+	.cc-cmd {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--text-secondary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.cc-cmd .accent {
+		color: var(--accent);
+	}
+
 	/* ---------- footer ---------- */
 	footer {
 		border-top: 1px solid var(--border);
@@ -866,7 +872,7 @@
 		.hero {
 			grid-template-columns: 1fr;
 			gap: 44px;
-			padding: 72px 0;
+			padding: 56px 0 72px;
 		}
 
 		.hero-visual {
@@ -882,24 +888,12 @@
 			gap: 36px 0;
 		}
 
-		.stats-grid {
+		.community-grid {
 			grid-template-columns: 1fr 1fr;
 		}
 
-		.stat {
-			border-bottom: 1px solid var(--border);
-		}
-
-		.stat:nth-child(2n) {
-			border-right: none;
-		}
-
-		.stat:nth-last-child(-n + 2) {
-			border-bottom: none;
-		}
-
 		.how-it-works {
-			padding: 60px 0 80px;
+			padding: 64px 0 72px;
 		}
 	}
 
@@ -912,21 +906,8 @@
 			grid-template-columns: 1fr;
 		}
 
-		.stats-grid {
+		.community-grid {
 			grid-template-columns: 1fr;
-		}
-
-		.stat {
-			border-right: none;
-			border-bottom: 1px solid var(--border);
-		}
-
-		.stat:nth-last-child(-n + 2) {
-			border-bottom: 1px solid var(--border);
-		}
-
-		.stat:last-child {
-			border-bottom: none;
 		}
 
 		.install-command code {
