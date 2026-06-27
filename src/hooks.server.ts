@@ -2,6 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { RESERVED_ALIASES } from '$lib/server/validation';
 import { getConfigForHookAlias, getConfigForInstall, getConfigForHookSlug } from '$lib/server/db';
 import { serveInstallByAlias, serveInstallBySlug } from '$lib/server/alias';
+import { ensureDevSession } from '$lib/server/dev-auth';
 
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/openbootdotdev/openboot/main/scripts/install.sh';
 
@@ -103,6 +104,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		}
 	}
+
+	// Local-dev only: auto-authenticate as a fixed test user (gated on DEV_AUTH +
+	// localhost). No-op in production.
+	await ensureDevSession(event);
 
 	const response = await resolve(event);
 	const securedResponse = withSecurityHeaders(response);
