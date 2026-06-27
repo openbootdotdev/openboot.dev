@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import PackageFingerprint from '$lib/components/PackageFingerprint.svelte';
+	import { countPackageTypes } from '$lib/fingerprint';
 
 	interface Config {
 		id: string;
@@ -112,10 +114,14 @@
 	<div class="container">
 		<section class="hero">
 			<div class="hero-content">
-				<p class="hero-prompt"><span class="accent">&gt;</span> explore</p>
+				<div class="hero-badge">
+					<span class="badge-dot"></span>
+					<span class="badge-label">community registry</span>
+					{#if total > 0}<span class="badge-count">{total} public</span>{/if}
+				</div>
 				<h1 class="hero-title">Community configurations</h1>
 				<p class="hero-subtitle">
-					Developer setups shared by the community{#if total > 0} — {total} public {total === 1 ? 'config' : 'configs'} and counting{/if}.
+					Real developer setups, shared as one-line installs. Find one close to yours, then make it your own.
 				</p>
 			</div>
 			<div class="sort-controls">
@@ -190,6 +196,9 @@
 						</div>
 						<h3 class="config-name">{config.name}</h3>
 						<p class="config-description">{config.description}</p>
+						<div class="card-fingerprint" aria-hidden="true">
+							<PackageFingerprint counts={countPackageTypes(getPackages(config))} seed={config.slug} />
+						</div>
 						<div class="card-footer">
 							{#if getPackageBreakdown(config).cli > 0 || getPackageBreakdown(config).apps > 0}
 								<div class="stat packages">
@@ -260,27 +269,60 @@
 		flex-wrap: wrap;
 	}
 
-	.hero-prompt {
-		color: var(--text-muted);
-		font-size: 0.85rem;
-		letter-spacing: 0.01em;
-		margin: 0 0 16px;
+	.hero-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		border: 1px solid var(--border-hover);
+		border-radius: 100px;
+		padding: 6px 13px 6px 11px;
+		margin: 0 0 20px;
 	}
 
-	.hero-prompt .accent {
+	.badge-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		animation: ob-pulse 1.8s ease infinite;
+	}
+
+	.badge-label {
+		font-size: 0.76rem;
+		color: var(--text-secondary);
+		letter-spacing: 0.01em;
+	}
+
+	.badge-count {
+		font-size: 0.7rem;
 		color: var(--accent);
+		border-left: 1px solid var(--border-hover);
+		padding-left: 9px;
+	}
+
+	@keyframes ob-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.45;
+			transform: scale(1.5);
+		}
 	}
 
 	.hero-title {
-		font-size: 1.9rem;
+		font-size: 2.5rem;
 		font-weight: 500;
-		letter-spacing: -0.025em;
+		letter-spacing: -0.035em;
+		line-height: 1.04;
 		color: var(--text-primary);
-		margin: 0 0 12px;
+		margin: 0 0 14px;
 	}
 
 	.hero-subtitle {
-		font-size: 0.9rem;
+		font-size: 0.95rem;
 		color: var(--text-secondary);
 		margin: 0;
 		max-width: 60ch;
@@ -568,6 +610,13 @@
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+	}
+
+	.card-fingerprint {
+		display: flex;
+		align-items: flex-end;
+		gap: 2px;
+		height: 26px;
 	}
 
 	.card-footer {

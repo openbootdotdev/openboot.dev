@@ -3,6 +3,7 @@
 	import { getCatalogItem } from '$lib/macos-prefs-catalog';
 	import ShareModal from '$lib/components/ShareModal.svelte';
 	import MacOSPreferencesDisplay from '$lib/components/MacOSPreferencesDisplay.svelte';
+	import PackageFingerprint from '$lib/components/PackageFingerprint.svelte';
 
 	let {
 		configUser,
@@ -134,22 +135,13 @@
 	const configNpm = $derived(configPkgs.filter((p) => p.type === 'npm'));
 	const configTaps = $derived(configPkgs.filter((p) => p.type === 'tap'));
 
-	// Package "DNA" — one segment per package, opacity ramping within each group.
-	type Seg = { color: string; opacity: number };
-	const dna = $derived.by((): Seg[] => {
-		const groups: [number, string][] = [
-			[configCli.length, 'var(--accent)'],
-			[configApps.length, 'var(--amber)'],
-			[configNpm.length, '#7aa2e3']
-		];
-		const segs: Seg[] = [];
-		for (const [n, color] of groups) {
-			for (let i = 0; i < n; i++) {
-				segs.push({ color, opacity: 0.55 + (i / Math.max(n - 1, 1)) * 0.45 });
-			}
-		}
-		return segs;
+	// Package "fingerprint" — tall bars colored by type, behind the hero.
+	const fpCounts = $derived({
+		cli: configCli.length,
+		cask: configApps.length,
+		npm: configNpm.length
 	});
+	const fpSeed = $derived(String(config.alias ?? config.id ?? config.name ?? ''));
 
 	const dnaLegend = $derived(
 		[
@@ -199,51 +191,51 @@
 		<div class="grid">
 			<!-- main -->
 			<div class="main">
-				<div class="byline">
-					{#if configUser.avatar_url}
-						<img src={configUser.avatar_url} alt={configUser.username} class="avatar" />
-					{:else}
-						<span class="avatar avatar-ph">{configUser.username.charAt(0).toLowerCase()}</span>
-					{/if}
-					<a href="/{configUser.username}" class="user">@{configUser.username}</a>
-					<span class="vis-badge" class:public={visibility === 'public'}>{visibility}</span>
-				</div>
-
-				<h1 class="title">{config.name}</h1>
-				{#if config.description}
-					<p class="desc">{config.description}</p>
-				{/if}
-
-				<div class="meta">
-					<span class="meta-item">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-						<span class="strong">{config.install_count || 0}</span> installs
-					</span>
-					{#if formatDate(config.updated_at)}
-						<span>updated {formatDate(config.updated_at)}</span>
-					{/if}
-					{#if config.base_preset}
-						<span>base preset <span class="strong">{config.base_preset}</span></span>
-					{/if}
-				</div>
-
-				{#if dna.length > 0}
-					<div class="dna">
-						{#each dna as seg}
-							<span style="flex:1; height:100%; background:{seg.color}; opacity:{seg.opacity};"></span>
-						{/each}
+				<div class="hero-card">
+					<div class="hero-fp" aria-hidden="true">
+						<PackageFingerprint counts={fpCounts} seed={fpSeed} delayStep={11} duration={0.55} />
 					</div>
-					<div class="dna-legend">
-						{#each dnaLegend as l}
-							<span><span class="swatch" style="background:{l.color};"></span>{l.n} {l.label}</span>
-						{/each}
+					<div class="hero-fade-x"></div>
+					<div class="hero-fade-y"></div>
+					<div class="hero-body">
+						<div class="byline">
+							{#if configUser.avatar_url}
+								<img src={configUser.avatar_url} alt={configUser.username} class="avatar" />
+							{:else}
+								<span class="avatar avatar-ph">{configUser.username.charAt(0).toLowerCase()}</span>
+							{/if}
+							<a href="/{configUser.username}" class="user">@{configUser.username}</a>
+							<span class="vis-badge" class:public={visibility === 'public'}>{visibility}</span>
+						</div>
+
+						<h1 class="title">{config.name}</h1>
+						{#if config.description}
+							<p class="desc">{config.description}</p>
+						{/if}
+
+						<div class="meta">
+							<span class="meta-item">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+								<span class="strong">{config.install_count || 0}</span> installs
+							</span>
+							{#if formatDate(config.updated_at)}
+								<span>updated {formatDate(config.updated_at)}</span>
+							{/if}
+							{#if dnaLegend.length > 0}
+								<span class="counts">
+									{#each dnaLegend as l}
+										<span class="count" title={l.label}><span class="swatch" style="background:{l.color};"></span>{l.n}</span>
+									{/each}
+								</span>
+							{/if}
+						</div>
 					</div>
-				{/if}
+				</div>
 			</div>
 
 			<!-- rail -->
 			<div class="rail">
-				<div class="rail-card">
+				<div class="rail-card install">
 					<div class="rail-label">Install this setup</div>
 					<button class="curl-btn" onclick={copyCurl}>
 						<code><span class="prompt">$</span> {getCurlCommand()}</code>
@@ -435,17 +427,52 @@
 		align-items: start;
 	}
 
+	.hero-card {
+		position: relative;
+		border: 1px solid var(--border-hover);
+		border-radius: 16px;
+		overflow: hidden;
+		background: var(--bg-secondary);
+		margin-bottom: 26px;
+	}
+
+	.hero-fp {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: flex-end;
+		gap: 3px;
+		padding: 14px;
+	}
+
+	.hero-fade-x {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(102deg, var(--bg-secondary) 44%, transparent 99%);
+	}
+
+	.hero-fade-y {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(0deg, var(--bg-secondary) 7%, transparent 62%);
+	}
+
+	.hero-body {
+		position: relative;
+		padding: 28px 30px 26px;
+	}
+
 	/* ---------- main column ---------- */
 	.byline {
 		display: flex;
 		align-items: center;
 		gap: 11px;
-		margin-bottom: 16px;
+		margin-bottom: 18px;
 	}
 
 	.avatar {
-		width: 34px;
-		height: 34px;
+		width: 30px;
+		height: 30px;
 		border-radius: 50%;
 		flex-shrink: 0;
 	}
@@ -456,7 +483,7 @@
 		justify-content: center;
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border-hover);
-		font-size: 0.85rem;
+		font-size: 0.82rem;
 		color: var(--text-secondary);
 	}
 
@@ -486,19 +513,20 @@
 	}
 
 	.title {
-		font-size: 2.1rem;
+		font-size: 2.6rem;
 		font-weight: 500;
-		letter-spacing: -0.03em;
-		margin: 0 0 12px;
+		letter-spacing: -0.04em;
+		line-height: 1.02;
+		margin: 0 0 14px;
 		color: var(--text-primary);
 	}
 
 	.desc {
-		font-size: 0.95rem;
+		font-size: 0.94rem;
 		color: var(--text-secondary);
 		line-height: 1.65;
-		max-width: 60ch;
-		margin: 0 0 20px;
+		max-width: 46ch;
+		margin: 0 0 22px;
 	}
 
 	.meta {
@@ -506,9 +534,8 @@
 		align-items: center;
 		gap: 20px;
 		flex-wrap: wrap;
-		font-size: 0.82rem;
+		font-size: 0.8rem;
 		color: var(--text-muted);
-		margin-bottom: 18px;
 	}
 
 	.meta-item {
@@ -521,20 +548,16 @@
 		color: var(--text-secondary);
 	}
 
-	.dna {
+	.counts {
 		display: flex;
-		height: 8px;
-		gap: 2px;
-		max-width: 420px;
+		align-items: center;
+		gap: 13px;
+		margin-left: 4px;
 	}
 
-	.dna-legend {
-		display: flex;
-		gap: 18px;
-		flex-wrap: wrap;
-		margin-top: 11px;
-		font-size: 0.74rem;
-		color: var(--text-muted);
+	.count {
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.swatch {
@@ -560,6 +583,24 @@
 		border: 1px solid var(--border);
 		border-radius: 14px;
 		padding: 20px;
+	}
+
+	.rail-card.install {
+		position: relative;
+		overflow: hidden;
+		border-color: var(--border-hover);
+	}
+
+	.rail-card.install::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(150deg, var(--accent-glow), transparent 60%);
+		pointer-events: none;
+	}
+
+	.rail-card.install > * {
+		position: relative;
 	}
 
 	.rail-label {
