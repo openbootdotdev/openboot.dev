@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ContextMenu from './ContextMenu.svelte';
+	import PackageFingerprint from './PackageFingerprint.svelte';
 
 	interface Config {
 		id: string;
@@ -31,22 +32,6 @@
 	const cli = $derived(packages.filter((p: any) => p.type !== 'cask' && p.type !== 'npm').length);
 	const apps = $derived(packages.filter((p: any) => p.type === 'cask').length);
 	const npm = $derived(packages.filter((p: any) => p.type === 'npm').length);
-
-	// DNA: one segment per package, grouped by type, brightening across each group
-	const dna = $derived.by(() => {
-		const groups: [number, string][] = [
-			[cli, 'var(--accent)'],
-			[apps, 'var(--amber)'],
-			[npm, '#7aa2e3'],
-		];
-		const segs: { color: string; opacity: number }[] = [];
-		for (const [n, color] of groups) {
-			for (let i = 0; i < n; i++) {
-				segs.push({ color, opacity: 0.55 + (i / Math.max(n - 1, 1)) * 0.45 });
-			}
-		}
-		return segs;
-	});
 
 	const installUrl = $derived(
 		config.alias ? `openboot.dev/${config.alias}` : `openboot.dev/${username}/${config.slug}`
@@ -84,11 +69,9 @@
 				<h3 class="row-name">{config.name}</h3>
 				<span class="vis-tag" class:public={config.visibility === 'public'}>{config.visibility}</span>
 			</div>
-			{#if dna.length > 0}
-				<div class="dna" aria-hidden="true">
-					{#each dna as seg, i (i)}
-						<span class="dna-seg" style="background:{seg.color}; opacity:{seg.opacity};"></span>
-					{/each}
+			{#if cli + apps + npm > 0}
+				<div class="fingerprint" aria-hidden="true">
+					<PackageFingerprint counts={{ cli, cask: apps, npm }} seed={config.slug ?? config.name} />
 				</div>
 			{/if}
 			{#if config.description}
@@ -145,7 +128,7 @@
 		gap: 24px;
 	}
 
-	/* ── identity + dna ── */
+	/* ── identity + fingerprint ── */
 	.identity {
 		flex: 1 1 0;
 		min-width: 0;
@@ -186,17 +169,13 @@
 		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 
-	.dna {
+	.fingerprint {
 		display: flex;
-		height: 7px;
+		align-items: flex-end;
+		height: 24px;
 		gap: 2px;
 		margin-bottom: 11px;
-		max-width: 280px;
-	}
-
-	.dna-seg {
-		flex: 1;
-		height: 100%;
+		max-width: 300px;
 	}
 
 	.row-desc {

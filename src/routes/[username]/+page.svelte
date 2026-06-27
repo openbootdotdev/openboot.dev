@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import ConfigDetail from '$lib/components/ConfigDetail.svelte';
+	import PackageFingerprint from '$lib/components/PackageFingerprint.svelte';
+	import { countPackageTypes } from '$lib/fingerprint';
 
 	let { data }: { data: PageData } = $props();
 
@@ -147,6 +149,9 @@
 							{#if config.description}
 								<p class="config-description">{config.description}</p>
 							{/if}
+							<div class="card-fingerprint" aria-hidden="true">
+								<PackageFingerprint counts={countPackageTypes(config.packages)} seed={config.slug} />
+							</div>
 							<div class="card-footer">
 								<span class="stat-pkgs">{getPackageBreakdown(config.packages)}</span>
 								<span class="stat-installs">
@@ -409,6 +414,13 @@
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+	}
+
+	.card-fingerprint {
+		display: flex;
+		align-items: flex-end;
+		gap: 2px;
+		height: 26px;
 	}
 
 	.card-footer {
