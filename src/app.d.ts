@@ -15,6 +15,7 @@ declare global {
 				GOOGLE_CLIENT_SECRET: string;
 				JWT_SECRET: string;
 				APP_URL: string;
+				DEV_AUTH?: string;
 			};
 		}
 	}

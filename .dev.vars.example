@@ -1,0 +1,24 @@
+# Local development config for `npm run dev`.
+# Copy this file to `.dev.vars` (gitignored, never deployed) and adjust.
+# Values here override the production [vars] in wrangler.toml when running locally.
+
+# Auto-login as a fixed fake test user (devuser) — no OAuth needed for local dev.
+# Gated to localhost, and the flag only lives in .dev.vars, so it can never be
+# active in production. Set to "false" (or remove) to test the real OAuth flow
+# or the logged-out UI, then restart `npm run dev`.
+DEV_AUTH=true
+
+# Secret used to sign session JWTs. Any long random string works locally.
+JWT_SECRET=any-long-random-string-for-local-dev
+
+# Base URL for OAuth redirect_uri and generated install scripts. Overrides the
+# production APP_URL in wrangler.toml. Match the port `npm run dev` prints.
+APP_URL=http://localhost:5173
+
+# --- Optional: only needed if you set DEV_AUTH=false to test real OAuth ---
+# GitHub OAuth app — callback URL: http://localhost:5173/api/auth/callback/github
+# GITHUB_CLIENT_ID=your_github_oauth_client_id
+# GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
+# Google OAuth — redirect URI: http://localhost:5173/api/auth/callback/google
+# GOOGLE_CLIENT_ID=your_google_oauth_client_id
+# GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret

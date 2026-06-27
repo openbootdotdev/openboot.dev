@@ -8,6 +8,7 @@ export default defineConfig({
 		exclude: [
 			'src/routes/api/health/**/*.test.ts',
 			'src/lib/server/auth.test.ts',
+			'src/lib/server/dev-auth.test.ts',
 			'src/lib/server/db/configs.test.ts',
 			'src/routes/api/configs/server.test.ts',
 			'src/routes/api/configs/[slug]/server.test.ts',
