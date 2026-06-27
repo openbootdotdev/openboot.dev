@@ -226,7 +226,7 @@
 		<div class="container">
 			<div class="cta-content">
 				<h3 class="cta-title">Create your own config and share it with the community</h3>
-				<p class="cta-desc">Capture your development environment in seconds and share it with a single command</p>
+				<p class="cta-desc">Capture your development environment in seconds and share it with a single command.</p>
 				<a href="/login?return_to=/dashboard" class="cta-button">
 					Get started
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -343,7 +343,7 @@
 	.skeleton-card {
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
-		border-radius: 16px;
+		border-radius: 12px;
 		padding: 20px;
 		display: flex;
 		flex-direction: column;

@@ -198,7 +198,7 @@
 		font-family: inherit;
 		font-size: 0.82rem;
 		cursor: pointer;
-		background: var(--bg-tertiary);
+		background: var(--bg-secondary);
 		color: var(--text-secondary);
 		border: 1px solid var(--border-hover);
 		text-transform: capitalize;

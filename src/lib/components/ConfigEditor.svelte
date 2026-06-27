@@ -436,6 +436,7 @@
 						<div class="term-head">
 							<span class="dot dot-red"></span><span class="dot dot-amber"></span><span class="dot dot-green"></span>
 							<span class="term-name">post-install.sh — runs after packages</span>
+							<span class="term-edit"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>editable</span>
 						</div>
 						<textarea
 							class="script-textarea"
@@ -852,9 +853,18 @@
 		color: var(--text-muted);
 	}
 
+	.term-edit {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 0.68rem;
+		color: var(--accent);
+	}
+
 	.script-textarea {
 		width: 100%;
-		min-height: 200px;
+		min-height: 148px;
 		padding: 18px 20px;
 		background: transparent;
 		border: none;

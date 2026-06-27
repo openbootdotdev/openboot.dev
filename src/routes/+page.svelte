@@ -1,5 +1,18 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	let copied = $state('');
+	// Default to the design's reference number; replaced by the live edge-cached count.
+	let starCount = $state(108);
+
+	onMount(() => {
+		fetch('/api/github/stars')
+			.then((r) => r.json())
+			.then((data) => {
+				if (data.stars) starCount = data.stars;
+			})
+			.catch(() => {});
+	});
 
 	function copyCommand(command: string, id: string) {
 		navigator.clipboard.writeText(command);
@@ -62,7 +75,11 @@
 			<section class="hero">
 				<div class="hero-grid"></div>
 				<div class="hero-content">
-					<p class="eyebrow"><span class="prompt">#</span> macOS bootstrap, automated</p>
+					<div class="hero-badge">
+						<span class="badge-dot"></span>
+						<span class="badge-label">macOS bootstrap, automated</span>
+						<span class="badge-version">v0.44</span>
+					</div>
 					<h1 class="hero-title">
 						Fresh Mac?<br />Set it up in<br /><span class="accent">one command.</span>
 					</h1>
@@ -162,7 +179,30 @@
 				</div>
 			</section>
 
-			<section class="how-it-works">
+			<section class="stats">
+					<div class="stats-card">
+						<div class="stats-grid">
+							<div class="stat">
+								<div class="stat-num accent">{starCount}</div>
+								<div class="stat-label">GitHub stars</div>
+							</div>
+							<div class="stat">
+								<div class="stat-num">~4<span class="stat-unit">min</span></div>
+								<div class="stat-label">average setup time</div>
+							</div>
+							<div class="stat">
+								<div class="stat-num">48<span class="stat-unit">pkgs</span></div>
+								<div class="stat-label">curated in the default preset</div>
+							</div>
+							<div class="stat">
+								<div class="stat-num amber">0</div>
+								<div class="stat-label">telemetry · MIT licensed</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section class="how-it-works">
 				<div class="section-header">
 					<p class="section-prompt"><span class="accent">&gt;</span> how it works</p>
 					<h2 class="section-title">One command, a few picks, done in under 30 minutes.</h2>
@@ -170,24 +210,40 @@
 
 				<div class="steps-grid">
 					<div class="step">
-						<div class="step-number">01</div>
+						<div class="step-head">
+								<span class="step-number">01</span>
+								<span class="step-line"></span>
+							</div>
+							<div class="step-dot"></div>
 						<h3>Run one command</h3>
-						<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too — Xcode tools and all. Then the package picker opens.</p>
+						<p>Paste the curl command into your terminal. If Homebrew isn't installed, it sets that up too.</p>
 					</div>
 					<div class="step">
-						<div class="step-number">02</div>
+						<div class="step-head">
+								<span class="step-number">02</span>
+								<span class="step-line"></span>
+							</div>
+							<div class="step-dot"></div>
 						<h3>Pick your tools</h3>
-						<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want, confirm, and you're done choosing.</p>
+						<p>A terminal menu opens. Start from a preset or go package by package — toggle what you want.</p>
 					</div>
 					<div class="step">
-						<div class="step-number">03</div>
-						<h3>Everything installs itself</h3>
-						<p>Packages download, shell gets configured, dotfiles get linked, macOS preferences get applied. It runs unattended — no babysitting needed.</p>
+						<div class="step-head">
+								<span class="step-number">03</span>
+								<span class="step-line"></span>
+							</div>
+							<div class="step-dot"></div>
+						<h3>Everything installs</h3>
+						<p>Packages download, shell gets configured, dotfiles linked, macOS prefs applied. Unattended.</p>
 					</div>
 					<div class="step">
-						<div class="step-number">04</div>
+						<div class="step-head">
+								<span class="step-number">04</span>
+								<span class="step-line"></span>
+							</div>
+							<div class="step-dot"></div>
 						<h3>Open a new terminal</h3>
-						<p>Your tools are there, aliases work, shell config is live. Everything that used to take a full day is already done.</p>
+						<p>Your tools are there, aliases work, shell config is live. A full day of setup, already done.</p>
 					</div>
 				</div>
 			</section>
@@ -250,24 +306,45 @@
 		flex-direction: column;
 	}
 
-	.eyebrow {
-		color: var(--text-muted);
-		font-size: 0.8rem;
-		letter-spacing: 0.02em;
-		margin: 0 0 26px;
+	.hero-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		align-self: flex-start;
+		border: 1px solid var(--border-hover);
+		border-radius: 100px;
+		padding: 6px 13px 6px 11px;
+		margin: 0 0 28px;
 	}
 
-	.eyebrow .prompt {
-		color: var(--accent);
+	.badge-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		animation: ob-pulse 1.8s ease infinite;
+	}
+
+	.badge-label {
+		font-size: 0.76rem;
+		color: var(--text-secondary);
+		letter-spacing: 0.01em;
+	}
+
+	.badge-version {
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		border-left: 1px solid var(--border-hover);
+		padding-left: 9px;
 	}
 
 	.hero-title {
-		font-size: clamp(2.3rem, 4.6vw, 3.4rem);
+		font-size: clamp(2.5rem, 5vw, 4rem);
 		font-weight: 500;
-		line-height: 1.05;
-		letter-spacing: -0.04em;
+		line-height: 1.02;
+		letter-spacing: -0.045em;
 		color: var(--text-primary);
-		margin: 0 0 26px;
+		margin: 0 0 24px;
 	}
 
 	.hero-title .accent {
@@ -594,10 +671,80 @@
 		99.5%, 100% { opacity: 0; }
 	}
 
+	@keyframes ob-pulse {
+		0%,
+		100% { opacity: 1; transform: scale(1); }
+		50% { opacity: 0.45; transform: scale(1.5); }
+	}
+
+	/* ---------- stats band ---------- */
+	.stats {
+		padding: 60px 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.stats-card {
+		position: relative;
+		border: 1px solid var(--border-hover);
+		border-radius: 16px;
+		overflow: hidden;
+		background: var(--bg-secondary);
+	}
+
+	.stats-card::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(120deg, var(--accent-glow), transparent 55%);
+		pointer-events: none;
+	}
+
+	.stats-grid {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	.stat {
+		padding: 34px 30px;
+		border-right: 1px solid var(--border);
+	}
+
+	.stat:last-child {
+		border-right: none;
+	}
+
+	.stat-num {
+		font-size: 2.6rem;
+		font-weight: 500;
+		letter-spacing: -0.03em;
+		line-height: 1;
+		color: var(--text-primary);
+	}
+
+	.stat-num.accent {
+		color: var(--accent);
+	}
+
+	.stat-num.amber {
+		color: var(--amber);
+	}
+
+	.stat-unit {
+		font-size: 1.1rem;
+		color: var(--text-muted);
+		margin-left: 4px;
+	}
+
+	.stat-label {
+		font-size: 0.78rem;
+		color: var(--text-secondary);
+		margin-top: 12px;
+	}
+
 	/* ---------- how it works ---------- */
 	.how-it-works {
-		padding: 104px 0;
-		border-top: 1px solid var(--border);
+		padding: 60px 0 104px;
 	}
 
 	.section-header {
@@ -616,51 +763,66 @@
 	}
 
 	.section-title {
-		font-size: 1.7rem;
+		font-size: 1.9rem;
 		font-weight: 500;
-		letter-spacing: -0.025em;
+		letter-spacing: -0.03em;
 		color: var(--text-primary);
 		margin: 0;
+		max-width: 22ch;
 	}
 
 	.steps-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 1px;
-		background: var(--border);
-		border: 1px solid var(--border);
-		border-radius: 13px;
-		overflow: hidden;
+		gap: 0;
 	}
 
 	.step {
-		background: var(--bg-primary);
-		padding: 28px 24px 32px;
-		transition: background 0.2s ease;
+		position: relative;
+		padding: 0 28px 0 0;
 	}
 
-	.step:hover {
-		background: var(--bg-secondary);
+	.step-head {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		margin-bottom: 24px;
 	}
 
 	.step-number {
-		color: var(--accent);
-		font-size: 0.85rem;
-		letter-spacing: 0.04em;
+		font-size: 3rem;
+		font-weight: 600;
+		letter-spacing: -0.04em;
+		color: var(--border-hover);
+		line-height: 1;
+	}
+
+	.step-line {
+		flex: 1;
+		height: 1px;
+		background: var(--border);
+	}
+
+	.step-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--accent);
+		margin-bottom: 18px;
 	}
 
 	.step h3 {
-		font-size: 0.98rem;
+		font-size: 1.02rem;
 		font-weight: 500;
-		margin: 22px 0 12px;
+		margin: 0 0 12px;
 		letter-spacing: -0.01em;
 		color: var(--text-primary);
 	}
 
 	.step p {
 		color: var(--text-secondary);
-		font-size: 0.82rem;
-		line-height: 1.7;
+		font-size: 0.84rem;
+		line-height: 1.72;
 		margin: 0;
 	}
 
@@ -717,10 +879,27 @@
 
 		.steps-grid {
 			grid-template-columns: 1fr 1fr;
+			gap: 36px 0;
+		}
+
+		.stats-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		.stat {
+			border-bottom: 1px solid var(--border);
+		}
+
+		.stat:nth-child(2n) {
+			border-right: none;
+		}
+
+		.stat:nth-last-child(-n + 2) {
+			border-bottom: none;
 		}
 
 		.how-it-works {
-			padding: 80px 0;
+			padding: 60px 0 80px;
 		}
 	}
 
@@ -731,6 +910,23 @@
 
 		.steps-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.stats-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.stat {
+			border-right: none;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.stat:nth-last-child(-n + 2) {
+			border-bottom: 1px solid var(--border);
+		}
+
+		.stat:last-child {
+			border-bottom: none;
 		}
 
 		.install-command code {

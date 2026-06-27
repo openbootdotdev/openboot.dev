@@ -528,10 +528,6 @@
 		max-width: 420px;
 	}
 
-	.dna span {
-		border-radius: 1px;
-	}
-
 	.dna-legend {
 		display: flex;
 		gap: 18px;
