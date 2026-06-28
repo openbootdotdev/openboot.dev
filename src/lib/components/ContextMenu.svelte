@@ -21,7 +21,11 @@
 	function reposition() {
 		if (!open || !triggerEl) return;
 		const r = triggerEl.getBoundingClientRect();
-		pos = { top: r.bottom + 4, right: window.innerWidth - r.right };
+		// Anchor against the viewport content width (clientWidth excludes the
+		// scrollbar) so a fixed `right` offset lines the dropdown up with the
+		// trigger's right edge; window.innerWidth would shift it left by the
+		// scrollbar width.
+		pos = { top: r.bottom + 4, right: document.documentElement.clientWidth - r.right };
 	}
 
 	function toggle(e: MouseEvent) {
@@ -30,6 +34,19 @@
 		open = !open;
 		if (open) reposition();
 	}
+
+	// Keep the fixed-positioned dropdown pinned to its trigger while open, then
+	// drop the listeners on close so a list of closed menus does no scroll work.
+	// Capture-phase scroll also catches nested scroll containers, not just window.
+	$effect(() => {
+		if (!open) return;
+		window.addEventListener('scroll', reposition, true);
+		window.addEventListener('resize', reposition);
+		return () => {
+			window.removeEventListener('scroll', reposition, true);
+			window.removeEventListener('resize', reposition);
+		};
+	});
 
 	function select(action: string, e: MouseEvent) {
 		e.stopPropagation();
@@ -55,7 +72,7 @@
 	}
 </script>
 
-<svelte:window onclick={handleClickOutside} onresize={reposition} onscroll={reposition} />
+<svelte:window onclick={handleClickOutside} />
 
 <div class="ctx">
 	<button class="trigger" class:square bind:this={triggerEl} onclick={toggle} aria-label="More actions">⋯</button>
@@ -118,7 +135,7 @@
 		border-radius: 12px;
 		padding: 4px;
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
-		z-index: 1000;
+		z-index: 150;
 		animation: menuIn 0.15s ease-out;
 	}
 
