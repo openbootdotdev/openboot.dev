@@ -78,10 +78,6 @@
 </div>
 
 <style>
-	.ctx {
-		position: relative;
-	}
-
 	.trigger {
 		display: flex;
 		align-items: center;
