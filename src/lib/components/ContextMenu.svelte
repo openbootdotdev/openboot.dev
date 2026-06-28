@@ -12,12 +12,23 @@
 	} = $props();
 
 	let open = $state(false);
-	let menuEl: HTMLDivElement | undefined = $state(undefined);
+	let triggerEl: HTMLButtonElement | undefined = $state(undefined);
+	let dropdownEl: HTMLDivElement | undefined = $state(undefined);
+	let pos = $state({ top: 0, right: 0 });
+
+	// Position the dropdown relative to the trigger. It's rendered as a body
+	// portal (see `portal` below) so it escapes the per-card stacking context.
+	function reposition() {
+		if (!open || !triggerEl) return;
+		const r = triggerEl.getBoundingClientRect();
+		pos = { top: r.bottom + 4, right: window.innerWidth - r.right };
+	}
 
 	function toggle(e: MouseEvent) {
 		e.stopPropagation();
 		e.preventDefault();
 		open = !open;
+		if (open) reposition();
 	}
 
 	function select(action: string, e: MouseEvent) {
@@ -28,18 +39,28 @@
 	}
 
 	function handleClickOutside(e: MouseEvent) {
-		if (open && menuEl && !menuEl.contains(e.target as Node)) {
-			open = false;
-		}
+		if (!open) return;
+		const target = e.target as Node;
+		if (triggerEl?.contains(target) || dropdownEl?.contains(target)) return;
+		open = false;
+	}
+
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
 	}
 </script>
 
-<svelte:window onclick={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} onresize={reposition} onscroll={reposition} />
 
-<div class="ctx" bind:this={menuEl}>
-	<button class="trigger" class:square onclick={toggle} aria-label="More actions">⋯</button>
+<div class="ctx">
+	<button class="trigger" class:square bind:this={triggerEl} onclick={toggle} aria-label="More actions">⋯</button>
 	{#if open}
-		<div class="dropdown">
+		<div class="dropdown" bind:this={dropdownEl} use:portal style="top: {pos.top}px; right: {pos.right}px;">
 			{#each items as item, i}
 				{#if i > 0 && item.danger && !items[i - 1]?.danger}
 					<div class="divider"></div>
@@ -94,16 +115,14 @@
 	}
 
 	.dropdown {
-		position: absolute;
-		top: calc(100% + 4px);
-		right: 0;
+		position: fixed;
 		min-width: 170px;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 4px;
 		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
-		z-index: 100;
+		z-index: 1000;
 		animation: menuIn 0.15s ease-out;
 	}
 
