@@ -652,8 +652,7 @@
 
 	/* ---------- how it works ---------- */
 	.how-it-works {
-		padding: 84px 0 96px;
-		border-top: 1px solid var(--border);
+		padding: 0 0 96px;
 	}
 
 	.section-header {
