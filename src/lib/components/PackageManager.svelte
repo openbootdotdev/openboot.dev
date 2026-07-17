@@ -31,8 +31,9 @@
 		return 'var(--accent)';
 	}
 
-	/** "cirruslabs/cli/tart" → "tart" */
-	function displayName(name: string): string {
+	/** "cirruslabs/cli/tart" → "tart". Taps keep their full "owner/name" identity. */
+	function displayName(name: string, type: string): string {
+		if (type === 'tap') return name;
 		if (name.includes('/')) return name.split('/').pop() as string;
 		return name;
 	}
@@ -119,7 +120,7 @@
 	<div class="chips">
 		{#each packageList as pk (pk.type + ':' + pk.name)}
 			<span class="chip">
-				<span class="chip-dot" style="background:{dotColor(pk.type)};"></span>{displayName(pk.name)}
+				<span class="chip-dot" style="background:{dotColor(pk.type)};"></span>{displayName(pk.name, pk.type)}
 				<button class="chip-x" aria-label="Remove {pk.name}" onclick={() => togglePackage(pk.name, pk.type)}>×</button>
 			</span>
 		{/each}
