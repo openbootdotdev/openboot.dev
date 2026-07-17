@@ -24,12 +24,9 @@ coverage/
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-# .claude/ contains both committed project assets (settings.json,
-# hooks/, skills/) and per-user noise (transcripts, local overrides).
-# Ignore everything by default, allow the committed pieces explicitly.
+# .claude/ contains the committed skill aliases plus per-user noise
+# (transcripts, local overrides). Ignore everything except shared skills.
 .claude/*
-!.claude/hooks/
-!.claude/settings.json
 !.claude/skills/
 .claude/settings.local.json
 .dev.vars
