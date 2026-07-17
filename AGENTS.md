@@ -1,80 +1,172 @@
 # AGENTS.md
 
-Canonical pointer for AI coding agents working on this repo. If you're a
-human, you probably want [README.md](README.md) or [CLAUDE.md](CLAUDE.md).
+Canonical instructions for coding agents working on this repository. Keep shared
+project knowledge here rather than in tool-specific configuration.
+
+## Agent compatibility
+
+- Codex loads this `AGENTS.md` directly.
+- Claude Code loads [CLAUDE.md](CLAUDE.md), which imports this file with
+  `@AGENTS.md`.
+- Canonical project skills live in [`.agents/skills/`](.agents/skills/).
+  [`.claude/skills/`](.claude/skills/) contains relative `SKILL.md` symlinks so
+  Claude Code and agents that follow the open Agent Skills layout use the same
+  instructions.
+- Quality enforcement is agent-independent: use the Git hooks, `npm run
+  validate`, and CI. Do not add tool-specific lifecycle hooks for checks that
+  belong in those shared gates.
 
 ## Read first
 
-- **[CLAUDE.md](CLAUDE.md)** — project conventions, stack overview,
-  request flow, where-to-look table. Treat as authoritative.
-- **[docs/HARNESS.md](docs/HARNESS.md)** — the steering meta-doc: when a
-  class of issue recurs, which file do you edit to prevent it next time.
+- **[docs/HARNESS.md](docs/HARNESS.md)** — where repository controls live and
+  how to encode a recurring issue as a mechanical check.
+- **[README.md](README.md)** — product-facing setup and usage.
 
-## Project invariants (the things that must not drift)
+## Overview
 
-These are enforced mechanically. New violations fail `npm run validate`
-or the `.claude/hooks/stop.sh` end-of-turn check.
+Web dashboard and install API for OpenBoot, a CLI that bootstraps developer
+machines. The app uses SvelteKit 5 on Cloudflare Workers with D1 (SQLite). It
+serves configuration pages, curl-compatible install scripts, a dashboard,
+OAuth login, and Markdown documentation.
+
+The Go CLI lives at [openbootdotdev/openboot](https://github.com/openbootdotdev/openboot).
+
+## Commands
+
+```bash
+npm run dev                # Local development server
+npm run build              # Production build
+npm run check              # svelte-kit sync + svelte-check
+npm run lint               # ESLint
+npm run validate           # lint + check + tests + build (the harness gate)
+npm test                   # All Vitest suites
+npx vitest run src/lib/server/auth.test.ts
+npx vitest run -t "test name"
+npm run test:coverage
+npm run install:hooks      # Install shared Git pre-commit/pre-push hooks
+
+# Database
+wrangler d1 migrations apply openboot --local
+wrangler d1 migrations apply openboot --remote
+```
+
+Local development requires `.dev.vars` containing `GITHUB_CLIENT_ID`,
+`GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
+
+## Architecture
+
+**Stack:** SvelteKit 5 (Svelte 5 runes), TypeScript, Cloudflare Workers, D1,
+mdsvex, Shiki, and Fuse.js.
+
+`src/hooks.server.ts` intercepts requests, resolves short aliases such as
+`/dev` to `/user/slug`, serves install scripts to curl/wget clients, and applies
+security headers.
+
+| Path | Purpose |
+|---|---|
+| `src/hooks.server.ts` | Alias resolution, curl detection, security headers |
+| `src/lib/server/` | Server-only auth, DB helpers, install scripts, rate limiting, validation |
+| `src/lib/stores/` | Client-side auth and theme stores |
+| `src/lib/presets.ts` | Package presets |
+| `src/lib/package-metadata.ts` | Source of truth for package metadata; served at `/api/packages` |
+| `src/routes/api/` | REST endpoints (`+server.ts`) |
+| `src/routes/[username]/[slug]/` | Config page, install endpoint, config JSON, OG image |
+| `src/docs/` | mdsvex documentation |
+| `migrations/` | Sequential D1 migrations (`0001_*.sql`) |
+
+### Auth
+
+1. OAuth: `/api/auth/login` -> provider -> `/api/auth/callback/{github,google}`
+   -> JWT in the httpOnly `session` cookie.
+2. Session: `getCurrentUser(request, cookies, db, secret)` verifies the JWT.
+3. CLI device flow: `/api/auth/cli/start` -> approval at `/cli-auth` -> polling
+   at `/api/auth/cli/poll` -> `obt_`-prefixed API token.
+
+### Database
+
+D1 is used directly with parameterized SQL; there is no ORM. The tables are
+`users`, `configs`, `config_revisions`, `api_tokens`, and `cli_auth_codes`.
+`configs.packages` stores a JSON array of `{name, type}` objects and read paths
+enrich each entry from `package-metadata.ts`. Visibility is `public`,
+`unlisted`, or `private`.
+
+D1 cannot `ALTER TABLE DROP COLUMN`; remove columns with a new table and a data
+migration.
+
+### Install scripts
+
+`src/lib/server/install-script.ts` provides `generateInstallScript()` for
+public configs and `generatePrivateInstallScript()` for private configs that
+require CLI authentication.
+
+## Conventions
+
+- Write code, comments, documentation, and commits in English.
+- Use Svelte 5 runes (`$state`, `$derived`, `$props()`), not legacy `$:`.
+- Return API data with `json({...})` and appropriate status codes. Return
+  errors as `json({ error: '...' }, { status: N })`.
+- Use Conventional Commits: `type(scope): subject`.
+- Put reusable D1 queries in `src/lib/server/db/`; endpoint-local access may
+  stay in `+server.ts`. Always bind query parameters.
+- Do not use `as any`, `@ts-ignore`, or `@ts-nocheck`; model the type instead.
+- Use `slugify()` from `$lib/server/auth` for lowercase alphanumeric/hyphen
+  slugs.
+- Treat the in-memory sliding-window rate limiter as per-Worker-isolate, not
+  globally consistent.
+
+## Project invariants
+
+New violations fail `npm run validate`.
 
 | Invariant | Enforced by |
 |---|---|
-| D1 access (`.prepare` / `.exec` / `.batch`) only in `+server.ts` or `src/lib/server/db/` | `src/archtest/db-access.test.ts` |
-| No `process.env` in `src/**` — Cloudflare Workers uses `platform.env` | `eslint` `no-restricted-globals` + `src/archtest/env.test.ts` |
-| No `console.log` in `src/lib/server/**` — use `console.error` for real errors | `src/archtest/server-console.test.ts` |
-| No `@ts-ignore` / `@ts-nocheck` | `eslint` `@typescript-eslint/ban-ts-comment` |
-| No `eval` / `new Function` | `eslint` `no-eval` / `no-implied-eval` |
-| Commit subjects follow Conventional Commits | `.github/workflows/conventional-commits.yml` |
+| D1 access (`.prepare` / `.exec` / `.batch`) stays in `+server.ts` or server-only helpers | `src/archtest/db-access.test.ts` |
+| No `process.env` in `src/**`; Workers use `platform.env` | ESLint + `src/archtest/env.test.ts` |
+| No `console.log` in server code; use `console.error` for real errors | `src/archtest/server-console.test.ts` |
+| No `@ts-ignore` / `@ts-nocheck` | ESLint `@typescript-eslint/ban-ts-comment` |
+| No `eval` / `new Function` | ESLint `no-eval` / `no-implied-eval` |
+| Commit subjects use Conventional Commits | `.github/workflows/conventional-commits.yml` |
 
-The full convention list lives in CLAUDE.md → "Conventions".
+When an architecture test fails, move accidental violations into an allowed
+path. If the boundary is genuinely too narrow, update the test's allow-list and
+explain why in the commit. The test is the audit trail; there is no baseline
+file.
 
-## Run before committing
+## Verification
 
-```bash
-npm run lint        # eslint, ~2s warm
-npm run check       # svelte-check, ~10s
-npx vitest run      # unit tests, ~1s
-```
-
-Or the umbrella:
+Before committing, run:
 
 ```bash
-npm run validate    # lint + check + test + build, ~30s
+npm run lint
+npm run check
+npx vitest run
 ```
 
-Install the git hooks once with `npm run install:hooks` and the
-pre-commit (lint diff) + pre-push (full validate) run automatically.
+Run `npm run validate` for the full gate. Install the shared Git hooks once with
+`npm run install:hooks`; pre-commit checks the staged diff and pre-push runs the
+full validation suite.
 
-## When archtest fails
+## CI/CD
 
-The failure message names the violating file and the rule. Two options:
+Pull requests run CI without deploying. A push to `main` runs CI and then the
+deployment workflow. Deployment applies D1 migrations before deploying and
+finishes with health and contract checks.
 
-1. **You added a violation by accident** — move the call into an allowed
-   path (e.g. DB access into `src/lib/server/db/` or a `+server.ts`).
-2. **The allowed-paths list is genuinely too narrow** — edit the
-   `allowedPaths` array in the test, and explain in your commit message
-   why the new path is justified. There is no baseline file; the test
-   itself is the audit trail.
+## Actions that require confirmation
 
-## Tools you may NOT use without asking
+- Force-pushing `main`.
+- Amending commits that have already been pushed.
+- Hard-resetting away uncommitted work.
+- Writing to production D1 with `wrangler d1 execute --remote`.
+- Running `wrangler deploy` directly; CI deploys from `main`.
+- Modifying production OAuth secrets or rotating JWTs.
 
-- `git push --force` against `main`.
-- `git commit --amend` on commits already pushed.
-- `git reset --hard` discarding uncommitted work.
-- `wrangler d1 execute --remote ...` against production D1 (read-only is
-  fine; writes are not).
-- `wrangler deploy` directly — CI deploys on push to `main`.
-- Anything that modifies production OAuth secrets or rotates JWTs.
-
-Everything else (Edit/Write/Read in repo, `npm run *`, `wrangler ...
---local`, vitest) is safe to run without confirmation.
+Repository reads/writes, `npm run *`, local Wrangler commands, and Vitest are
+otherwise safe without confirmation.
 
 ## Skills
 
-Project-specific skills live under [`.claude/skills/`](.claude/skills/):
-
-- `ship-pr` — canonical post-edit flow: push → `gh pr create` → wait
-  for CI → review diff → triage (self-fix small / escalate decisions /
-  merge directly when clean) → `gh pr merge --squash` → local cleanup.
-  Use this instead of calling `gh pr create` / `gh pr merge` directly.
-  **Do not use `--auto`** — it skips the review gate.
-  **Do not ask for confirmation on a clean merge** — the loop closes
-  itself when nothing requires a decision.
+- `ship-pr` — use the shared skill for the canonical push -> PR -> CI -> review
+  -> triage -> squash-merge -> cleanup flow. Never use `--auto`; merge directly
+  when the PR is clean, and escalate only decisions that need product or team
+  input.

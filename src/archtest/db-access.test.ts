@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { walkSourceFiles, collectViolations, formatViolations } from './walk';
 
-// CLAUDE.md: "DB access: Only in +server.ts files".
+// AGENTS.md: keep D1 access in +server.ts or server-only helpers.
 // Extended in practice: server-only helpers under `src/lib/server/`
 // (auth, db query helpers) may access D1 too — concentrating SQL there
 // is the established pattern. Client-side code (Svelte components,

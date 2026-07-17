@@ -1,5 +1,5 @@
 // Flat config — minimal rule set that mechanises the conventions
-// already written in CLAUDE.md. See HARNESS.md for the steering loop
+// already written in AGENTS.md. See HARNESS.md for the steering loop
 // (when a class of issue recurs, prefer encoding it here over re-stating
 // it in docs).
 
@@ -29,7 +29,7 @@ export default [
 			parserOptions: { extraFileExtensions: ['.svelte'] }
 		},
 		rules: {
-			// CLAUDE.md: "No `as any` or `@ts-ignore` — type properly".
+			// AGENTS.md: "Do not use `as any` or `@ts-ignore`; model the type instead".
 			// Warn for now — full cleanup is tracked separately; `validate`
 			// fails only on errors so existing call sites don't block.
 			'@typescript-eslint/no-explicit-any': 'warn',
@@ -37,8 +37,7 @@ export default [
 
 			// Stop merge of forgotten _-debugging without blocking intentional
 			// throwaway names. Soft-landed (warn) so existing call sites
-			// don't block; new code stays clean via the .claude post-tool-use
-			// hook surfacing warnings during edit.
+			// don't block; `npm run lint`, Git hooks, and CI still surface them.
 			'no-unused-vars': 'off',
 			'@typescript-eslint/no-unused-vars': [
 				'warn',
