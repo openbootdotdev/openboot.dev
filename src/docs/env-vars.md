@@ -15,8 +15,9 @@ Used when you run `curl -fsSL openboot.dev/install.sh | bash`. The script instal
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENBOOT_VERSION` | Install a specific version instead of latest | `latest` |
 | `OPENBOOT_DRY_RUN` | Set to `true` to preview without changes | — |
+
+The script always installs the latest release published in the tap; there is no version pin.
 
 Preview the install script without making changes:
 
@@ -34,6 +35,9 @@ Used by the `openboot` binary at runtime.
 | `OPENBOOT_GIT_EMAIL` | Git user email — **read only in `--silent` mode** (required if Git isn't already configured) |
 | `OPENBOOT_PRESET` | Default preset. Overridden by `-p` / `--preset` |
 | `OPENBOOT_USER` | Default cloud config (alias or `user/slug`). Overridden by `-u` / `--user` |
+| `OPENBOOT_DOTFILES` | Dotfiles repo URL to clone and link. Overrides the config's `dotfiles_repo` |
+| `OPENBOOT_DISABLE_AUTOUPDATE` | Set to `1` to skip the auto-update check that runs before `install` |
+| `OPENBOOT_API_URL` | Override the openboot.dev API base URL — testing only; must be `https://` or `http://localhost` |
 
 Silent install with Git identity:
 

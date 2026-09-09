@@ -141,10 +141,9 @@
 								<div class="t-mt13"><span class="t-accent">✓</span> Xcode Command Line Tools ready</div>
 								<div><span class="t-accent">✓</span> Homebrew ready</div>
 								<div class="t-mt13 t-muted">Detected: darwin/arm64</div>
-								<div class="t-strong">Downloading OpenBoot v0.44.0...</div>
-								<div><span class="t-accent">✓</span> Downloaded to ~/.openboot/bin/openboot</div>
-								<div><span class="t-accent">✓</span> Checksum verified</div>
-								<div><span class="t-accent">✓</span> Added to PATH</div>
+								<div class="t-strong">Installing OpenBoot via Homebrew...</div>
+								<div><span class="t-accent">✓</span> OpenBoot installed!</div>
+								<div>Starting OpenBoot setup...</div>
 								<div class="t-mt10"><span class="t-caret"></span></div>
 							</div>
 

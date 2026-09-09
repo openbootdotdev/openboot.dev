@@ -95,9 +95,7 @@ An account (GitHub or Google OAuth) is needed to:
 brew upgrade openboot
 ```
 
-OpenBoot also does a lightweight auto-update check when you run `install`.
-
-The old `openboot update --self` command was removed in v1.0 — use `brew upgrade` instead.
+`openboot update` does the same thing — on a Homebrew install it just runs `brew upgrade openboot` for you. OpenBoot also does a lightweight auto-update check when you run `install`; set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip it.
 
 Your configs, snapshots, and auth tokens are unaffected by upgrades.
 

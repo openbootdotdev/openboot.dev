@@ -31,13 +31,13 @@ OpenBoot is an open-source CLI that automates the boring part of setting up a ne
 curl -fsSL https://openboot.dev/install.sh | bash
 ```
 
-This installs Xcode Command Line Tools and Homebrew if you don't have them yet, downloads the `openboot` binary, and launches the TUI.
+This installs Xcode Command Line Tools and Homebrew if you don't have them yet, installs `openboot` through Homebrew, and launches the TUI.
 
 **Already have Homebrew?**
 
 ```bash
 brew install openbootdotdev/tap/openboot
-openboot
+openboot install
 ```
 
 Either way, from there:
