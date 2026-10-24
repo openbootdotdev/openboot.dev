@@ -5,7 +5,7 @@
 	import PackageManager from './PackageManager.svelte';
 	import MacOSPreferencesEditor from './MacOSPreferencesEditor.svelte';
 	import { PRESET_PACKAGES } from '$lib/presets';
-	import { normalizePackages, resolvePackages } from '$lib/packages';
+	import { normalizePackages, resolvePackages, syncSnapshotTaps } from '$lib/packages';
 
 	let { slug, skipAuth = false }: { slug?: string; skipAuth?: boolean } = $props();
 	const isNew = !slug;
@@ -221,14 +221,17 @@
 			existingSnapshot !== null || macosPrefs.length > 0
 				? { ...(existingSnapshot || {}), macos_prefs: macosPrefs }
 				: null;
+		const packages = normalizePackages(
+			Array.from(selectedPackages.entries()).map(([key, type]) => {
+				const name = key.slice(type.length + 1);
+				return { name, type, desc: packageDescs.get(key) || '' };
+			})
+		);
 		return {
 			...formData,
 			alias: formData.alias.trim() || null,
-			packages: Array.from(selectedPackages.entries()).map(([key, type]) => {
-				const name = key.slice(type.length + 1);
-				return { name, type, desc: packageDescs.get(key) || '' };
-			}),
-			snapshot: updatedSnapshot
+			packages,
+			snapshot: syncSnapshotTaps(updatedSnapshot, packages)
 		};
 	}
 
@@ -244,7 +247,7 @@
 		};
 		const newMap = new Map<string, string>();
 		const newDescs = new Map<string, string>();
-		for (const pkg of normalizePackages(parsed.packages || [], parsed.snapshot?.packages)) {
+		for (const pkg of normalizePackages(parsed.packages || [], parsed.snapshot?.packages, false)) {
 			const t = pkg.type || 'formula';
 			const k = pkgKey(pkg.name, t);
 			newMap.set(k, t);

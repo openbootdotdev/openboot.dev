@@ -29,22 +29,29 @@ export function getHomebrewTap(name: string): string | null {
 }
 
 /** Repair legacy tap packages without changing explicit formula/cask choices. */
-export function normalizePackages(packages: readonly PackageInput[], snapshot?: SnapshotPackages): ConfigPackage[] {
+export function normalizePackages(
+	packages: readonly PackageInput[],
+	snapshot?: SnapshotPackages,
+	includeSnapshotTaps = true
+): ConfigPackage[] {
 	const casks = new Set(
 		Array.isArray(snapshot?.casks) ? snapshot.casks.filter((name) => typeof name === 'string') : []
 	);
 	const inputs: PackageInput[] = [...packages];
-	// Only legacy string lists need snapshot sources. Typed lists are authoritative,
-	// so removing a source in the editor cannot resurrect it from an old snapshot.
-	if (packages.some((pkg) => typeof pkg === 'string') && Array.isArray(snapshot?.taps)) {
+	// Older editors saved typed software without copying snapshot-only sources.
+	// Reads must retain those sources; writes synchronize the snapshot instead.
+	if (includeSnapshotTaps && Array.isArray(snapshot?.taps)) {
 		for (const name of snapshot.taps) {
 			if (typeof name === 'string') inputs.push({ name, type: 'tap' });
 		}
 	}
-	const legacyFormulaNames = new Set(
-		inputs.flatMap((pkg) =>
-			typeof pkg !== 'string' && pkg.type === 'tap' && getHomebrewTap(pkg.name) ? [pkg.name.split('/')[2]] : []
-		)
+	const legacyPackageKeys = new Set(
+		inputs.flatMap((pkg) => {
+			if (typeof pkg === 'string' || pkg.type !== 'tap' || !getHomebrewTap(pkg.name)) return [];
+			const shortName = pkg.name.split('/')[2];
+			const type = casks.has(pkg.name) || casks.has(shortName) ? 'cask' : 'formula';
+			return [`${type}:${shortName}`];
+		})
 	);
 	const normalized = new Map<string, ConfigPackage>();
 	for (const input of inputs) {
@@ -57,8 +64,8 @@ export function normalizePackages(packages: readonly PackageInput[], snapshot?: 
 		} else {
 			type = casks.has(pkg.name) || casks.has(pkg.name.split('/').pop() || '') ? 'cask' : 'formula';
 		}
-		if (type === 'formula' && legacyFormulaNames.has(pkg.name)) continue;
 		const key = `${type}:${pkg.name}`;
+		if (legacyPackageKeys.has(key)) continue;
 		const previous = normalized.get(key);
 		normalized.set(key, {
 			name: pkg.name,
@@ -67,6 +74,23 @@ export function normalizePackages(packages: readonly PackageInput[], snapshot?: 
 		});
 	}
 	return [...normalized.values()];
+}
+
+/** Keep snapshot sources aligned with an explicit package selection on save. */
+export function syncSnapshotTaps(
+	snapshot: unknown,
+	packages: readonly ConfigPackage[]
+): Record<string, unknown> | null {
+	if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return null;
+	const hints = 'packages' in snapshot ? snapshot.packages : null;
+	const snapshotPackages = hints && typeof hints === 'object' && !Array.isArray(hints) ? hints : {};
+	return {
+		...snapshot,
+		packages: {
+			...snapshotPackages,
+			taps: packages.filter((pkg) => pkg.type === 'tap').map((pkg) => pkg.name)
+		}
+	};
 }
 
 /** Combine manually retained sources with dependencies of selected Homebrew packages. */

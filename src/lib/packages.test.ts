@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getHomebrewTap, isTapName, normalizePackages, resolvePackages, type SnapshotPackages } from './packages';
+import {
+	getHomebrewTap,
+	isTapName,
+	normalizePackages,
+	resolvePackages,
+	syncSnapshotTaps,
+	type SnapshotPackages
+} from './packages';
 
 describe('Homebrew package sources', () => {
 	it('distinguishes repository names from qualified software names', () => {
@@ -37,9 +44,47 @@ describe('Homebrew package sources', () => {
 		).toEqual(['cask', 'cask', 'formula']);
 	});
 
+	it('deduplicates legacy casks without removing a same-named formula', () => {
+		expect(
+			normalizePackages(
+				[
+					{ name: 'editor', type: 'formula' },
+					{ name: 'editor', type: 'cask' },
+					{ name: 'example/apps/editor', type: 'tap' }
+				],
+				{ casks: ['editor'] }
+			)
+		).toEqual([
+			{ name: 'editor', type: 'formula' },
+			{ name: 'example/apps/editor', type: 'cask' }
+		]);
+	});
+
 	it('ignores malformed historical snapshot hints', () => {
 		const snapshot = JSON.parse('{"casks":{},"taps":"invalid"}') as SnapshotPackages;
 		expect(normalizePackages(['git'], snapshot)).toEqual([{ name: 'git', type: 'formula' }]);
+	});
+
+	it('preserves snapshot-only sources in historical typed lists', () => {
+		expect(normalizePackages([{ name: 'custom-tool', type: 'formula' }], { taps: ['example/tools'] })).toEqual([
+			{ name: 'custom-tool', type: 'formula' },
+			{ name: 'example/tools', type: 'tap' }
+		]);
+	});
+
+	it('synchronizes sources on save while preserving other snapshot fields', () => {
+		const packages = normalizePackages([{ name: 'example/apps/editor', type: 'cask' }]);
+		const snapshot = {
+			packages: { taps: ['old/tools'], casks: ['editor'] },
+			hostname: 'test-machine',
+			macos_prefs: []
+		};
+		const saved = syncSnapshotTaps(snapshot, packages);
+		expect(saved).toEqual({ ...snapshot, packages: { taps: [], casks: ['editor'] } });
+		expect(resolvePackages(normalizePackages(packages, saved?.packages as SnapshotPackages)).taps).toEqual([
+			{ name: 'example/apps', explicit: false, requiredBy: ['example/apps/editor'] }
+		]);
+		expect(snapshot.packages.taps).toEqual(['old/tools']);
 	});
 
 	it('recovers snapshot-only taps for legacy string lists', () => {
@@ -52,7 +97,7 @@ describe('Homebrew package sources', () => {
 	it.each([[], [{ name: 'git', type: 'formula' }]].map((packages) => ({ packages })))(
 		'does not restore removed sources from a snapshot: $packages',
 		({ packages }) => {
-			expect(resolvePackages(normalizePackages(packages, { taps: ['old/tools'] })).taps).toEqual([]);
+			expect(resolvePackages(normalizePackages(packages, { taps: ['old/tools'] }, false)).taps).toEqual([]);
 		}
 	);
 

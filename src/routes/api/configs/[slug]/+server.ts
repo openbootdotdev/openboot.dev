@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { normalizePackages, type PackageInput, type SnapshotPackages } from '$lib/packages';
+import { normalizePackages, syncSnapshotTaps, type PackageInput, type SnapshotPackages } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
 import {
@@ -10,14 +10,7 @@ import {
 	RESERVED_ALIASES
 } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
-import {
-	getConfig,
-	getConfigIdAndAlias,
-	slugConflict,
-	aliasExistsExcluding,
-	updateConfig,
-	deleteConfig
-} from '$lib/server/db';
+import { getConfig, slugConflict, aliasExistsExcluding, updateConfig, deleteConfig } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
@@ -156,7 +149,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 
 	const slug = params.slug;
 
-	const existing = await getConfigIdAndAlias(env.DB, user.id, slug);
+	const existing = await getConfig(env.DB, user.id, slug);
 	if (!existing) return json({ error: 'Config not found' }, { status: 404 });
 
 	let newSlug = slug;
@@ -185,18 +178,34 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		}
 	}
 
+	let snapshotToSave = snapshot;
+	let selectedPackages: ReturnType<typeof normalizePackages> | undefined;
+	if (packages !== undefined) {
+		let previousSnapshot = null;
+		if (snapshot === undefined && existing.snapshot) {
+			try {
+				previousSnapshot = JSON.parse(existing.snapshot);
+			} catch (error) {
+				console.error('Failed to parse snapshot while updating package sources:', error);
+			}
+		}
+		const sourceSnapshot = snapshot === undefined ? previousSnapshot : snapshot;
+		selectedPackages = normalizePackages(packages || [], sourceSnapshot?.packages, false);
+		snapshotToSave = syncSnapshotTaps(sourceSnapshot, selectedPackages);
+	}
+
 	try {
 		await updateConfig(env.DB, {
 			newSlug,
 			name: name || null,
 			description: description !== undefined ? description : null,
 			base_preset: base_preset || null,
-			packages: packages ? JSON.stringify(normalizePackages(packages, snapshot?.packages)) : null,
+			packages: selectedPackages ? JSON.stringify(selectedPackages) : null,
 			custom_script: custom_script !== undefined ? custom_script : null,
 			visibility: visibility !== undefined ? visibility : null,
 			alias: newAlias,
 			dotfiles_repo: dotfiles_repo !== undefined ? dotfiles_repo : null,
-			snapshot: snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
+			snapshot: snapshotToSave !== undefined ? (snapshotToSave ? JSON.stringify(snapshotToSave) : null) : null,
 			snapshot_at: snapshot_at !== undefined ? snapshot_at : null,
 			userId: user.id,
 			slug

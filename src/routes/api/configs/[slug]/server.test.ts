@@ -413,8 +413,11 @@ describe('package source save round-trip', () => {
 		);
 		expect(saved.status).toBe(200);
 		const read = await call(GET, callOpts({ token: mockApiToken.token }));
-		const data = (await read.json()) as { config: { packages: { name: string; type: string }[] } };
+		const data = (await read.json()) as {
+			config: { packages: { name: string; type: string }[]; snapshot: { packages: { taps: string[] } } };
+		};
 		expect(data.config.packages).toEqual([{ name: 'oven-sh/bun/bun', type: 'formula' }]);
+		expect(data.config.snapshot.packages.taps).toEqual([]);
 		const cleared = await call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body: { packages: [] } }));
 		expect(cleared.status).toBe(200);
 		const reloaded = await call(GET, callOpts({ token: mockApiToken.token }));

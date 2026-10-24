@@ -284,9 +284,9 @@ describe('snapshot source normalization', () => {
 				snapshot: {
 					packages: {
 						formulae: ['bun', 'git'],
-						casks: [],
+						casks: ['editor'],
 						npm: [],
-						taps: ['oven-sh/bun/bun', 'oven-sh/bun', 'example/extra']
+						taps: ['oven-sh/bun/bun', 'oven-sh/bun', 'example/extra', 'example/apps/editor']
 					}
 				}
 			}
@@ -297,7 +297,8 @@ describe('snapshot source normalization', () => {
 			{ name: 'git', type: 'formula' },
 			{ name: 'oven-sh/bun/bun', type: 'formula' },
 			{ name: 'oven-sh/bun', type: 'tap' },
-			{ name: 'example/extra', type: 'tap' }
+			{ name: 'example/extra', type: 'tap' },
+			{ name: 'example/apps/editor', type: 'cask' }
 		]);
 	});
 });

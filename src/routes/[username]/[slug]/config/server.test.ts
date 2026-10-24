@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { env } from 'cloudflare:test';
 import { GET } from './+server';
 import { GET as GET_ALIAS } from '../../../api/configs/alias/[alias]/+server';
+import { PUT as UPDATE_CONFIG } from '../../../api/configs/[slug]/+server';
 import { resetDb, seed, strip } from '$lib/test/seed';
 import { call } from '$lib/test/call';
 import { mockUser, mockPublicConfig, mockPrivateConfig, mockApiToken, mockExpiredApiToken } from '$lib/test/fixtures';
@@ -470,11 +471,29 @@ describe.each([
 		expect(data.taps).toEqual(['example/tools']);
 	});
 
-	it.each([[], [{ name: 'git', type: 'formula' }]].map((packages) => ({ packages })))(
-		'does not resurrect removed snapshot taps: $packages',
+	it.each([[], [{ name: 'custom-tool', type: 'formula' }]].map((packages) => ({ packages })))(
+		'preserves historical snapshot-only sources for typed lists: $packages',
 		async ({ packages }) => {
 			const data = await exportConfig(packages, ['old/tools']);
-			expect(data.taps).toEqual([]);
+			expect(data.taps).toEqual(['old/tools']);
 		}
 	);
+
+	it('removes snapshot sources when saving a new selection without resending the snapshot', async () => {
+		await exportConfig([{ name: 'custom-tool', type: 'formula' }], ['old/tools']);
+		await seed(db, { api_tokens: [mockApiToken] });
+		const saved = await call(
+			UPDATE_CONFIG,
+			opts({
+				method: 'PUT',
+				token: mockApiToken.token,
+				params: { slug: 'public-config' },
+				body: { packages: [{ name: 'git', type: 'formula' }] }
+			})
+		);
+		expect(saved.status).toBe(200);
+		const response = await call(handler, opts({ params }));
+		const data = (await response.json()) as { taps: string[] };
+		expect(data.taps).toEqual([]);
+	});
 });

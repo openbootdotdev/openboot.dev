@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { normalizePackages } from '$lib/packages';
+import { normalizePackages, syncSnapshotTaps } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
 import {
@@ -146,6 +146,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	}
 
 	const id = generateId();
+	const selectedPackages = normalizePackages(packages || [], snapshot?.packages, false);
 
 	try {
 		await createConfig(env.DB, {
@@ -155,12 +156,12 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			name,
 			description: description || '',
 			base_preset: base_preset || 'developer',
-			packages: JSON.stringify(normalizePackages(packages || [], snapshot?.packages)),
+			packages: JSON.stringify(selectedPackages),
 			custom_script: custom_script || '',
 			visibility: visibility || 'unlisted',
 			alias: cleanAlias,
 			dotfiles_repo: dotfiles_repo || '',
-			snapshot: snapshot ? JSON.stringify(snapshot) : null,
+			snapshot: snapshot ? JSON.stringify(syncSnapshotTaps(snapshot, selectedPackages)) : null,
 			snapshot_at: snapshot_at || null,
 			forked_from: forked_from || null
 		});
