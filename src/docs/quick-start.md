@@ -32,7 +32,7 @@ The interactive TUI opens and you pick what to install.
 openboot install
 ```
 
-The TUI opens with the `developer` preset selected. **Arrow keys** navigate, **Space** toggles packages, **Enter** confirms. Homebrew starts installing — usually 10–30 minutes depending on what you picked.
+The TUI checks your environment and asks you to choose a preset (`minimal`, `developer`, or `full`). Review the selected packages and setup options, then confirm the plan. Homebrew starts installing — usually 10–30 minutes depending on what you picked.
 
 When it finishes, restart your terminal or run:
 

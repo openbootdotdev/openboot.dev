@@ -95,7 +95,7 @@ An account (GitHub or Google OAuth) is needed to:
 brew upgrade openboot
 ```
 
-`openboot update` does the same thing — on a Homebrew install it just runs `brew upgrade openboot` for you. OpenBoot also does a lightweight auto-update check when you run `install`; set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip it.
+You can also run `openboot update`. On a Homebrew install, it refreshes the OpenBoot tap before upgrading the formula. When you run `install`, OpenBoot checks for newer releases and notifies you by default; automatic upgrades are opt-in. Set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip the check. See [CLI Commands — Update](/docs/cli-reference#openboot-update) for update preferences and options for manually installed binaries.
 
 Your configs, snapshots, and auth tokens are unaffected by upgrades.
 

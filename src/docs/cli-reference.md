@@ -7,7 +7,7 @@ order: 9
 
 # CLI Commands
 
-OpenBoot v1.0 has two real verbs: **`install`** adds things to your Mac, **`snapshot`** captures what's on it. Everything else is auth or bookkeeping.
+OpenBoot's main commands are **`install`**, which adds things to your Mac, and **`snapshot`**, which captures what's on it. Supporting commands handle authentication, diagnostics, and updates.
 
 ```
 openboot install [source] # install from preset, file, or cloud config
@@ -235,19 +235,19 @@ openboot update            # upgrade to the latest release
 openboot update --dry-run  # print what would be done, change nothing
 ```
 
-Both install methods (the one-line installer and `brew install`) put OpenBoot under Homebrew, so `openboot update` simply runs `brew upgrade openboot` for you. Running `brew upgrade openboot` yourself does the same thing.
+Both install methods (the one-line installer and `brew install`) put OpenBoot under Homebrew. On these installs, `openboot update` refreshes the `openbootdotdev/tap` repository and runs `brew upgrade openbootdotdev/tap/openboot`. You can also upgrade with Homebrew directly.
 
 If you installed a release binary by hand instead of through Homebrew, `update` downloads from GitHub and keeps a backup of the previous binary:
 
 ```
-openboot update --version 1.0.0   # pin to an exact version
+openboot update --version 1.0.5   # pin to an exact version
 openboot update --rollback        # restore the most recent backup
 openboot update --list-backups    # list backups under ~/.openboot/backup
 ```
 
 Backups live in `~/.openboot/backup/`; the 5 most recent are kept. `--version` and `--rollback` are refused on Homebrew-managed installs — use `brew` for those.
 
-`install` also does a lightweight auto-update check before it runs. Set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip it.
+`install` also checks for updates before it runs. By default, it only notifies you when a newer version is available. Automatic upgrades are opt-in: set `"autoupdate": "true"` in `~/.openboot/config.json` to enable them, or `"autoupdate": "false"` to disable checks. Set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip the check regardless of that preference.
 
 ---
 
