@@ -21,7 +21,7 @@ Installs Xcode Command Line Tools and Homebrew if they're missing, downloads Ope
 
 ```bash
 brew install openbootdotdev/tap/openboot
-openboot
+openboot install
 ```
 
 The interactive TUI opens and you pick what to install.
@@ -29,10 +29,10 @@ The interactive TUI opens and you pick what to install.
 ## First run
 
 ```bash
-openboot
+openboot install
 ```
 
-The TUI opens with the `developer` preset selected. **Arrow keys** navigate, **Space** toggles packages, **Enter** confirms. Homebrew starts installing — usually 10–30 minutes depending on what you picked.
+The TUI checks your environment and asks you to choose a preset (`minimal`, `developer`, or `full`). Review the selected packages and setup options, then confirm the plan. Homebrew starts installing — usually 10–30 minutes depending on what you picked.
 
 When it finishes, restart your terminal or run:
 
@@ -51,7 +51,7 @@ See [Presets](/docs/presets) for what's in each one.
 
 ## Running again later
 
-Just type `openboot`. If the machine is already synced to a config (or a preset), OpenBoot fetches the latest version, shows what's missing, and asks to apply it. Nothing gets uninstalled — `install` only adds.
+Run `openboot install` again. If the machine is already synced to a config, OpenBoot fetches the latest version, shows what's missing, and asks to apply it. Nothing gets uninstalled — `install` only adds.
 
 ```
 → Syncing with @alice/dev-setup (last synced 2 days ago)

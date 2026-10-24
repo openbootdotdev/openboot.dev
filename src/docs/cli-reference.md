@@ -7,17 +7,18 @@ order: 9
 
 # CLI Commands
 
-OpenBoot v1.0 has two real verbs: **`install`** adds things to your Mac, **`snapshot`** captures what's on it. Everything else is auth or bookkeeping.
+OpenBoot's main commands are **`install`**, which adds things to your Mac, and **`snapshot`**, which captures what's on it. Supporting commands handle authentication, diagnostics, and updates.
 
 ```
 openboot install [source] # install from preset, file, or cloud config
 openboot snapshot         # capture your environment
 openboot doctor           # check system health and diagnose issues
+openboot update           # upgrade the openboot binary itself
 openboot login / logout   # openboot.dev auth
 openboot version          # print version
 ```
 
-> **v1.0 removed these commands:** `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `update`, `list`, `edit`, `delete`. OpenBoot no longer uninstalls packages or tracks revision history — `install` is add-only, and `snapshot --publish` overwrites. Manage configs on the [dashboard](/dashboard). See the project [CHANGELOG](https://github.com/openbootdotdev/openboot/blob/main/CHANGELOG.md) for migration.
+> **v1.0 removed these commands:** `pull`, `push`, `diff`, `clean`, `log`, `restore`, `init`, `setup-agent`, `list`, `edit`, `delete`. OpenBoot no longer uninstalls packages or tracks revision history — `install` is add-only, and `snapshot --publish` overwrites. Manage configs on the [dashboard](/dashboard). See the project [CHANGELOG](https://github.com/openbootdotdev/openboot/blob/main/CHANGELOG.md) for migration.
 
 ## `openboot install`
 
@@ -84,7 +85,7 @@ For private configs, run `openboot login` first.
 | `--dotfiles <mode>` | `clone`, `link`, or `skip` |
 | `--post-install <mode>` | `skip` to skip post-install scripts |
 | `--allow-post-install` | Allow post-install scripts in silent mode |
-| `--update` | Update Homebrew before installing |
+| `--update` | Update Homebrew and exit — nothing is installed |
 | `--verbose` | Debug logging to stderr |
 
 `install` is **add-only**. It never uninstalls packages or removes settings — if a package is in your local system but not in the config, it stays. To remove packages, run `brew uninstall` directly.
@@ -218,22 +219,35 @@ Checks performed:
 | Oh-My-Zsh | Installed at `~/.oh-my-zsh` |
 | Brew shellenv | `~/.zshrc` sources `brew shellenv` (Apple Silicon only) |
 | OpenBoot dir | `~/.openboot/` exists |
-| OpenBoot state | `install_state.json` is valid JSON |
-| PATH | `/usr/local/bin` and/or Homebrew prefix on PATH |
+| OpenBoot state | `~/.openboot/sync_source.json` or `state.json` exists (a previous install) |
+| PATH | `/opt/homebrew/bin` on PATH (Apple Silicon only; skipped on Intel) |
 
 All checks are read-only — `doctor` never modifies your system.
 
 ---
 
-## Upgrading OpenBoot
+## `openboot update`
 
-OpenBoot no longer has a self-update command. It's installed via Homebrew — use Homebrew to upgrade:
+Upgrade the `openboot` binary itself.
 
 ```
-brew upgrade openboot
+openboot update            # upgrade to the latest release
+openboot update --dry-run  # print what would be done, change nothing
 ```
 
-OpenBoot also does a lightweight auto-update check when you run `install`.
+Both install methods (the one-line installer and `brew install`) put OpenBoot under Homebrew. On these installs, `openboot update` refreshes the `openbootdotdev/tap` repository and runs `brew upgrade openbootdotdev/tap/openboot`. You can also upgrade with Homebrew directly.
+
+If you installed a release binary by hand instead of through Homebrew, `update` downloads from GitHub and keeps a backup of the previous binary:
+
+```
+openboot update --version 1.0.5   # pin to an exact version
+openboot update --rollback        # restore the most recent backup
+openboot update --list-backups    # list backups under ~/.openboot/backup
+```
+
+Backups live in `~/.openboot/backup/`; the 5 most recent are kept. `--version` and `--rollback` are refused on Homebrew-managed installs — use `brew` for those.
+
+`install` also checks for updates before it runs. By default, it only notifies you when a newer version is available. Automatic upgrades are opt-in: set `"autoupdate": "true"` in `~/.openboot/config.json` to enable them, or `"autoupdate": "false"` to disable checks. Set `OPENBOOT_DISABLE_AUTOUPDATE=1` to skip the check regardless of that preference.
 
 ---
 
