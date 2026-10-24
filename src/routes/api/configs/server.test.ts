@@ -302,3 +302,22 @@ describe('snapshot source normalization', () => {
 		]);
 	});
 });
+
+describe('snapshot-only config creation', () => {
+	it('preserves sources when the software selection is omitted', async () => {
+		await seed(db, { users: [userRow()], api_tokens: [mockApiToken] });
+		const response = await call(POST, {
+			url: baseUrl,
+			method: 'POST',
+			token: mockApiToken.token,
+			body: { name: 'Sources only', snapshot: { packages: { taps: ['example/tools'] } } }
+		});
+		expect(response.status).toBe(201);
+		const created = (await response.json()) as { slug: string };
+		const list = await call(GET, { url: baseUrl, token: mockApiToken.token });
+		const data = (await list.json()) as { configs: { slug: string; packages: { name: string; type: string }[] }[] };
+		expect(data.configs.find((config) => config.slug === created.slug)?.packages).toEqual([
+			{ name: 'example/tools', type: 'tap' }
+		]);
+	});
+});

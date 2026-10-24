@@ -146,7 +146,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	}
 
 	const id = generateId();
-	const selectedPackages = normalizePackages(packages || [], snapshot?.packages, false);
+	const selectedPackages = normalizePackages(packages || [], snapshot?.packages, packages === undefined);
 
 	try {
 		await createConfig(env.DB, {

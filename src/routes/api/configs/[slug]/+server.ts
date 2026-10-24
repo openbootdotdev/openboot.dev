@@ -187,7 +187,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 
 	let snapshotToSave = snapshot;
 	let selectedPackages: ReturnType<typeof normalizePackages> | undefined;
-	if (packages !== undefined) {
+	if (packages !== undefined && packages !== null) {
 		let previousSnapshot = null;
 		if (snapshot === undefined && existing.snapshot) {
 			try {

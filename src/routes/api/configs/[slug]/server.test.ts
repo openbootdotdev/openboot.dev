@@ -425,3 +425,14 @@ describe('package source save round-trip', () => {
 		expect(empty.config.packages).toEqual([]);
 	});
 });
+
+describe('optional package updates', () => {
+	it('retains the software selection when packages is null', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig], api_tokens: [mockApiToken] });
+		const updated = await call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body: { packages: null } }));
+		expect(updated.status).toBe(200);
+		const read = await call(GET, callOpts({ token: mockApiToken.token }));
+		const data = (await read.json()) as { config: { packages: unknown[] } };
+		expect(data.config.packages).toEqual(JSON.parse(mockConfig.packages));
+	});
+});
