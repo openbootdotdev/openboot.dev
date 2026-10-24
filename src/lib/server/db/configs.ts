@@ -18,9 +18,7 @@ export async function saveRevision(
 	const id = `rev_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
 
 	await db
-		.prepare(
-			`INSERT INTO config_revisions (id, config_id, packages, message) VALUES (?, ?, ?, ?)`
-		)
+		.prepare(`INSERT INTO config_revisions (id, config_id, packages, message) VALUES (?, ?, ?, ?)`)
 		.bind(id, configId, packages, message ?? null)
 		.run();
 
@@ -84,43 +82,29 @@ export async function getUserConfigs(db: D1Database, userId: string): Promise<Co
 	return results;
 }
 
-export async function getConfig(
-	db: D1Database,
-	userId: string,
-	slug: string
-): Promise<ConfigRow | null> {
-	return db
-		.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?')
-		.bind(userId, slug)
-		.first<ConfigRow>();
+export async function getConfig(db: D1Database, userId: string, slug: string): Promise<ConfigRow | null> {
+	return db.prepare('SELECT * FROM configs WHERE user_id = ? AND slug = ?').bind(userId, slug).first<ConfigRow>();
 }
 
-export async function getConfigIdAndAlias(
+export async function getConfigForUpdate(
 	db: D1Database,
 	userId: string,
 	slug: string
-): Promise<Pick<ConfigRow, 'id' | 'alias'> | null> {
+): Promise<Pick<ConfigRow, 'id' | 'alias' | 'snapshot'> | null> {
 	return db
-		.prepare('SELECT id, alias FROM configs WHERE user_id = ? AND slug = ?')
+		.prepare('SELECT id, alias, snapshot FROM configs WHERE user_id = ? AND slug = ?')
 		.bind(userId, slug)
-		.first<Pick<ConfigRow, 'id' | 'alias'>>();
+		.first<Pick<ConfigRow, 'id' | 'alias' | 'snapshot'>>();
 }
 
-export async function getConfigId(
-	db: D1Database,
-	userId: string,
-	slug: string
-): Promise<Pick<ConfigRow, 'id'> | null> {
+export async function getConfigId(db: D1Database, userId: string, slug: string): Promise<Pick<ConfigRow, 'id'> | null> {
 	return db
 		.prepare('SELECT id FROM configs WHERE user_id = ? AND slug = ?')
 		.bind(userId, slug)
 		.first<Pick<ConfigRow, 'id'>>();
 }
 
-export async function getConfigById(
-	db: D1Database,
-	id: string
-): Promise<ConfigRow | null> {
+export async function getConfigById(db: D1Database, id: string): Promise<ConfigRow | null> {
 	return db
 		.prepare(
 			'SELECT id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility FROM configs WHERE id = ?'
@@ -149,14 +133,7 @@ export async function getConfigForCLI(
 ): Promise<
 	| (Pick<
 			ConfigRow,
-			| 'slug'
-			| 'name'
-			| 'base_preset'
-			| 'packages'
-			| 'snapshot'
-			| 'visibility'
-			| 'dotfiles_repo'
-			| 'custom_script'
+			'slug' | 'name' | 'base_preset' | 'packages' | 'snapshot' | 'visibility' | 'dotfiles_repo' | 'custom_script'
 	  > & { username: string })
 	| null
 > {
@@ -172,14 +149,7 @@ export async function getConfigForCLI(
 		.first<
 			Pick<
 				ConfigRow,
-				| 'slug'
-				| 'name'
-				| 'base_preset'
-				| 'packages'
-				| 'snapshot'
-				| 'visibility'
-				| 'dotfiles_repo'
-				| 'custom_script'
+				'slug' | 'name' | 'base_preset' | 'packages' | 'snapshot' | 'visibility' | 'dotfiles_repo' | 'custom_script'
 			> & { username: string }
 		>();
 }
@@ -243,14 +213,7 @@ export async function getConfigByAliasForAPI(
 ): Promise<
 	| (Pick<
 			ConfigRow,
-			| 'slug'
-			| 'name'
-			| 'base_preset'
-			| 'packages'
-			| 'snapshot'
-			| 'visibility'
-			| 'dotfiles_repo'
-			| 'custom_script'
+			'slug' | 'name' | 'base_preset' | 'packages' | 'snapshot' | 'visibility' | 'dotfiles_repo' | 'custom_script'
 	  > & { username: string })
 	| null
 > {
@@ -266,14 +229,7 @@ export async function getConfigByAliasForAPI(
 		.first<
 			Pick<
 				ConfigRow,
-				| 'slug'
-				| 'name'
-				| 'base_preset'
-				| 'packages'
-				| 'snapshot'
-				| 'visibility'
-				| 'dotfiles_repo'
-				| 'custom_script'
+				'slug' | 'name' | 'base_preset' | 'packages' | 'snapshot' | 'visibility' | 'dotfiles_repo' | 'custom_script'
 			> & { username: string }
 		>();
 }
@@ -319,14 +275,7 @@ export async function getUserPublicConfigs(
 ): Promise<
 	Pick<
 		ConfigRow,
-		| 'id'
-		| 'slug'
-		| 'name'
-		| 'description'
-		| 'base_preset'
-		| 'packages'
-		| 'install_count'
-		| 'updated_at'
+		'id' | 'slug' | 'name' | 'description' | 'base_preset' | 'packages' | 'install_count' | 'updated_at'
 	>[]
 > {
 	const { results } = await db
@@ -337,14 +286,7 @@ export async function getUserPublicConfigs(
 		.all<
 			Pick<
 				ConfigRow,
-				| 'id'
-				| 'slug'
-				| 'name'
-				| 'description'
-				| 'base_preset'
-				| 'packages'
-				| 'install_count'
-				| 'updated_at'
+				'id' | 'slug' | 'name' | 'description' | 'base_preset' | 'packages' | 'install_count' | 'updated_at'
 			>
 		>();
 	return results;
@@ -358,14 +300,8 @@ export async function countUserConfigs(db: D1Database, userId: string): Promise<
 	return result?.count ?? 0;
 }
 
-export async function aliasExists(
-	db: D1Database,
-	alias: string
-): Promise<Pick<ConfigRow, 'id'> | null> {
-	return db
-		.prepare('SELECT id FROM configs WHERE alias = ?')
-		.bind(alias)
-		.first<Pick<ConfigRow, 'id'>>();
+export async function aliasExists(db: D1Database, alias: string): Promise<Pick<ConfigRow, 'id'> | null> {
+	return db.prepare('SELECT id FROM configs WHERE alias = ?').bind(alias).first<Pick<ConfigRow, 'id'>>();
 }
 
 export async function aliasExistsExcluding(
@@ -421,8 +357,7 @@ export async function getPublicConfigs(
 ): Promise<{ results: PublicConfigRow[]; total: number }> {
 	const { username, sort, visibility, limit, offset } = options;
 
-	let whereClause =
-		visibility === 'public' ? `c.visibility = 'public'` : `c.visibility IN ('public', 'unlisted')`;
+	let whereClause = visibility === 'public' ? `c.visibility = 'public'` : `c.visibility IN ('public', 'unlisted')`;
 
 	if (!username) {
 		whereClause += ` AND NOT (u.username = 'openboot' AND c.slug = 'default')`;
@@ -475,8 +410,14 @@ export async function getPublicConfigs(
 	}
 
 	const [{ results }, countResult] = await Promise.all([
-		db.prepare(query).bind(...bindings).all<PublicConfigRow>(),
-		db.prepare(countQuery).bind(...countBindings).first<{ count: number }>()
+		db
+			.prepare(query)
+			.bind(...bindings)
+			.all<PublicConfigRow>(),
+		db
+			.prepare(countQuery)
+			.bind(...countBindings)
+			.first<{ count: number }>()
 	]);
 
 	return { results, total: countResult?.count ?? 0 };
@@ -488,16 +429,12 @@ export async function getConfigOGData(
 	slug: string
 ): Promise<Pick<ConfigRow, 'name' | 'description' | 'packages' | 'visibility' | 'base_preset'> | null> {
 	return db
-		.prepare(
-			'SELECT name, description, packages, visibility, base_preset FROM configs WHERE user_id = ? AND slug = ?'
-		)
+		.prepare('SELECT name, description, packages, visibility, base_preset FROM configs WHERE user_id = ? AND slug = ?')
 		.bind(userId, slug)
 		.first<Pick<ConfigRow, 'name' | 'description' | 'packages' | 'visibility' | 'base_preset'>>();
 }
 
-export async function getSitemapConfigs(
-	db: D1Database
-): Promise<{ slug: string; username: string }[]> {
+export async function getSitemapConfigs(db: D1Database): Promise<{ slug: string; username: string }[]> {
 	const { results } = await db
 		.prepare(
 			`SELECT c.slug, u.username FROM configs c JOIN users u ON c.user_id = u.id WHERE c.visibility = 'public' AND c.slug != 'default' ORDER BY c.install_count DESC LIMIT 500`
@@ -550,11 +487,7 @@ export async function createConfig(db: D1Database, p: CreateConfigParams): Promi
 		.run();
 }
 
-export async function createDefaultConfig(
-	db: D1Database,
-	id: string,
-	userId: string
-): Promise<void> {
+export async function createDefaultConfig(db: D1Database, id: string, userId: string): Promise<void> {
 	await db
 		.prepare(
 			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages)
@@ -616,15 +549,8 @@ export async function updateConfig(db: D1Database, p: UpdateConfigParams): Promi
 		.run();
 }
 
-export async function deleteConfig(
-	db: D1Database,
-	userId: string,
-	slug: string
-): Promise<void> {
-	await db
-		.prepare('DELETE FROM configs WHERE user_id = ? AND slug = ?')
-		.bind(userId, slug)
-		.run();
+export async function deleteConfig(db: D1Database, userId: string, slug: string): Promise<void> {
+	await db.prepare('DELETE FROM configs WHERE user_id = ? AND slug = ?').bind(userId, slug).run();
 }
 
 export function incrementInstallByAlias(db: D1Database, alias: string): void {
@@ -635,9 +561,7 @@ export function incrementInstallByAlias(db: D1Database, alias: string): void {
 }
 
 export function incrementInstallBySlug(db: D1Database, userId: string, slug: string): void {
-	db.prepare(
-		'UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?'
-	)
+	db.prepare('UPDATE configs SET install_count = install_count + 1 WHERE user_id = ? AND slug = ?')
 		.bind(userId, slug)
 		.run()
 		.catch((e: unknown) => console.error('install count update failed:', e));
@@ -718,25 +642,12 @@ export interface CreateConfigFromSnapshotParams {
 	visibility: string;
 }
 
-export async function createConfigFromSnapshot(
-	db: D1Database,
-	p: CreateConfigFromSnapshotParams
-): Promise<void> {
+export async function createConfigFromSnapshot(db: D1Database, p: CreateConfigFromSnapshotParams): Promise<void> {
 	await db
 		.prepare(
 			`INSERT INTO configs (id, user_id, slug, name, description, base_preset, packages, snapshot, snapshot_at, visibility)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)`
 		)
-		.bind(
-			p.id,
-			p.userId,
-			p.slug,
-			p.name,
-			p.description,
-			p.base_preset,
-			p.packages,
-			p.snapshot,
-			p.visibility
-		)
+		.bind(p.id, p.userId, p.slug, p.name, p.description, p.base_preset, p.packages, p.snapshot, p.visibility)
 		.run();
 }

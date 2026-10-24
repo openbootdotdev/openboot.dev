@@ -10,7 +10,14 @@ import {
 	RESERVED_ALIASES
 } from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
-import { getConfig, slugConflict, aliasExistsExcluding, updateConfig, deleteConfig } from '$lib/server/db';
+import {
+	getConfig,
+	getConfigForUpdate,
+	slugConflict,
+	aliasExistsExcluding,
+	updateConfig,
+	deleteConfig
+} from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
@@ -149,7 +156,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 
 	const slug = params.slug;
 
-	const existing = await getConfig(env.DB, user.id, slug);
+	const existing = await getConfigForUpdate(env.DB, user.id, slug);
 	if (!existing) return json({ error: 'Config not found' }, { status: 404 });
 
 	let newSlug = slug;
