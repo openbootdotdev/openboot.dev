@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { normalizePackages, resolvePackages } from '$lib/packages';
 	import { getCatalogItem } from '$lib/macos-prefs-catalog';
 	import ShareModal from '$lib/components/ShareModal.svelte';
 	import MacOSPreferencesDisplay from '$lib/components/MacOSPreferencesDisplay.svelte';
@@ -105,10 +106,7 @@
 	}
 
 	function escapeHtml(str: string): string {
-		return str
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;');
+		return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	}
 
 	/** Color comments muted and the leading command token accent, comp-style. */
@@ -122,18 +120,14 @@
 		config.dotfiles_repo ? config.dotfiles_repo.replace(/^https?:\/\//, '').replace(/\.git$/, '') : ''
 	);
 
-	const configPkgs: { name: string; type: string }[] = $derived(
-		Array.isArray(config.packages)
-			? config.packages.map((p: any) => (typeof p === 'string' ? { name: p, type: 'formula' } : p))
-			: []
+	const configPkgs = $derived(
+		normalizePackages(Array.isArray(config.packages) ? config.packages : [], config.snapshot?.packages)
 	);
-
-	const configCli = $derived(
-		configPkgs.filter((p) => p.type !== 'cask' && p.type !== 'npm' && p.type !== 'tap')
-	);
-	const configApps = $derived(configPkgs.filter((p) => p.type === 'cask'));
-	const configNpm = $derived(configPkgs.filter((p) => p.type === 'npm'));
-	const configTaps = $derived(configPkgs.filter((p) => p.type === 'tap'));
+	const packageGroups = $derived(resolvePackages(configPkgs));
+	const configCli = $derived(packageGroups.formulae);
+	const configApps = $derived(packageGroups.casks);
+	const configNpm = $derived(packageGroups.npm);
+	const configTaps = $derived(packageGroups.taps);
 
 	// Package "fingerprint" — tall bars colored by type, behind the hero.
 	const fpCounts = $derived({
@@ -158,9 +152,7 @@
 	const shell = $derived(snapshot.shell || {});
 	const git = $derived(snapshot.git || {});
 	const devToolsRaw = $derived(snapshot.dev_tools || []);
-	const devTools = $derived(
-		devToolsRaw.map((t: any) => (typeof t === 'string' ? t : t?.name || String(t)))
-	);
+	const devTools = $derived(devToolsRaw.map((t: any) => (typeof t === 'string' ? t : t?.name || String(t))));
 
 	const prefsByCategory = $derived.by(() => {
 		const map: Record<string, { pref: any; catalogItem: ReturnType<typeof getCatalogItem> }[]> = {};
@@ -179,11 +171,35 @@
 	<div class="container">
 		<div class="topbar">
 			<a href="/explore" class="back">
-				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+				<svg
+					width="15"
+					height="15"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg
+				>
 				Back to explore
 			</a>
 			<button class="share" onclick={() => (showShareModal = true)}>
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line
+						x1="8.59"
+						y1="13.51"
+						x2="15.42"
+						y2="17.49"
+					/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg
+				>
 				Share
 			</button>
 		</div>
@@ -215,7 +231,22 @@
 
 						<div class="meta">
 							<span class="meta-item">
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line
+										x1="12"
+										y1="15"
+										x2="12"
+										y2="3"
+									/></svg
+								>
 								<span class="strong">{config.install_count || 0}</span> installs
 							</span>
 							{#if formatDate(config.updated_at)}
@@ -224,7 +255,9 @@
 							{#if dnaLegend.length > 0}
 								<span class="counts">
 									{#each dnaLegend as l}
-										<span class="count" title={l.label}><span class="swatch" style="background:{l.color};"></span>{l.n}</span>
+										<span class="count" title={l.label}
+											><span class="swatch" style="background:{l.color};"></span>{l.n}</span
+										>
 									{/each}
 								</span>
 							{/if}
@@ -258,7 +291,14 @@
 						<div class="kv"><span class="k">Base preset</span><span class="v">{config.base_preset}</span></div>
 					{/if}
 					{#if config.dotfiles_repo}
-						<div class="kv"><span class="k">Dotfiles</span><a class="v link" href={config.dotfiles_repo} target="_blank" rel="noopener noreferrer">{dotfilesLabel}</a></div>
+						<div class="kv">
+							<span class="k">Dotfiles</span><a
+								class="v link"
+								href={config.dotfiles_repo}
+								target="_blank"
+								rel="noopener noreferrer">{dotfilesLabel}</a
+							>
+						</div>
 					{/if}
 					<div class="kv"><span class="k">macOS prefs</span><span class="v">{macosPrefs.length} applied</span></div>
 				</div>
@@ -268,7 +308,10 @@
 		<div class="sections">
 			{#if configCli.length > 0}
 				<section class="pkg-section">
-					<h3 class="pkg-head"><span class="swatch" style="background:var(--accent);"></span>Formulae <span class="count">{configCli.length}</span></h3>
+					<h3 class="pkg-head">
+						<span class="swatch" style="background:var(--accent);"></span>Formulae
+						<span class="count">{configCli.length}</span>
+					</h3>
 					<div class="pkg-grid">
 						{#each configCli as p}
 							<a class="pkg-card" href={getPackageUrl(p.name, 'formula')} target="_blank" rel="noopener noreferrer">
@@ -282,7 +325,10 @@
 
 			{#if configApps.length > 0}
 				<section class="pkg-section">
-					<h3 class="pkg-head"><span class="swatch" style="background:var(--amber);"></span>Casks <span class="count">{configApps.length}</span></h3>
+					<h3 class="pkg-head">
+						<span class="swatch" style="background:var(--amber);"></span>Casks
+						<span class="count">{configApps.length}</span>
+					</h3>
 					<div class="pkg-grid">
 						{#each configApps as p}
 							<a class="pkg-card" href={getPackageUrl(p.name, 'cask')} target="_blank" rel="noopener noreferrer">
@@ -296,10 +342,15 @@
 
 			{#if configNpm.length > 0}
 				<section class="pkg-section">
-					<h3 class="pkg-head"><span class="swatch" style="background:#7aa2e3;"></span>NPM globals <span class="count">{configNpm.length}</span></h3>
+					<h3 class="pkg-head">
+						<span class="swatch" style="background:#7aa2e3;"></span>NPM globals
+						<span class="count">{configNpm.length}</span>
+					</h3>
 					<div class="chips">
 						{#each configNpm as p}
-							<a class="chip npm" href={getPackageUrl(p.name, 'npm')} target="_blank" rel="noopener noreferrer">{p.name}</a>
+							<a class="chip npm" href={getPackageUrl(p.name, 'npm')} target="_blank" rel="noopener noreferrer"
+								>{p.name}</a
+							>
 						{/each}
 					</div>
 				</section>
@@ -307,7 +358,10 @@
 
 			{#if configTaps.length > 0}
 				<section class="pkg-section">
-					<h3 class="pkg-head"><span class="swatch" style="background:var(--text-muted);"></span>Homebrew taps <span class="count">{configTaps.length}</span></h3>
+					<h3 class="pkg-head">
+						<span class="swatch" style="background:var(--text-muted);"></span>Homebrew taps
+						<span class="count">{configTaps.length}</span>
+					</h3>
 					<div class="chips">
 						{#each configTaps as p}
 							<span class="chip">{p.name}</span>
@@ -341,9 +395,15 @@
 				<section class="pkg-section">
 					<h3 class="pkg-head">Shell &amp; Git</h3>
 					<div class="kv-list">
-						{#if shell.default}<div class="kv-row"><span class="k">Shell</span><span class="v">{shell.default}</span></div>{/if}
-						{#if shell.oh_my_zsh}<div class="kv-row"><span class="k">Oh My Zsh</span><span class="v accent">installed</span></div>{/if}
-						{#if shell.theme}<div class="kv-row"><span class="k">Theme</span><span class="v">{shell.theme}</span></div>{/if}
+						{#if shell.default}<div class="kv-row">
+								<span class="k">Shell</span><span class="v">{shell.default}</span>
+							</div>{/if}
+						{#if shell.oh_my_zsh}<div class="kv-row">
+								<span class="k">Oh My Zsh</span><span class="v accent">installed</span>
+							</div>{/if}
+						{#if shell.theme}<div class="kv-row">
+								<span class="k">Theme</span><span class="v">{shell.theme}</span>
+							</div>{/if}
 						{#each Object.entries(git) as [key, value]}
 							<div class="kv-row"><span class="k">git.{key}</span><span class="v">{value}</span></div>
 						{/each}
@@ -412,7 +472,9 @@
 		font-size: 0.8rem;
 		color: var(--text-secondary);
 		cursor: pointer;
-		transition: border-color 0.15s ease, color 0.15s ease;
+		transition:
+			border-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	.share:hover {
@@ -661,7 +723,9 @@
 		font-size: 0.86rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: filter 0.15s ease, transform 0.15s ease;
+		transition:
+			filter 0.15s ease,
+			transform 0.15s ease;
 	}
 
 	.use:hover:not(:disabled) {

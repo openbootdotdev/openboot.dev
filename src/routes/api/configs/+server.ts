@@ -1,7 +1,14 @@
 import { json } from '@sveltejs/kit';
+import { normalizePackages } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
-import { validateCustomScript, validateDotfilesRepo, validatePackages, validateMacOSPrefs, RESERVED_ALIASES } from '$lib/server/validation';
+import {
+	validateCustomScript,
+	validateDotfilesRepo,
+	validatePackages,
+	validateMacOSPrefs,
+	RESERVED_ALIASES
+} from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
 import { getUserConfigs, getConfigId, aliasExists, countUserConfigs, createConfig } from '$lib/server/db';
 
@@ -15,7 +22,10 @@ export const GET: RequestHandler = async ({ platform, cookies, request }) => {
 	const rlKey = getRateLimitKey('config-read', user.id);
 	const rl = checkRateLimit(rlKey, RATE_LIMITS.CONFIG_READ);
 	if (!rl.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } }
+		);
 	}
 
 	const results = await getUserConfigs(env.DB, user.id);
@@ -61,7 +71,19 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at, forked_from } = body;
+	const {
+		name,
+		description,
+		base_preset,
+		packages,
+		custom_script,
+		visibility,
+		alias,
+		dotfiles_repo,
+		snapshot,
+		snapshot_at,
+		forked_from
+	} = body;
 
 	if (visibility !== undefined && !['public', 'unlisted', 'private'].includes(visibility)) {
 		return json({ error: 'Invalid visibility. Must be public, unlisted, or private' }, { status: 400 });
@@ -70,7 +92,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const rlKeyW = getRateLimitKey('config-write', user.id);
 	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
 	if (!rlW.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } }
+		);
 	}
 
 	const pv = validatePackages(packages);
@@ -90,8 +115,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	}
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
-	if (typeof name !== 'string' || name.length > 100) return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
-	if (description !== undefined && description !== '' && (typeof description !== 'string' || description.length > 500)) return json({ error: 'Description must be a string of 500 characters or less' }, { status: 400 });
+	if (typeof name !== 'string' || name.length > 100)
+		return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
+	if (description !== undefined && description !== '' && (typeof description !== 'string' || description.length > 500))
+		return json({ error: 'Description must be a string of 500 characters or less' }, { status: 400 });
 
 	const slug = slugify(name);
 	if (!slug) return json({ error: 'Invalid name' }, { status: 400 });
@@ -128,7 +155,7 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 			name,
 			description: description || '',
 			base_preset: base_preset || 'developer',
-			packages: JSON.stringify(packages || []),
+			packages: JSON.stringify(normalizePackages(packages || [], snapshot?.packages)),
 			custom_script: custom_script || '',
 			visibility: visibility || 'unlisted',
 			alias: cleanAlias,

@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { env } from 'cloudflare:test';
 import { GET, POST } from './+server';
+import { POST as POST_SNAPSHOT } from './from-snapshot/+server';
 import { resetDb, seed, strip } from '$lib/test/seed';
 import { call } from '$lib/test/call';
 import { mockUser, mockConfig, mockPublicConfig, mockPrivateConfig, mockApiToken } from '$lib/test/fixtures';
@@ -268,5 +269,35 @@ describe('POST /api/configs', () => {
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as { error: string };
 		expect(json.error).toContain('Maximum 20 configs');
+	});
+});
+
+describe('snapshot source normalization', () => {
+	it('imports legacy qualified tap packages as software and preserves standalone sources', async () => {
+		await seed(db, { users: [userRow()], api_tokens: [mockApiToken] });
+		const response = await call(POST_SNAPSHOT, {
+			url: `${baseUrl}/from-snapshot`,
+			method: 'POST',
+			token: mockApiToken.token,
+			body: {
+				name: 'Imported sources',
+				snapshot: {
+					packages: {
+						formulae: ['bun', 'git'],
+						casks: [],
+						npm: [],
+						taps: ['oven-sh/bun/bun', 'oven-sh/bun', 'example/extra']
+					}
+				}
+			}
+		});
+		expect(response.status).toBe(201);
+		const data = (await response.json()) as { packages: { name: string; type: string }[] };
+		expect(data.packages).toEqual([
+			{ name: 'git', type: 'formula' },
+			{ name: 'oven-sh/bun/bun', type: 'formula' },
+			{ name: 'oven-sh/bun', type: 'tap' },
+			{ name: 'example/extra', type: 'tap' }
+		]);
 	});
 });

@@ -5,6 +5,7 @@
 	import PackageManager from './PackageManager.svelte';
 	import MacOSPreferencesEditor from './MacOSPreferencesEditor.svelte';
 	import { PRESET_PACKAGES } from '$lib/presets';
+	import { normalizePackages, resolvePackages } from '$lib/packages';
 
 	let { slug, skipAuth = false }: { slug?: string; skipAuth?: boolean } = $props();
 	const isNew = !slug;
@@ -57,6 +58,17 @@
 			macosPrefs
 		});
 	}
+
+	const selectedGroups = $derived(
+		resolvePackages(
+			normalizePackages(
+				Array.from(selectedPackages.entries()).map(([key, type]) => ({ name: key.slice(type.length + 1), type }))
+			)
+		)
+	);
+	const softwareCount = $derived(
+		selectedGroups.formulae.length + selectedGroups.casks.length + selectedGroups.npm.length
+	);
 
 	const dirty = $derived(initialSnapshot !== '' && captureSnapshot() !== initialSnapshot);
 	const canSave = $derived(isNew || dirty || rawMode);
@@ -143,15 +155,11 @@
 					if (data.packages?.length) {
 						const map = new Map<string, string>();
 						const descs = new Map<string, string>();
-						for (const pkg of data.packages) {
-							if (typeof pkg === 'string') {
-								map.set(pkgKey(pkg, 'formula'), 'formula');
-							} else {
-								const t = pkg.type || 'formula';
-								const k = pkgKey(pkg.name, t);
-								map.set(k, t);
-								if (pkg.desc) descs.set(k, pkg.desc);
-							}
+						for (const pkg of normalizePackages(data.packages, data.snapshot?.packages)) {
+							const t = pkg.type || 'formula';
+							const k = pkgKey(pkg.name, t);
+							map.set(k, t);
+							if (pkg.desc) descs.set(k, pkg.desc);
 						}
 						selectedPackages = map;
 						packageDescs = descs;
@@ -181,22 +189,16 @@
 					custom_script: config.custom_script || '',
 					dotfiles_repo: config.dotfiles_repo || ''
 				};
-				macosPrefs = Array.isArray(config.snapshot?.macos_prefs)
-					? mapPrefs(config.snapshot.macos_prefs)
-					: [];
+				macosPrefs = Array.isArray(config.snapshot?.macos_prefs) ? mapPrefs(config.snapshot.macos_prefs) : [];
 				const savedPkgs = config.packages || [];
-				if (savedPkgs.length > 0) {
+				if (Array.isArray(config.packages)) {
 					const newMap = new Map<string, string>();
 					const newDescs = new Map<string, string>();
-					for (const pkg of savedPkgs) {
-						if (typeof pkg === 'string') {
-							newMap.set(pkgKey(pkg, 'formula'), 'formula');
-						} else {
-							const t = pkg.type || 'formula';
-							const k = pkgKey(pkg.name, t);
-							newMap.set(k, t);
-							if (pkg.desc) newDescs.set(k, pkg.desc);
-						}
+					for (const pkg of normalizePackages(savedPkgs, config.snapshot?.packages)) {
+						const t = pkg.type || 'formula';
+						const k = pkgKey(pkg.name, t);
+						newMap.set(k, t);
+						if (pkg.desc) newDescs.set(k, pkg.desc);
 					}
 					selectedPackages = newMap;
 					packageDescs = newDescs;
@@ -242,15 +244,11 @@
 		};
 		const newMap = new Map<string, string>();
 		const newDescs = new Map<string, string>();
-		for (const pkg of parsed.packages || []) {
-			if (typeof pkg === 'string') {
-				newMap.set(pkgKey(pkg, 'formula'), 'formula');
-			} else {
-				const t = pkg.type || 'formula';
-				const k = pkgKey(pkg.name, t);
-				newMap.set(k, t);
-				if (pkg.desc) newDescs.set(k, pkg.desc);
-			}
+		for (const pkg of normalizePackages(parsed.packages || [], parsed.snapshot?.packages)) {
+			const t = pkg.type || 'formula';
+			const k = pkgKey(pkg.name, t);
+			newMap.set(k, t);
+			if (pkg.desc) newDescs.set(k, pkg.desc);
 		}
 		selectedPackages = newMap;
 		packageDescs = newDescs;
@@ -345,7 +343,16 @@
 		<!-- save bar -->
 		<div class="savebar">
 			<button class="back" onclick={() => goto('/dashboard')}>
-				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+				<svg
+					width="15"
+					height="15"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg
+				>
 				Back to dashboard
 			</button>
 			<div class="savebar-right">
@@ -358,8 +365,22 @@
 				{:else if !isNew}
 					<span class="status saved">✓ All changes saved</span>
 				{/if}
-				<button class="raw-btn" class:active={rawMode} onclick={toggleRaw} title={rawMode ? 'Back to the form' : 'Edit raw JSON'}>
-					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+				<button
+					class="raw-btn"
+					class:active={rawMode}
+					onclick={toggleRaw}
+					title={rawMode ? 'Back to the form' : 'Edit raw JSON'}
+				>
+					<svg
+						width="13"
+						height="13"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg
+					>
 					Raw
 				</button>
 				{#if dirty && !rawMode}
@@ -379,7 +400,8 @@
 						<span class="term-name">config.json</span>
 						<span class="term-note">editable · consumed by the CLI</span>
 					</div>
-					<textarea class="raw-textarea" bind:value={rawJson} spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+					<textarea class="raw-textarea" bind:value={rawJson} spellcheck="false" autocomplete="off" autocapitalize="off"
+					></textarea>
 				</div>
 			</div>
 		{:else}
@@ -393,7 +415,11 @@
 						<div class="identity-foot">
 							<div class="vis-pills">
 								{#each ['public', 'unlisted', 'private'] as v (v)}
-									<button class="vis-pill" class:active={formData.visibility === v} onclick={() => (formData.visibility = v)}>{v}</button>
+									<button
+										class="vis-pill"
+										class:active={formData.visibility === v}
+										onclick={() => (formData.visibility = v)}>{v}</button
+									>
 								{/each}
 							</div>
 							<div class="alias-field">
@@ -408,7 +434,10 @@
 				<section>
 					<div class="eyebrow-row">
 						<p class="eyebrow"><span class="gt">&gt;</span> STACK</p>
-						<span class="eyebrow-count">{selectedPackages.size} packages</span>
+						<span class="eyebrow-count"
+							>{softwareCount} packages{#if selectedGroups.taps.length > 0}
+								· {selectedGroups.taps.length} taps{/if}</span
+						>
 					</div>
 					<PackageManager
 						{selectedPackages}
@@ -423,7 +452,11 @@
 					<p class="eyebrow"><span class="gt">&gt;</span> SYSTEM</p>
 					<div class="card">
 						<div class="field-label">Dotfiles repository</div>
-						<input class="text-input" bind:value={formData.dotfiles_repo} placeholder="https://github.com/you/dotfiles" />
+						<input
+							class="text-input"
+							bind:value={formData.dotfiles_repo}
+							placeholder="https://github.com/you/dotfiles"
+						/>
 						<p class="field-hint">Cloned &amp; deployed via GNU Stow after install.</p>
 						<div class="field-label field-label-spaced">macOS preferences</div>
 						<MacOSPreferencesEditor bind:macosPrefs />
@@ -437,7 +470,22 @@
 						<div class="term-head">
 							<span class="dot dot-red"></span><span class="dot dot-amber"></span><span class="dot dot-green"></span>
 							<label class="term-name" for="post-install-script">post-install.sh</label>
-							<button type="button" class="term-edit" onclick={() => scriptTextarea?.focus()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Edit script</button>
+							<button type="button" class="term-edit" onclick={() => scriptTextarea?.focus()}
+								><svg
+									width="12"
+									height="12"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+									><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path
+										d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"
+									/></svg
+								>Edit script</button
+							>
 						</div>
 						<textarea
 							id="post-install-script"
@@ -452,7 +500,9 @@
 							placeholder={scriptPlaceholder}
 						></textarea>
 					</div>
-					<p class="field-hint" id="script-hint">Edit the script above, then click Save changes. Runs after packages, shell, dotfiles, and macOS preferences.</p>
+					<p class="field-hint" id="script-hint">
+						Edit the script above, then click Save changes. Runs after packages, shell, dotfiles, and macOS preferences.
+					</p>
 				</section>
 			</div>
 		{/if}
@@ -613,7 +663,9 @@
 		font-size: 0.84rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: filter 0.15s ease, transform 0.15s ease;
+		transition:
+			filter 0.15s ease,
+			transform 0.15s ease;
 	}
 
 	.save:hover:not(:disabled) {

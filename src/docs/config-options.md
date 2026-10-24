@@ -71,6 +71,14 @@ The tools and apps to install. Stored as an array of package objects, each with 
 
 Each entry is an object: `{ "name": "package-name", "type": "formula" | "cask" | "npm" | "tap" }`. Names must match Homebrew or npm package names exactly. Taps are added before formulae and casks are installed.
 
+Use `formula` or `cask` for fully qualified software names such as
+`oven-sh/bun/bun`; their `owner/repository` tap is derived automatically.
+Use `tap` only for a repository name such as `oven-sh/bun` when you want to
+retain that source independently of its packages. The editor lists sources in
+a separate Homebrew taps section, with the packages that require each source.
+Automatically derived sources disappear when their last package is removed;
+manually retained sources remain. Taps do not count toward the editor's software total.
+
 **Limits:** max 500 packages per config; name max 200 characters (alphanumeric, `.`, `_`, `-`, `@`, `/`).
 
 ### `custom_script`
