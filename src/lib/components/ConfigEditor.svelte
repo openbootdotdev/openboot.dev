@@ -17,6 +17,7 @@
 	let initialPayload: any = null;
 	let rawMode = $state(false);
 	let rawJson = $state('');
+	let scriptTextarea = $state<HTMLTextAreaElement | null>(null);
 
 	let formData = $state({
 		name: '',
@@ -432,19 +433,26 @@
 				<!-- SCRIPT -->
 				<section class="col-full">
 					<p class="eyebrow"><span class="gt">&gt;</span> SCRIPT</p>
-					<div class="term">
+					<div class="term script-term">
 						<div class="term-head">
 							<span class="dot dot-red"></span><span class="dot dot-amber"></span><span class="dot dot-green"></span>
-							<span class="term-name">post-install.sh — runs after packages</span>
-							<span class="term-edit"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>editable</span>
+							<label class="term-name" for="post-install-script">post-install.sh</label>
+							<button type="button" class="term-edit" onclick={() => scriptTextarea?.focus()}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Edit script</button>
 						</div>
 						<textarea
+							id="post-install-script"
 							class="script-textarea"
+							bind:this={scriptTextarea}
 							bind:value={formData.custom_script}
+							aria-describedby="script-hint"
+							rows="10"
 							spellcheck="false"
+							autocomplete="off"
+							autocapitalize="off"
 							placeholder={scriptPlaceholder}
 						></textarea>
 					</div>
+					<p class="field-hint" id="script-hint">Edit the script above, then click Save changes. Runs after packages, shell, dotfiles, and macOS preferences.</p>
 				</section>
 			</div>
 		{/if}
@@ -858,13 +866,34 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		font-size: 0.68rem;
+		padding: 5px 8px;
+		border: 1px solid var(--border-hover);
+		border-radius: 6px;
+		background: var(--bg-tertiary);
+		font-family: inherit;
+		font-size: 0.72rem;
 		color: var(--accent);
+		cursor: pointer;
+	}
+
+	.term-edit:hover {
+		border-color: var(--accent);
+	}
+
+	.term-edit:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.script-term:focus-within {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 1px var(--accent);
 	}
 
 	.script-textarea {
+		display: block;
 		width: 100%;
-		min-height: 148px;
+		min-height: 220px;
 		padding: 18px 20px;
 		background: transparent;
 		border: none;
@@ -872,7 +901,7 @@
 		resize: vertical;
 		font-family: inherit;
 		font-size: 0.8rem;
-		line-height: 1.9;
+		line-height: 1.7;
 		color: var(--text-secondary);
 	}
 
@@ -929,6 +958,12 @@
 
 		.form-grid {
 			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.script-term .dot {
+			display: none;
 		}
 	}
 </style>

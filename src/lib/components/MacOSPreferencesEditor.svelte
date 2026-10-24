@@ -54,39 +54,52 @@
 </script>
 
 <div class="prefs">
+	<p class="prefs-hint">{macosPrefs.length} configured. Expand a category to manage settings.</p>
 	{#each byCategory as group (group.cat)}
-		<div class="group">
-			<div class="group-label">{group.cat}</div>
-			{#each group.items as item (item.id)}
-				{@const on = isOn(item)}
-				<div class="row">
-					<div class="row-text">
-						<div class="row-name">{item.label}</div>
-						<div class="row-desc">{item.description}</div>
+		<details class="group" name="macos-preference-category">
+			<summary>
+				<span class="group-label">{group.cat}</span>
+				<span class="group-count">{group.items.filter(isOn).length} / {group.items.length} included</span>
+				<svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+			</summary>
+			<div class="group-items">
+				{#each group.items as item (item.id)}
+					{@const on = isOn(item)}
+					<div class="row">
+						<div class="row-text">
+							<div class="row-name">{item.label}</div>
+							<div class="row-desc">{item.description}</div>
+						</div>
+						<button class="knob" class:on role="switch" aria-checked={on} aria-label={item.label} onclick={() => toggle(item)}>
+							<span class="knob-dot"></span>
+						</button>
 					</div>
-					<button class="knob" class:on role="switch" aria-checked={on} aria-label={item.label} onclick={() => toggle(item)}>
-						<span class="knob-dot"></span>
-					</button>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		</details>
 	{/each}
 
 	{#if customPrefs.length > 0}
-		<div class="group">
-			<div class="group-label">Custom</div>
-			{#each customPrefs as pref (pref.domain + ':' + pref.key)}
-				<div class="row">
-					<div class="row-text">
-						<div class="row-name">{pref.desc || pref.key}</div>
-						<div class="row-desc">{pref.domain} {pref.key} = {pref.value}</div>
+		<details class="group" name="macos-preference-category">
+			<summary>
+				<span class="group-label">Custom</span>
+				<span class="group-count">{customPrefs.length} included</span>
+				<svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+			</summary>
+			<div class="group-items">
+				{#each customPrefs as pref (pref.domain + ':' + pref.key)}
+					<div class="row">
+						<div class="row-text">
+							<div class="row-name">{pref.desc || pref.key}</div>
+							<div class="row-desc">{pref.domain} {pref.key} = {pref.value}</div>
+						</div>
+						<button class="knob on" role="switch" aria-checked="true" aria-label="Remove {pref.key}" onclick={() => removeCustom(pref)}>
+							<span class="knob-dot"></span>
+						</button>
 					</div>
-					<button class="knob on" role="switch" aria-checked="true" aria-label="Remove {pref.key}" onclick={() => removeCustom(pref)}>
-						<span class="knob-dot"></span>
-					</button>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		</details>
 	{/if}
 </div>
 
@@ -96,17 +109,68 @@
 		flex-direction: column;
 	}
 
-	.group + .group {
-		margin-top: 14px;
+	.prefs-hint {
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		line-height: 1.5;
+		margin: 0 0 10px;
+	}
+
+	.group {
+		border-bottom: 1px solid var(--border);
+	}
+
+	summary {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 13px 4px;
+		cursor: pointer;
+		list-style: none;
+		border-radius: 5px;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary:hover {
+		background: var(--bg-tertiary);
+	}
+
+	summary:focus-visible,
+	.knob:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
 	}
 
 	.group-label {
-		font-size: 0.66rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		font-size: 0.8rem;
+		color: var(--text-primary);
+	}
+
+	.group-count {
+		margin-left: auto;
+		font-size: 0.68rem;
 		color: var(--text-muted);
-		padding: 8px 0 2px;
+		white-space: nowrap;
+	}
+
+	.chevron {
+		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+
+	.group[open] .chevron {
+		transform: rotate(90deg);
+	}
+
+	.group-items {
+		max-height: 340px;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+		padding: 0 4px 8px;
 	}
 
 	.row {
@@ -120,6 +184,7 @@
 
 	.row-text {
 		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.row-name {
