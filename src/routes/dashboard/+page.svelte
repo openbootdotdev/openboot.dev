@@ -35,9 +35,7 @@
 	let shareConfigName = $state('');
 	let shareCopied = $state(false);
 
-	const totalInstalls = $derived(
-		configs.reduce((sum, c) => sum + (c.install_count || 0), 0)
-	);
+	const totalInstalls = $derived(configs.reduce((sum, c) => sum + (c.install_count || 0), 0));
 
 	onMount(async () => {
 		await auth.check();
@@ -91,7 +89,7 @@
 					packages: source.packages || [],
 					custom_script: source.custom_script || '',
 					dotfiles_repo: source.dotfiles_repo || '',
-					snapshot: source.snapshot || null,
+					snapshot: source.snapshot || null
 				})
 			);
 			goto('/dashboard/edit/_new');
@@ -114,10 +112,10 @@
 				dotfiles_repo: config.dotfiles_repo || '',
 				snapshot: config.snapshot || null,
 				visibility: config.visibility || 'unlisted',
-				alias: config.alias || null,
+				alias: config.alias || null
 			};
 			const blob = new Blob([JSON.stringify(exported, null, 2)], {
-				type: 'application/json',
+				type: 'application/json'
 			});
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
@@ -155,16 +153,14 @@
 	async function pushToCommunity(config: Config) {
 		const pkgs = Array.isArray(config.packages) ? config.packages : [];
 		if (pkgs.length < 5 || config.name === 'Default' || !config.description) {
-			alert(
-				'Needs at least 5 packages, a custom name, and a description to share publicly.'
-			);
+			alert('Needs at least 5 packages, a custom name, and a description to share publicly.');
 			return;
 		}
 		try {
 			const response = await fetch(`/api/configs/${config.slug}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ ...config, visibility: 'public' }),
+				body: JSON.stringify({ ...config, visibility: 'public' })
 			});
 			if (!response.ok) {
 				const data = await response.json();
@@ -216,14 +212,14 @@
 			const response = await fetch('/api/brewfile/parse', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content: brewfileContent }),
+				body: JSON.stringify({ content: brewfileContent })
 			});
 			const data = await response.json();
 			if (!response.ok) {
 				importError = data.error || 'Failed to parse';
 				return;
 			}
-			if (data.packages.length === 0) {
+			if (data.packages.length === 0 && !(data.taps || []).length) {
 				importError = 'No packages found';
 				return;
 			}
@@ -235,10 +231,13 @@
 					name: 'Imported Config',
 					description: `Imported from Brewfile (${data.packages.length} packages)`,
 					base_preset: 'minimal',
-					packages: data.packages.map((pkg: string) => ({
-						name: pkg,
-						type: (data.casks || []).includes(pkg) ? 'cask' : 'formula',
-					})),
+					packages: [
+						...data.packages.map((pkg: string) => ({
+							name: pkg,
+							type: (data.casks || []).includes(pkg) ? 'cask' : 'formula'
+						})),
+						...(data.taps || []).map((name: string) => ({ name, type: 'tap' }))
+					]
 				})
 			);
 			goto('/dashboard/edit/_new');
@@ -263,7 +262,7 @@
 		<div class="page-header">
 			<div>
 				<p class="eyebrow"><span class="accent">&gt;</span> dashboard</p>
-					<h1 class="page-title">My configurations</h1>
+				<h1 class="page-title">My configurations</h1>
 				<p class="page-stats">
 					{configs.length} config{configs.length !== 1 ? 's' : ''}
 					<span class="stats-sep">&middot;</span>
@@ -281,7 +280,16 @@
 		{#if configs.length === 0}
 			<div class="empty">
 				<div class="empty-glyph">
-					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+					<svg
+						width="48"
+						height="48"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
 						<rect x="2" y="3" width="20" height="14" rx="2" />
 						<path d="M8 21h8" />
 						<path d="M12 17v4" />
@@ -290,22 +298,14 @@
 					</svg>
 				</div>
 				<h3 class="empty-title">No configurations yet</h3>
-				<p class="empty-desc">
-					Define your machine's DNA. Create a config to get a custom install URL.
-				</p>
-				<Button variant="primary" onclick={() => goto('/dashboard/edit/_new')}>
-					Create First Config
-				</Button>
+				<p class="empty-desc">Define your machine's DNA. Create a config to get a custom install URL.</p>
+				<Button variant="primary" onclick={() => goto('/dashboard/edit/_new')}>Create First Config</Button>
 			</div>
 		{:else}
 			<div class="config-list">
 				{#each configs as config, i (config.id)}
 					<div class="card-wrap" style="animation-delay: {i * 50}ms">
-						<ConfigRow
-							{config}
-							username={$auth.user?.username ?? ''}
-							onaction={handleAction}
-						/>
+						<ConfigRow {config} username={$auth.user?.username ?? ''} onaction={handleAction} />
 					</div>
 				{/each}
 			</div>
@@ -322,12 +322,7 @@
 		role="dialog"
 		tabindex="0"
 	>
-		<div
-			class="modal"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="presentation"
-		>
+		<div class="modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
 			<div class="modal-head">
 				<h3>Import Brewfile</h3>
 				<button class="close" onclick={() => (showImportModal = false)}>&times;</button>
@@ -344,9 +339,7 @@
 				<p class="modal-hint">Supports tap, brew, and cask entries</p>
 			</div>
 			<div class="modal-foot">
-				<Button variant="secondary" onclick={() => (showImportModal = false)}>
-					Cancel
-				</Button>
+				<Button variant="secondary" onclick={() => (showImportModal = false)}>Cancel</Button>
 				<Button variant="primary" onclick={importBrewfile}>
 					{importLoading ? 'Parsing...' : 'Import'}
 				</Button>
@@ -381,7 +374,16 @@
 				<div class="share-options">
 					<button class="share-opt" onclick={shareCopyLink}>
 						<span class="share-icon">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<rect x="9" y="9" width="13" height="13" rx="2" />
 								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
 							</svg>
@@ -391,7 +393,9 @@
 					<button class="share-opt" onclick={shareOnTwitter}>
 						<span class="share-icon">
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+								<path
+									d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+								/>
 							</svg>
 						</span>
 						Share on X
@@ -429,7 +433,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Header */
@@ -511,7 +517,9 @@
 		font-size: 0.84rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: filter 0.16s ease, transform 0.16s ease;
+		transition:
+			filter 0.16s ease,
+			transform 0.16s ease;
 	}
 
 	.btn-new:hover {
@@ -598,8 +606,12 @@
 	}
 
 	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	.modal {
@@ -613,8 +625,14 @@
 	}
 
 	@keyframes slideUp {
-		from { opacity: 0; transform: translateY(16px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.share-modal {
@@ -776,8 +794,14 @@
 	}
 
 	@keyframes toastIn {
-		from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-		to { opacity: 1; transform: translateX(-50%) translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateX(-50%) translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
+		}
 	}
 
 	@media (max-width: 768px) {

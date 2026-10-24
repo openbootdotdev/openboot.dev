@@ -107,6 +107,35 @@ describe('GET /api/configs/[slug]', () => {
 	});
 });
 
+describe('legacy package type repair', () => {
+	it('returns qualified packages as software and repositories as taps', async () => {
+		await seed(db, {
+			users: [userRow()],
+			api_tokens: [mockApiToken],
+			configs: [
+				{
+					...mockConfig,
+					packages: JSON.stringify([
+						'git',
+						'oven-sh/bun',
+						{ name: 'oven-sh/bun/bun', type: 'tap' },
+						{ name: 'example/apps/editor', type: 'cask' }
+					])
+				}
+			]
+		});
+		const response = await call(GET, callOpts({ token: mockApiToken.token }));
+		expect(response.status).toBe(200);
+		const data = (await response.json()) as { config: { packages: { name: string; type: string }[] } };
+		expect(data.config.packages).toEqual([
+			{ name: 'git', type: 'formula' },
+			{ name: 'oven-sh/bun', type: 'tap' },
+			{ name: 'oven-sh/bun/bun', type: 'formula' },
+			{ name: 'example/apps/editor', type: 'cask' }
+		]);
+	});
+});
+
 describe('PUT /api/configs/[slug]', () => {
 	const authedPut = (body: unknown, overrides: Record<string, unknown> = {}) =>
 		call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body, ...overrides }));
@@ -368,5 +397,42 @@ describe('DELETE /api/configs/[slug]', () => {
 		expect(response.status).toBe(200);
 		const survivor = await db.prepare('SELECT id FROM configs WHERE id = ?').bind('cfg_2').first();
 		expect(survivor).not.toBeNull();
+	});
+});
+
+describe('package source save round-trip', () => {
+	it('repairs legacy writes and persists source removal over stale snapshot data', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig], api_tokens: [mockApiToken] });
+		const saved = await call(
+			PUT,
+			callOpts({
+				method: 'PUT',
+				token: mockApiToken.token,
+				body: { packages: [{ name: 'oven-sh/bun/bun', type: 'tap' }], snapshot: { packages: { taps: ['old/tools'] } } }
+			})
+		);
+		expect(saved.status).toBe(200);
+		const read = await call(GET, callOpts({ token: mockApiToken.token }));
+		const data = (await read.json()) as {
+			config: { packages: { name: string; type: string }[]; snapshot: { packages: { taps: string[] } } };
+		};
+		expect(data.config.packages).toEqual([{ name: 'oven-sh/bun/bun', type: 'formula' }]);
+		expect(data.config.snapshot.packages.taps).toEqual([]);
+		const cleared = await call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body: { packages: [] } }));
+		expect(cleared.status).toBe(200);
+		const reloaded = await call(GET, callOpts({ token: mockApiToken.token }));
+		const empty = (await reloaded.json()) as { config: { packages: unknown[] } };
+		expect(empty.config.packages).toEqual([]);
+	});
+});
+
+describe('optional package updates', () => {
+	it('retains the software selection when packages is null', async () => {
+		await seed(db, { users: [userRow()], configs: [mockConfig], api_tokens: [mockApiToken] });
+		const updated = await call(PUT, callOpts({ method: 'PUT', token: mockApiToken.token, body: { packages: null } }));
+		expect(updated.status).toBe(200);
+		const read = await call(GET, callOpts({ token: mockApiToken.token }));
+		const data = (await read.json()) as { config: { packages: unknown[] } };
+		expect(data.config.packages).toEqual(JSON.parse(mockConfig.packages));
 	});
 });

@@ -1,9 +1,23 @@
 import { json } from '@sveltejs/kit';
+import { normalizePackages, syncSnapshotTaps, type PackageInput, type SnapshotPackages } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify } from '$lib/server/auth';
-import { validateCustomScript, validateDotfilesRepo, validatePackages, validateMacOSPrefs, RESERVED_ALIASES } from '$lib/server/validation';
+import {
+	validateCustomScript,
+	validateDotfilesRepo,
+	validatePackages,
+	validateMacOSPrefs,
+	RESERVED_ALIASES
+} from '$lib/server/validation';
 import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from '$lib/server/rate-limit';
-import { getConfig, getConfigIdAndAlias, slugConflict, aliasExistsExcluding, updateConfig, deleteConfig } from '$lib/server/db';
+import {
+	getConfig,
+	getConfigForUpdate,
+	slugConflict,
+	aliasExistsExcluding,
+	updateConfig,
+	deleteConfig
+} from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ platform, cookies, params, request }) => {
 	const env = platform?.env;
@@ -15,7 +29,10 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 	const rlKey = getRateLimitKey('config-read', user.id);
 	const rl = checkRateLimit(rlKey, RATE_LIMITS.CONFIG_READ);
 	if (!rl.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } }
+		);
 	}
 
 	const config = await getConfig(env.DB, user.id, params.slug);
@@ -23,8 +40,7 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 
 	const installUrl = config.alias ? `${env.APP_URL}/${config.alias}` : `${env.APP_URL}/${user.username}/${params.slug}`;
 
-	const rawPkgs = JSON.parse((config.packages as string) || '[]');
-	const needsTypeInference = rawPkgs.length > 0 && typeof rawPkgs[0] === 'string';
+	const rawPkgs: PackageInput[] = JSON.parse((config.packages as string) || '[]');
 
 	// Parse snapshot once and reuse for cask inference and macos_prefs extraction.
 	let parsedSnapshot: Record<string, unknown> | null = null;
@@ -36,23 +52,7 @@ export const GET: RequestHandler = async ({ platform, cookies, params, request }
 		}
 	}
 
-	let caskSet = new Set<string>();
-	if (needsTypeInference && parsedSnapshot) {
-		const casks: string[] = (parsedSnapshot as any).packages?.casks || [];
-		for (const c of casks) {
-			caskSet.add(c);
-		}
-	}
-
-	const packages = rawPkgs.map((p: any) => {
-		if (typeof p === 'string') {
-			const parts = p.split('/');
-			if (parts.length === 3) return { name: p, type: 'tap' };
-			if (caskSet.has(p)) return { name: p, type: 'cask' };
-			return { name: p, type: 'formula' };
-		}
-		return p;
-	});
+	const packages = normalizePackages(rawPkgs, parsedSnapshot?.packages as SnapshotPackages | undefined);
 
 	type MacOSPrefOut = { domain: string; key: string; type?: string; value: string; desc?: string; host?: string };
 	let macosPrefs: MacOSPrefOut[] | null = null;
@@ -110,7 +110,18 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		return json({ error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { name, description, base_preset, packages, custom_script, visibility, alias, dotfiles_repo, snapshot, snapshot_at } = body;
+	const {
+		name,
+		description,
+		base_preset,
+		packages,
+		custom_script,
+		visibility,
+		alias,
+		dotfiles_repo,
+		snapshot,
+		snapshot_at
+	} = body;
 
 	if (visibility !== undefined && !['public', 'unlisted', 'private'].includes(visibility)) {
 		return json({ error: 'Invalid visibility. Must be public, unlisted, or private' }, { status: 400 });
@@ -119,7 +130,10 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 	const rlKeyW = getRateLimitKey('config-write', user.id);
 	const rlW = checkRateLimit(rlKeyW, RATE_LIMITS.CONFIG_WRITE);
 	if (!rlW.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rlW.retryAfter! / 1000)) } }
+		);
 	}
 
 	if (packages !== undefined) {
@@ -142,7 +156,7 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 
 	const slug = params.slug;
 
-	const existing = await getConfigIdAndAlias(env.DB, user.id, slug);
+	const existing = await getConfigForUpdate(env.DB, user.id, slug);
 	if (!existing) return json({ error: 'Config not found' }, { status: 404 });
 
 	let newSlug = slug;
@@ -171,18 +185,34 @@ export const PUT: RequestHandler = async ({ platform, cookies, params, request }
 		}
 	}
 
+	let snapshotToSave = snapshot;
+	let selectedPackages: ReturnType<typeof normalizePackages> | undefined;
+	if (packages !== undefined && packages !== null) {
+		let previousSnapshot = null;
+		if (snapshot === undefined && existing.snapshot) {
+			try {
+				previousSnapshot = JSON.parse(existing.snapshot);
+			} catch (error) {
+				console.error('Failed to parse snapshot while updating package sources:', error);
+			}
+		}
+		const sourceSnapshot = snapshot === undefined ? previousSnapshot : snapshot;
+		selectedPackages = normalizePackages(packages || [], sourceSnapshot?.packages, false);
+		snapshotToSave = syncSnapshotTaps(sourceSnapshot, selectedPackages);
+	}
+
 	try {
 		await updateConfig(env.DB, {
 			newSlug,
 			name: name || null,
 			description: description !== undefined ? description : null,
 			base_preset: base_preset || null,
-			packages: packages ? JSON.stringify(packages) : null,
+			packages: selectedPackages ? JSON.stringify(selectedPackages) : null,
 			custom_script: custom_script !== undefined ? custom_script : null,
 			visibility: visibility !== undefined ? visibility : null,
 			alias: newAlias,
 			dotfiles_repo: dotfiles_repo !== undefined ? dotfiles_repo : null,
-			snapshot: snapshot !== undefined ? (snapshot ? JSON.stringify(snapshot) : null) : null,
+			snapshot: snapshotToSave !== undefined ? (snapshotToSave ? JSON.stringify(snapshotToSave) : null) : null,
 			snapshot_at: snapshot_at !== undefined ? snapshot_at : null,
 			userId: user.id,
 			slug
@@ -207,7 +237,10 @@ export const DELETE: RequestHandler = async ({ platform, cookies, params, reques
 	const rlKeyD = getRateLimitKey('config-write', user.id);
 	const rlD = checkRateLimit(rlKeyD, RATE_LIMITS.CONFIG_WRITE);
 	if (!rlD.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rlD.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rlD.retryAfter! / 1000)) } }
+		);
 	}
 
 	await deleteConfig(env.DB, user.id, params.slug);

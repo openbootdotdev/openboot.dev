@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { normalizePackages, resolvePackages, type PackageInput, type SnapshotPackages } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getPackageDescription } from '$lib/package-metadata';
 import { getUserIdAndName, getConfigCLIData, getValidToken } from '$lib/server/db';
@@ -33,41 +34,37 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		}
 	}
 
-	const tapsSet = new Set<string>();
-	const snapshotCasks = new Set<string>();
+	let snapshotPackages: SnapshotPackages | undefined;
 	type MacOSPrefOut = { domain: string; key: string; type: string; value: string; desc: string; host?: string };
 	let macosPrefs: MacOSPrefOut[] | null = null;
 
 	if (config.snapshot) {
 		try {
 			const snapshot = JSON.parse(config.snapshot);
-			for (const tap of snapshot.packages?.taps || []) {
-				tapsSet.add(tap);
-			}
-			for (const cask of snapshot.packages?.casks || []) {
-				snapshotCasks.add(cask);
-			}
+			snapshotPackages = snapshot.packages;
 			if (Array.isArray(snapshot.macos_prefs) && snapshot.macos_prefs.length > 0) {
-				const filtered = snapshot.macos_prefs.filter(
-					(p: unknown): p is Record<string, unknown> =>
-						typeof p === 'object' &&
-						p !== null &&
-						typeof (p as Record<string, unknown>).domain === 'string' &&
-						typeof (p as Record<string, unknown>).key === 'string' &&
-						typeof (p as Record<string, unknown>).value === 'string'
-				).map((p: Record<string, unknown>) => {
-					const out: MacOSPrefOut = {
-						domain: p.domain as string,
-						key: p.key as string,
-						type: typeof p.type === 'string' ? p.type : '',
-						value: p.value as string,
-						desc: typeof p.desc === 'string' ? p.desc : ''
-					};
-					// `host` selects the ByHost scope (defaults -currentHost). Mirrors Go `omitempty`:
-					// only emit when non-empty so payloads stay clean for the common main-domain case.
-					if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
-					return out;
-				});
+				const filtered = snapshot.macos_prefs
+					.filter(
+						(p: unknown): p is Record<string, unknown> =>
+							typeof p === 'object' &&
+							p !== null &&
+							typeof (p as Record<string, unknown>).domain === 'string' &&
+							typeof (p as Record<string, unknown>).key === 'string' &&
+							typeof (p as Record<string, unknown>).value === 'string'
+					)
+					.map((p: Record<string, unknown>) => {
+						const out: MacOSPrefOut = {
+							domain: p.domain as string,
+							key: p.key as string,
+							type: typeof p.type === 'string' ? p.type : '',
+							value: p.value as string,
+							desc: typeof p.desc === 'string' ? p.desc : ''
+						};
+						// `host` selects the ByHost scope (defaults -currentHost). Mirrors Go `omitempty`:
+						// only emit when non-empty so payloads stay clean for the common main-domain case.
+						if (typeof p.host === 'string' && p.host !== '') out.host = p.host;
+						return out;
+					});
 				if (filtered.length > 0) macosPrefs = filtered;
 			}
 		} catch (err) {
@@ -75,40 +72,16 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		}
 	}
 
-	const rawPackages: any[] = JSON.parse(config.packages || '[]');
-	const formulae: { name: string; desc: string }[] = [];
-	const casks: { name: string; desc: string }[] = [];
-	const npms: { name: string; desc: string }[] = [];
-
-	for (const pkg of rawPackages) {
-		const name = typeof pkg === 'string' ? pkg : pkg.name;
-		const desc = (typeof pkg === 'object' && pkg.desc) || getPackageDescription(name);
-
-		if (typeof pkg === 'string') {
-			if (snapshotCasks.has(pkg)) {
-				casks.push({ name, desc });
-			} else {
-				formulae.push({ name, desc });
-			}
-		} else {
-			if (pkg.type === 'npm') {
-				npms.push({ name, desc });
-			} else if (pkg.type === 'cask') {
-				casks.push({ name, desc });
-			} else {
-				formulae.push({ name, desc });
-			}
-		}
-	}
-
-	for (const pkg of formulae) {
-		const parts = pkg.name.split('/');
-		if (parts.length === 3) {
-			tapsSet.add(`${parts[0]}/${parts[1]}`);
-		}
-	}
-
-	const taps = Array.from(tapsSet);
+	const rawPackages: PackageInput[] = JSON.parse(config.packages || '[]');
+	const groups = resolvePackages(normalizePackages(rawPackages, snapshotPackages));
+	const withDescription = (pkg: { name: string; desc?: string }) => ({
+		name: pkg.name,
+		desc: pkg.desc || getPackageDescription(pkg.name)
+	});
+	const formulae = groups.formulae.map(withDescription);
+	const casks = groups.casks.map(withDescription);
+	const npms = groups.npm.map(withDescription);
+	const taps = groups.taps.map((tap) => tap.name);
 
 	return json({
 		username: user.username,
@@ -121,7 +94,10 @@ export const GET: RequestHandler = async ({ platform, params, request }) => {
 		npm: npms,
 		dotfiles_repo: config.dotfiles_repo || '',
 		post_install: config.custom_script
-			? config.custom_script.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+			? config.custom_script
+					.split('\n')
+					.map((s: string) => s.trim())
+					.filter((s: string) => s.length > 0)
 			: [],
 		macos_prefs: macosPrefs
 	});

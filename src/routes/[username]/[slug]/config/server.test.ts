@@ -6,6 +6,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { env } from 'cloudflare:test';
 import { GET } from './+server';
+import { GET as GET_ALIAS } from '../../../api/configs/alias/[alias]/+server';
+import { PUT as UPDATE_CONFIG } from '../../../api/configs/[slug]/+server';
 import { resetDb, seed, strip } from '$lib/test/seed';
 import { call } from '$lib/test/call';
 import { mockUser, mockPublicConfig, mockPrivateConfig, mockApiToken, mockExpiredApiToken } from '$lib/test/fixtures';
@@ -157,9 +159,10 @@ describe('data parsing', () => {
 		expect(json.npm).toContainEqual(expect.objectContaining({ name: 'typescript' }));
 	});
 
-	it('parses snapshot for taps and casks', async () => {
+	it('parses snapshot taps for legacy string packages', async () => {
 		await seedPublic({
 			...mockPublicConfig,
+			packages: JSON.stringify(['git']),
 			snapshot: JSON.stringify({
 				packages: { taps: ['homebrew/cask-fonts'], casks: ['font-fira-code'] }
 			})
@@ -324,9 +327,11 @@ describe('data parsing', () => {
 			packages: { name: string; desc?: string }[];
 			casks: { name: string; desc: string }[];
 			npm: { name: string; desc: string }[];
+			taps: string[];
 		};
 		expect(json.packages).toContainEqual({ name: 'git', desc: 'Version control' });
-		expect(json.packages).toContainEqual(expect.objectContaining({ name: 'homebrew/cask-fonts' }));
+		expect(json.packages.map((pkg) => pkg.name)).not.toContain('homebrew/cask-fonts');
+		expect(json.taps).toContain('homebrew/cask-fonts');
 		expect(json.casks).toContainEqual({ name: 'docker', desc: 'Containers' });
 		expect(json.npm).toContainEqual({ name: 'typescript', desc: 'Typed JS' });
 	});
@@ -422,5 +427,73 @@ describe('error handling', () => {
 		expect(response.status).toBe(404);
 		const json = (await response.json()) as { error: string };
 		expect(json.error).toContain('Config not found');
+	});
+});
+
+describe.each([
+	['config', GET, { username: 'testuser', slug: 'public-config' }],
+	['alias', GET_ALIAS, { alias: 'publiccfg' }]
+] as const)('%s source export', (_name, handler, params) => {
+	const exportConfig = async (packages: unknown[], snapshotTaps: string[] = []) => {
+		await seedPublic({
+			...mockPublicConfig,
+			packages: JSON.stringify(packages),
+			snapshot: JSON.stringify({ packages: { taps: snapshotTaps } })
+		});
+		const response = await call(handler, opts({ params }));
+		expect(response.status).toBe(200);
+		return (await response.json()) as {
+			packages: (string | { name: string })[];
+			casks: (string | { name: string })[];
+			npm: (string | { name: string })[];
+			taps: string[];
+		};
+	};
+	const names = (packages: (string | { name: string })[]) =>
+		packages.map((pkg) => (typeof pkg === 'string' ? pkg : pkg.name));
+
+	it('exports sources separately and derives them from both formulae and casks', async () => {
+		const data = await exportConfig([
+			{ name: 'oven-sh/bun/bun', type: 'tap' },
+			{ name: 'oven-sh/bun', type: 'tap' },
+			{ name: 'example/apps/editor', type: 'cask' },
+			{ name: '@larksuite/cli', type: 'npm' }
+		]);
+		expect(names(data.packages)).toEqual(['oven-sh/bun/bun']);
+		expect(names(data.casks)).toEqual(['example/apps/editor']);
+		expect(names(data.npm)).toEqual(['@larksuite/cli']);
+		expect(data.taps).toEqual(['oven-sh/bun', 'example/apps']);
+	});
+
+	it('retains a manually selected tap without software', async () => {
+		const data = await exportConfig([{ name: 'example/tools', type: 'tap' }]);
+		expect(data.packages).toEqual([]);
+		expect(data.taps).toEqual(['example/tools']);
+	});
+
+	it.each([[], [{ name: 'custom-tool', type: 'formula' }]].map((packages) => ({ packages })))(
+		'preserves historical snapshot-only sources for typed lists: $packages',
+		async ({ packages }) => {
+			const data = await exportConfig(packages, ['old/tools']);
+			expect(data.taps).toEqual(['old/tools']);
+		}
+	);
+
+	it('removes snapshot sources when saving a new selection without resending the snapshot', async () => {
+		await exportConfig([{ name: 'custom-tool', type: 'formula' }], ['old/tools']);
+		await seed(db, { api_tokens: [mockApiToken] });
+		const saved = await call(
+			UPDATE_CONFIG,
+			opts({
+				method: 'PUT',
+				token: mockApiToken.token,
+				params: { slug: 'public-config' },
+				body: { packages: [{ name: 'git', type: 'formula' }] }
+			})
+		);
+		expect(saved.status).toBe(200);
+		const response = await call(handler, opts({ params }));
+		const data = (await response.json()) as { taps: string[] };
+		expect(data.taps).toEqual([]);
 	});
 });

@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { normalizePackages } from '$lib/packages';
 import type { RequestHandler } from './$types';
 import { getCurrentUser, slugify, generateId } from '$lib/server/auth';
 import { validatePackages } from '$lib/server/validation';
@@ -21,7 +22,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 
 	const rl = checkRateLimit(getRateLimitKey('config-write', user.id), RATE_LIMITS.CONFIG_WRITE);
 	if (!rl.allowed) {
-		return json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } });
+		return json(
+			{ error: 'Rate limit exceeded' },
+			{ status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfter! / 1000)) } }
+		);
 	}
 
 	const contentLength = parseInt(request.headers.get('content-length') ?? '0', 10);
@@ -39,8 +43,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const { name, description, snapshot, config_slug, visibility, message } = body;
 
 	if (!name) return json({ error: 'Name is required' }, { status: 400 });
-	if (typeof name !== 'string' || name.length > 100) return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
-	if (description !== undefined && description !== '' && (typeof description !== 'string' || description.length > 500)) return json({ error: 'Description must be a string of 500 characters or less' }, { status: 400 });
+	if (typeof name !== 'string' || name.length > 100)
+		return json({ error: 'Name must be a string of 100 characters or less' }, { status: 400 });
+	if (description !== undefined && description !== '' && (typeof description !== 'string' || description.length > 500))
+		return json({ error: 'Description must be a string of 500 characters or less' }, { status: 400 });
 	if (!snapshot) return json({ error: 'Snapshot is required' }, { status: 400 });
 
 	const validVisibilities = ['public', 'unlisted', 'private'];
@@ -57,7 +63,10 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	// Validate snapshot.packages is the canonical structured format:
 	// { formulae: string[], casks: string[], taps: string[], npm: string[], bun?: string[] }
 	if (!snapshot.packages || typeof snapshot.packages !== 'object' || Array.isArray(snapshot.packages)) {
-		return json({ error: 'snapshot.packages must be an object with formulae, casks, taps, npm arrays' }, { status: 400 });
+		return json(
+			{ error: 'snapshot.packages must be an object with formulae, casks, taps, npm arrays' },
+			{ status: 400 }
+		);
 	}
 
 	// Build typed package objects from the full snapshot.
@@ -69,19 +78,6 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const snapshotBun: string[] = snapshot.packages?.bun || [];
 	const snapshotTaps: string[] = snapshot.packages?.taps || [];
 
-	// Build a set of formula names that are already covered by a tap entry
-	// (e.g. "argoproj/tap/kubectl-argo-rollouts" covers "kubectl-argo-rollouts")
-	// so they don't appear in both CLI and TAPS sections.
-	// Only consider three-segment tap entries (owner/tap/formula) to avoid
-	// false-positive collisions with two-segment tap names like "homebrew/cask".
-	const tapFormulaNames = new Set<string>();
-	for (const t of snapshotTaps) {
-		const parts = t.split('/');
-		if (parts.length === 3) {
-			tapFormulaNames.add(parts[2]);
-		}
-	}
-
 	// Bun globals come from the npm registry and install fine via `npm install -g`,
 	// so we bucket them with npm in the typed `packages` array (the canonical
 	// downstream schema only special-cases `npm` and `cask`). Bun provenance is
@@ -89,18 +85,17 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 	const npmSet = new Set(snapshotNpm);
 	const bunAsNpm = snapshotBun.filter((name) => !npmSet.has(name));
 
-	const packages = [
-		...snapshotFormulae
-			.filter((name) => !tapFormulaNames.has(name))
-			.map((name) => ({ name, type: 'formula' })),
+	const rawPackages = [
+		...snapshotFormulae.map((name) => ({ name, type: 'formula' })),
 		...snapshotCasks.map((name) => ({ name, type: 'cask' })),
 		...snapshotNpm.map((name) => ({ name, type: 'npm' })),
 		...bunAsNpm.map((name) => ({ name, type: 'npm' })),
-		...snapshotTaps.map((name) => ({ name, type: 'tap' })),
+		...snapshotTaps.map((name) => ({ name, type: 'tap' }))
 	];
 
-	const pv = validatePackages(packages);
+	const pv = validatePackages(rawPackages);
 	if (!pv.valid) return json({ error: pv.error }, { status: 400 });
+	const packages = normalizePackages(rawPackages, snapshot.packages);
 
 	if (config_slug) {
 		const existing = await getConfig(env.DB, user.id, config_slug);
@@ -201,11 +196,14 @@ export const POST: RequestHandler = async ({ platform, cookies, request }) => {
 		createdPackages = [];
 	}
 
-	return json({
-		...created,
-		snapshot: createdSnapshot,
-		packages: createdPackages
-	}, { status: 201 });
+	return json(
+		{
+			...created,
+			snapshot: createdSnapshot,
+			packages: createdPackages
+		},
+		{ status: 201 }
+	);
 };
 
 // The CLI sends PUT for updates — route to the same handler.
