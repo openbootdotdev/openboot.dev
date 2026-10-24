@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import ContextMenu from './ContextMenu.svelte';
 	import PackageFingerprint from './PackageFingerprint.svelte';
 
@@ -66,7 +67,13 @@
 	<div class="row-top">
 		<div class="identity">
 			<div class="id-head">
-				<h3 class="row-name">{config.name}</h3>
+				<h3 class="row-name">
+					<a
+						class="edit-link"
+						href={resolve(`/dashboard/edit/${config.slug}`)}
+						aria-label={`Edit ${config.name}`}
+					>{config.name}</a>
+				</h3>
 				<span class="vis-tag" class:public={config.visibility === 'public'}>{config.visibility}</span>
 			</div>
 			{#if cli + apps + npm > 0}
@@ -103,12 +110,15 @@
 		<button class="icon-btn" aria-label="Edit" onclick={() => onaction('edit', config.slug)}>
 			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
 		</button>
-		<ContextMenu square items={menuItems} onselect={(action) => onaction(action, config.slug)} />
+		<div class="more-actions">
+			<ContextMenu square items={menuItems} onselect={(action) => onaction(action, config.slug)} />
+		</div>
 	</div>
 </div>
 
 <style>
 	.row {
+		position: relative;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
 		border-radius: 14px;
@@ -120,6 +130,36 @@
 		transform: translateY(-3px);
 		border-color: var(--border-hover);
 		box-shadow: 0 16px 34px -16px var(--shadow);
+	}
+
+	.edit-link {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	/* Stretch the edit link across the card, below the independent actions. */
+	.edit-link::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		border-radius: 14px;
+	}
+
+	.edit-link:focus-visible {
+		outline: none;
+	}
+
+	.edit-link:focus-visible::after {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+
+	.copy-cmd,
+	.icon-btn,
+	.more-actions {
+		position: relative;
+		z-index: 1;
 	}
 
 	.row-top {
