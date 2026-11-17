@@ -6,12 +6,7 @@ project knowledge here rather than in tool-specific configuration.
 ## Agent compatibility
 
 - Codex loads this `AGENTS.md` directly.
-- Claude Code loads [CLAUDE.md](CLAUDE.md), which imports this file with
-  `@AGENTS.md`.
 - Canonical project skills live in [`.agents/skills/`](.agents/skills/).
-  [`.claude/skills/`](.claude/skills/) contains relative `SKILL.md` symlinks so
-  Claude Code and agents that follow the open Agent Skills layout use the same
-  instructions.
 - Quality enforcement is agent-independent: use the Git hooks, `npm run
   validate`, and CI. Do not add tool-specific lifecycle hooks for checks that
   belong in those shared gates.

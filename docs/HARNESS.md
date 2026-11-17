@@ -22,8 +22,8 @@ Two execution flavors:
 
 - **Computational** — deterministic, fast, free: `eslint`, `svelte-check`,
   `vitest`, `src/archtest/*`. Run during local verification and in CI.
-- **Inferential** — non-deterministic, slower, paid: AI code review,
-  `/security-review`, `/ultrareview`. Run on integration boundaries.
+- **Inferential** — non-deterministic, slower, paid: AI code review
+  and security review. Run on integration boundaries.
 
 Three regulation categories:
 
@@ -50,8 +50,8 @@ Three regulation categories:
 | Behav. | Contract schema validation against `openboot-contract` | CI `check` job + post-deploy | `.github/workflows/ci.yml`, `.github/workflows/deploy.yml` |
 | Behav. | Post-deploy health check (`/api/health`) | CD `deploy` job | `.github/workflows/deploy.yml` |
 | Behav. | Post-deploy smoke test + contract round-trip | CD `deploy` job | `scripts/smoke-test-api.sh` |
-| Feedfwd. | Shared agent conventions | Codex loads directly; Claude imports with `@AGENTS.md` | `AGENTS.md`, `CLAUDE.md` |
-| Feedfwd. | `ship-pr` skill — push → CI → review → triage → squash → cleanup; **no `--auto`** | model-loaded | `.agents/skills/ship-pr/SKILL.md` (`.claude/skills/ship-pr/SKILL.md` is a symlink) |
+| Feedfwd. | Shared agent conventions | Codex loads directly | `AGENTS.md` (canonical) |
+| Feedfwd. | `ship-pr` skill — push → CI → review → triage → squash → cleanup; **no `--auto`** | model-loaded | `.agents/skills/ship-pr/SKILL.md` |
 | Maint. | `eslint` on staged diff + `prettier --check` | local git pre-commit | `scripts/hooks/pre-commit` |
 | Behav. | `npm run validate` (lint + check + test + build) | local git pre-push | `scripts/hooks/pre-push` |
 | Drift loop | Failed harness sensor → open/update GitHub issue | on main / nightly | `.github/workflows/drift-to-issue.yml` |
@@ -99,9 +99,8 @@ ideally one rule per PR so the diff is reviewable:
   test-shaped code without raising actual quality.
 - **No husky / lint-staged.** `scripts/hooks/` symlinked via
   `npm run install:hooks` does the same job in ~30 lines, no runtime dep.
-- **No agent-specific lifecycle hooks.** Codex, Claude Code, and other tools
-  have different hook protocols. Shared Git hooks and CI enforce the same
-  checks for every contributor and agent.
+- **No agent-specific lifecycle hooks.** Shared Git hooks and CI enforce
+  the same checks for every contributor and agent.
 - **No baseline file for archtest rules.** Repo is small enough to clean
   up violations directly when a new rule is added.
 - **No agent-driven direct changes to `main`.** All changes go through PR
