@@ -6,7 +6,7 @@ project knowledge here rather than in tool-specific configuration.
 ## Agent compatibility
 
 - Codex loads this `AGENTS.md` directly.
-- Canonical project skills live in [`.agents/skills/`](.agents/skills/).
+- Keep repository-specific guidance here; personal skills are installed globally.
 - Quality enforcement is agent-independent: use the Git hooks, `npm run
   validate`, and CI. Do not add tool-specific lifecycle hooks for checks that
   belong in those shared gates.
@@ -159,9 +159,20 @@ finishes with health and contract checks.
 Repository reads/writes, `npm run *`, local Wrangler commands, and Vitest are
 otherwise safe without confirmation.
 
-## Skills
+## PR review and delivery
 
-- `ship-pr` — use the shared skill for the canonical push -> PR -> CI -> review
-  -> triage -> squash-merge -> cleanup flow. Never use `--auto`; merge directly
-  when the PR is clean, and escalate only decisions that need product or team
-  input.
+The personal `ship-pr` skill is installed globally; do not keep a duplicate
+repository-local entry. These project rules also apply without that skill:
+
+- Use `.github/required-checks.txt` alongside live branch protection to identify
+  required checks. Harness drift sensors are informational unless policy changes.
+- Review D1 access boundaries and parameter binding, API alignment with
+  `openboot-contract`, forward-only D1 migrations, and field round trips through
+  CLI -> server -> CLI. Check new warnings, test gaps, and generated files.
+- For backwards-incompatible D1 migrations, verify locally and obtain the
+  rollout decision before proceeding. Review is the last reversible gate before
+  merging to `main` triggers deployment.
+- When merging is authorized, use squash merge after CI and review pass. Do not
+  use auto-merge. Fix clear issues in scope; escalate product or rollout choices.
+- Do not roll back a failed deployment, modify the separate `openboot-contract`
+  repository, or alter production secrets without explicit direction.

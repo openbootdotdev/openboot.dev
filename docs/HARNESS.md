@@ -51,7 +51,7 @@ Three regulation categories:
 | Behav. | Post-deploy health check (`/api/health`) | CD `deploy` job | `.github/workflows/deploy.yml` |
 | Behav. | Post-deploy smoke test + contract round-trip | CD `deploy` job | `scripts/smoke-test-api.sh` |
 | Feedfwd. | Shared agent conventions | Codex loads directly | `AGENTS.md` (canonical) |
-| Feedfwd. | `ship-pr` skill — push → CI → review → triage → squash → cleanup; **no `--auto`** | model-loaded | `.agents/skills/ship-pr/SKILL.md` |
+| Feedfwd. | PR review and delivery rules; personal global `ship-pr` can orchestrate the flow | PR delivery | `AGENTS.md` "PR review and delivery" |
 | Maint. | `eslint` on staged diff + `prettier --check` | local git pre-commit | `scripts/hooks/pre-commit` |
 | Behav. | `npm run validate` (lint + check + test + build) | local git pre-push | `scripts/hooks/pre-push` |
 | Drift loop | Failed harness sensor → open/update GitHub issue | on main / nightly | `.github/workflows/drift-to-issue.yml` |
@@ -70,7 +70,7 @@ When you observe a recurring issue, decide where to encode the fix:
 | "Agent breaks behaviour that has no test." | Write the test next to existing ones (`src/**/*.test.ts`). The pattern is vitest + happy-dom + the helpers in `src/lib/test/`. |
 | "Agent missed an `AGENTS.md` rule we keep restating." | Make it a lint rule or an archtest test. A docs rule that doesn't fail is a docs rule that drifts. |
 | "Agent guessed at an API contract." | Update `openboot-contract` fixtures + schemas. CI runs schema validation against them in the `check` job and after deploy. |
-| "Agent's PR description was off." | Tighten `.github/pull_request_template.md` (if added) or the `ship-pr` skill. |
+| "Agent's PR description was off." | Tighten `.github/pull_request_template.md` (if added) or the PR delivery rules in `AGENTS.md`. |
 | "Drift sensor failed on main but nobody noticed." | Already handled: `.github/workflows/drift-to-issue.yml` opens/updates a tracking issue per failed sensor. |
 
 Rule of thumb: **if you reach for a doc edit, first ask whether a test or
